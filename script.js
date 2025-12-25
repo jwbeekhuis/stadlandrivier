@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let roomUnsubscribe = null;
     let roomData = null; // Store full room data
     let heartbeatInterval = null;
+    let voteTimerInterval = null;
+    let voteTimeLeft = 0;
 
     // --- DOM Elements ---
     // Screens
@@ -69,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const votingResultOverlay = document.getElementById('voting-result-overlay');
     const votingVerdictIcon = document.getElementById('voting-verdict-icon');
     const votingVerdictText = document.getElementById('voting-verdict-text');
+    const voteTimer = document.getElementById('vote-timer');
+    const voteTimeLeftDisplay = document.getElementById('vote-time-left');
+    const moreTimeBtn = document.getElementById('more-time-btn');
 
 
     // Circle Config
@@ -108,63 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         voteYesBtn.addEventListener('click', () => castVote(true));
         voteNoBtn.addEventListener('click', () => castVote(false));
+        if (moreTimeBtn) moreTimeBtn.addEventListener('click', requestMoreVoteTime);
 
-        setupSecretFeatures();
         subscribeToActiveRooms();
-    }
-
-    // Secret admin features
-    let titleClickCount = 0;
-    let titleClickTimer = null;
-
-    function setupSecretFeatures() {
-        const title = document.querySelector('header h1');
-        if (!title) return;
-
-        title.style.cursor = 'pointer';
-        title.addEventListener('click', async () => {
-            titleClickCount++;
-
-            if (titleClickTimer) clearTimeout(titleClickTimer);
-            titleClickTimer = setTimeout(() => { titleClickCount = 0; }, 2000);
-
-            if (titleClickCount === 1) {
-                const confirmed = confirm("⚠️ SECRET MENU ⚠️\n\nWil je de hele woordenbibliotheek wissen (flushen)?\nDit kan niet ongedaan worden gemaakt!");
-                if (confirmed) {
-                    await flushLibrary();
-                }
-                titleClickCount = 0;
-            }
-        });
-    }
-
-    async function flushLibrary() {
-        const password = prompt("Voer wachtwoord in (of typ 'flush' als je zeker bent):");
-        if (password !== 'flush') return alert("Geannuleerd.");
-
-        alert("Bezig met flushen... dit kan even duren.");
-        try {
-            const snap = await getDocs(collection(db, "library"));
-            const batchSize = 400;
-            let batch = writeBatch(db);
-            let count = 0;
-
-            for (const docSnap of snap.docs) {
-                batch.delete(docSnap.ref);
-                count++;
-                if (count >= batchSize) {
-                    await batch.commit();
-                    batch = writeBatch(db);
-                    count = 0;
-                }
-            }
-            if (count > 0) await batch.commit();
-
-            alert("📚 Bibliotheek is volledig gewist!");
-        } catch (e) {
-            console.error(e);
-            alert("Fout bij wissen: " + e.message);
-        }
     }
 
     // --- Room Discovery ---
@@ -273,6 +224,34 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error("Error deleting room:", e);
             alert("Fout bij verwijderen: " + e.message);
+        }
+    };
+
+    window.kickPlayer = async function (playerUid) {
+        if (!isHost) return;
+
+        try {
+            const roomRef = doc(db, "rooms", roomId);
+            const roomSnap = await getDoc(roomRef);
+
+            if (!roomSnap.exists()) return;
+
+            const players = roomSnap.data().players;
+            const playerToKick = players.find(p => p.uid === playerUid);
+
+            if (!playerToKick) return;
+
+            if (!confirm(`Weet je zeker dat je ${playerToKick.name} uit de kamer wilt verwijderen?`)) {
+                return;
+            }
+
+            const updatedPlayers = players.filter(p => p.uid !== playerUid);
+            await updateDoc(roomRef, { players: updatedPlayers });
+
+            console.log(`${playerToKick.name} is uit de kamer verwijderd`);
+        } catch (e) {
+            console.error("Error kicking player:", e);
+            alert("Fout bij verwijderen speler: " + e.message);
         }
     };
 
@@ -424,11 +403,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPlayersList(players) {
-        playersList.innerHTML = players.map(p =>
-            `<span class="player-tag ${p.uid === currentUser.uid ? 'me' : ''}">
-                ${p.name} (${p.score} pts)
-            </span>`
-        ).join('');
+        playersList.innerHTML = players.map(p => {
+            const isMe = p.uid === currentUser.uid;
+            const canKick = isHost && !isMe && players.length > 1;
+
+            return `
+                <span class="player-tag ${isMe ? 'me' : ''}">
+                    ${p.name} (${p.score} pts)
+                    ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="Verwijder speler"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                </span>
+            `;
+        }).join('');
     }
 
     function enterGameUI(code) {
@@ -778,15 +763,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentUser.uid === state.targetUid) {
             votingActions.classList.add('hidden');
+            voteTimer.classList.add('hidden');
             votingStatusText.textContent = "Je medespelers stemmen op jouw antwoord...";
+            stopVoteTimer();
         } else {
             // Check if I already voted
             if (state.votes && state.votes[currentUser.uid] !== undefined) {
                 votingActions.classList.add('hidden');
+                voteTimer.classList.add('hidden');
                 votingStatusText.textContent = "Je hebt gestemd. Wachten op de rest...";
+                stopVoteTimer();
             } else {
                 votingActions.classList.remove('hidden');
                 votingStatusText.textContent = "Is dit antwoord goed of fout?";
+
+                // Start vote timer
+                startVoteTimer();
             }
         }
 
@@ -795,10 +787,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function startVoteTimer() {
+        stopVoteTimer();
+        voteTimeLeft = 15;
+        voteTimer.classList.remove('hidden');
+        moreTimeBtn.classList.add('hidden');
+
+        updateVoteTimerDisplay();
+
+        voteTimerInterval = setInterval(() => {
+            voteTimeLeft--;
+            updateVoteTimerDisplay();
+
+            if (voteTimeLeft === 0) {
+                // Auto-approve if no vote
+                stopVoteTimer();
+                castVote(true); // Auto-approve
+                console.log("Vote timeout - auto-approved");
+            } else if (voteTimeLeft <= 5 && moreTimeBtn.classList.contains('hidden')) {
+                // Show "More Time" button in last 5 seconds
+                moreTimeBtn.classList.remove('hidden');
+            }
+        }, 1000);
+    }
+
+    function stopVoteTimer() {
+        if (voteTimerInterval) {
+            clearInterval(voteTimerInterval);
+            voteTimerInterval = null;
+        }
+        voteTimer.classList.add('hidden');
+    }
+
+    function updateVoteTimerDisplay() {
+        voteTimeLeftDisplay.textContent = voteTimeLeft;
+
+        // Change color when time is running out
+        if (voteTimeLeft <= 5) {
+            voteTimer.style.color = 'var(--danger-color)';
+        } else {
+            voteTimer.style.color = 'var(--text-color)';
+        }
+    }
+
+    function requestMoreVoteTime() {
+        voteTimeLeft += 10;
+        moreTimeBtn.classList.add('hidden');
+        console.log("Added 10 seconds to vote timer");
+    }
+
     async function castVote(isValid) {
         if (!roomData.votingState) return;
         // Optimization: Don't allow vote if verdict already set
         if (roomData.votingState.verdict) return;
+
+        // Stop timer when vote is cast
+        stopVoteTimer();
 
         const roomRef = doc(db, "rooms", roomId);
         const key = `votingState.votes.${currentUser.uid}`;

@@ -690,12 +690,37 @@ body.light-mode .lobby-panel input:focus {
     border-radius: 20px;
     font-size: 0.9rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .player-tag.me {
     background: var(--primary-color);
     border-color: var(--secondary-color);
     color: white;
+}
+
+.kick-player-btn {
+    background: transparent;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.7rem;
+    padding: 0;
+}
+
+.kick-player-btn:hover {
+    background: var(--danger-color);
+    color: white;
+    transform: scale(1.1);
 }
 
 .secondary-btn {
@@ -974,6 +999,43 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 30px;
+}
+
+.vote-timer {
+    text-align: center;
+    margin: 15px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.vote-timer.hidden {
+    display: none;
+}
+
+.more-time-btn {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: var(--font-main);
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.more-time-btn:hover {
+    background: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.more-time-btn.hidden {
+    display: none;
 }
 
 .icon-btn-lg {
