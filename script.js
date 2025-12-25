@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=48';
+import { translations } from './translations.js?v=49';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -1068,10 +1068,28 @@ document.addEventListener('DOMContentLoaded', () => {
             updateVoteTimerDisplay();
 
             if (voteTimeLeft === 0) {
-                // Auto-approve if no vote
                 stopVoteTimer();
-                castVote(true); // Auto-approve
-                console.log("Vote timeout - auto-approved");
+
+                // Check if we already voted
+                const currentVote = roomData.votingState?.votes?.[currentUser.uid];
+                if (currentVote === undefined) {
+                    // We haven't voted yet - check if there are other votes
+                    const votes = roomData.votingState?.votes || {};
+                    const voteValues = Object.values(votes);
+
+                    if (voteValues.length === 0) {
+                        // No votes at all - auto-approve
+                        castVote(true);
+                        console.log("Vote timeout - no votes, auto-approved");
+                    } else {
+                        // There are other votes - follow the majority
+                        const yesVotes = voteValues.filter(v => v === true).length;
+                        const noVotes = voteValues.filter(v => v === false).length;
+                        const shouldApprove = yesVotes >= noVotes;
+                        castVote(shouldApprove);
+                        console.log(`Vote timeout - following majority: ${shouldApprove ? 'approved' : 'rejected'}`);
+                    }
+                }
             } else if (voteTimeLeft <= 5 && moreTimeBtn.classList.contains('hidden')) {
                 // Show "More Time" button in last 5 seconds
                 moreTimeBtn.classList.remove('hidden');
