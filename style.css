@@ -1025,17 +1025,37 @@ h1 {
 }
 
 .voting-panel h2 {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     font-size: 1.5rem;
 }
 
-#voting-category-title {
-    display: inline-block;
-    padding: 8px 20px;
+.voting-category-banner {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
-    margin-left: 10px;
+    padding: 20px 30px;
+    border-radius: 16px;
+    margin: 20px 0;
+    box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    animation: slideIn 0.4s ease;
+}
+
+.category-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.category-name {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .voting-content {

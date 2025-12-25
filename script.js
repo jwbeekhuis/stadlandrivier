@@ -1057,12 +1057,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             console.log(`Vote stats for ${answerData.answer}: ${yesCount}✅ ${noCount}❌`);
 
-            // Create voter names list
-            const voterNamesList = Object.entries(votesForThisAnswer).map(([uid, vote]) => {
-                const p = roomData.players.find(pl => pl.uid === uid);
-                const name = p ? p.name : 'Unknown';
-                return vote ? `${name}✅` : `${name}❌`;
-            }).join(', ');
+            // Create voter names list - sort by player name for stable order
+            const voterNamesList = Object.entries(votesForThisAnswer)
+                .map(([uid, vote]) => {
+                    const p = roomData.players.find(pl => pl.uid === uid);
+                    const name = p ? p.name : 'Unknown';
+                    return { name, vote };
+                })
+                .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+                .map(({ name, vote }) => vote ? `${name}✅` : `${name}❌`)
+                .join(', ');
 
             // Find the vote-stats div for this answer and update it
             const votingItems = document.querySelectorAll('.voting-item');
@@ -1168,12 +1172,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const yesCount = Object.values(votesForThisAnswer).filter(v => v === true).length;
             const noCount = Object.values(votesForThisAnswer).filter(v => v === false).length;
 
-            // Create voter names list
-            const voterNamesList = Object.entries(votesForThisAnswer).map(([uid, vote]) => {
-                const p = roomData.players.find(pl => pl.uid === uid);
-                const name = p ? p.name : 'Unknown';
-                return vote ? `${name}✅` : `${name}❌`;
-            }).join(', ');
+            // Create voter names list - sort by player name for stable order
+            const voterNamesList = Object.entries(votesForThisAnswer)
+                .map(([uid, vote]) => {
+                    const p = roomData.players.find(pl => pl.uid === uid);
+                    const name = p ? p.name : 'Unknown';
+                    return { name, vote };
+                })
+                .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+                .map(({ name, vote }) => vote ? `${name}✅` : `${name}❌`)
+                .join(', ');
 
             // Create answer card
             const itemDiv = document.createElement('div');
