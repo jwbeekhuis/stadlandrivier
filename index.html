@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=58">
+    <link rel="stylesheet" href="style.css?v=62">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -135,8 +135,11 @@
             <div class="room-info">
                 <span><span data-i18n="room">Kamer:</span> <strong id="room-code-display">---</strong></span>
                 <span id="player-count">👤 1</span>
+                <button id="leave-room-btn" class="leave-room-btn" data-i18n="leaveRoom" title="Verlaat kamer">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="leaveRoom">Verlaat Kamer</span>
+                </button>
                 <button id="delete-room-game-btn" class="delete-room-game-btn hidden" data-i18n="deleteRoom" title="Verwijder kamer">
-                    <i class="fa-solid fa-trash"></i> Verwijder Kamer
+                    <i class="fa-solid fa-trash"></i> <span data-i18n="deleteRoom">Verwijder Kamer</span>
                 </button>
             </div>
             <div class="letter-display-container">
@@ -178,45 +181,26 @@
 
         <!-- Voting Screen -->
         <section id="voting-screen" class="glass-panel voting-panel hidden">
-            <h2 data-i18n="checkAnswer">Controleer Antwoord</h2>
+            <h2><span data-i18n="checkAllAnswers">Controleer Alle Antwoorden</span> - <span id="voting-category-title">---</span></h2>
+
+            <div id="vote-timer" class="vote-timer">
+                <div class="vote-progress-container">
+                    <div class="vote-progress-bar" id="vote-progress-bar"></div>
+                    <span class="vote-time-text" id="vote-time-left">30</span>
+                </div>
+                <button id="more-time-btn" class="more-time-btn hidden" data-i18n="moreTime">+10s Meer Tijd</button>
+            </div>
+
             <div class="voting-content">
-                <p class="voting-context"><span data-i18n="hasAnswered">Heeft</span> <strong id="voting-player-name">---</strong> <span data-i18n="at">bij</span> <span
-                        id="voting-category">---</span> <span data-i18n="theFollowingAnswer">het volgende antwoord:</span></p>
-                <div class="voting-answer" id="voting-answer-display">---</div>
+                <p class="voting-instructions" data-i18n="voteAllInstructions">Stem op alle antwoorden hieronder. Je kunt je stem aanpassen tot de tijd om is.</p>
 
-                <div id="voting-actions" class="voting-actions">
-                    <button id="vote-no-btn" class="icon-btn-lg danger"><i class="fa-solid fa-xmark"></i></button>
-                    <button id="vote-yes-btn" class="icon-btn-lg success"><i class="fa-solid fa-check"></i></button>
+                <div id="voting-items-container" class="voting-items-grid">
+                    <!-- Voting items will be injected here -->
                 </div>
 
-                <div id="vote-timer" class="vote-timer hidden">
-                    <div class="vote-progress-container">
-                        <div class="vote-progress-bar" id="vote-progress-bar"></div>
-                        <span class="vote-time-text" id="vote-time-left">15</span>
-                    </div>
-                    <button id="more-time-btn" class="more-time-btn hidden" data-i18n="moreTime">+10s Meer Tijd</button>
-                </div>
-
-                <div id="voting-status">
-                    <div class="vote-counts hidden">
-                        <div class="vote-column">
-                            <span class="vote-pill success"><i class="fa-solid fa-check"></i> <span
-                                    id="yes-count">0</span></span>
-                            <div id="yes-voters" class="voters-list"></div>
-                        </div>
-                        <div class="vote-column">
-                            <span class="vote-pill danger"><i class="fa-solid fa-xmark"></i> <span
-                                    id="no-count">0</span></span>
-                            <div id="no-voters" class="voters-list"></div>
-                        </div>
-                    </div>
-                    <p id="voting-status-text" data-i18n="waitingForVotes">Wachten op stemmen...</p>
-                </div>
-
-                <!-- 5s Result Overlay -->
-                <div id="voting-result-overlay" class="result-overlay hidden">
-                    <div id="voting-verdict-icon" class="verdict-icon"></div>
-                    <h3 id="voting-verdict-text">GOEDGEKEURD!</h3>
+                <div class="voting-submit-container">
+                    <p class="vote-progress-text"><span id="voted-count">0</span> / <span id="total-votes-count">0</span> <span data-i18n="voted">gestemd</span></p>
+                    <p class="vote-info-text" data-i18n="autoSubmitInfo">Stemmen worden automatisch ingediend wanneer je alles hebt beoordeeld</p>
                 </div>
             </div>
         </section>
@@ -249,7 +233,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=58"></script>
+    <script type="module" src="script.js?v=62">
 </body>
 
 </html>

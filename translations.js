@@ -60,6 +60,7 @@ export const translations = {
 
         // Game Controls
         room: "Kamer:",
+        leaveRoom: "Verlaat Kamer",
         deleteRoom: "Verwijder Kamer",
         rollLetter: "DRAAI LETTER",
         stopRound: "STOP DE RONDE",
@@ -67,6 +68,12 @@ export const translations = {
 
         // Voting
         checkAnswer: "Controleer Antwoord",
+        checkAllAnswers: "Controleer Alle Antwoorden",
+        voteAllInstructions: "Stem op alle antwoorden hieronder. Je kunt je stem aanpassen tot de tijd om is.",
+        submitVotes: "Bevestig Stemmen",
+        voted: "gestemd",
+        yourAnswer: "Jouw antwoord",
+        autoSubmitInfo: "Stemmen worden automatisch ingediend wanneer je alles hebt beoordeeld",
         hasAnswered: "Heeft",
         at: "bij",
         theFollowingAnswer: "het volgende antwoord:",
@@ -103,6 +110,7 @@ export const translations = {
         kickedFromRoom: "Je bent uit de kamer verwijderd.",
         confirmKick: "Weet je zeker dat je {name} uit de kamer wilt verwijderen?",
         confirmDelete: "Weet je zeker dat je deze kamer wilt verwijderen?",
+        confirmLeaveRoom: "Weet je zeker dat je deze kamer wilt verlaten?",
         nowHost: "Je bent nu de host van deze kamer! Je kunt nu de letter draaien en de volgende ronde starten.",
 
         // Categories
@@ -196,6 +204,7 @@ export const translations = {
 
         // Game Controls
         room: "Room:",
+        leaveRoom: "Leave Room",
         deleteRoom: "Delete Room",
         rollLetter: "ROLL LETTER",
         stopRound: "STOP THE ROUND",
@@ -203,6 +212,12 @@ export const translations = {
 
         // Voting
         checkAnswer: "Check Answer",
+        checkAllAnswers: "Check All Answers",
+        voteAllInstructions: "Vote on all answers below. You can change your vote until time runs out.",
+        submitVotes: "Submit Votes",
+        voted: "voted",
+        yourAnswer: "Your answer",
+        autoSubmitInfo: "Votes are automatically submitted when you've rated everything",
         hasAnswered: "Has",
         at: "for",
         theFollowingAnswer: "the following answer:",
@@ -239,6 +254,7 @@ export const translations = {
         kickedFromRoom: "You have been removed from the room.",
         confirmKick: "Are you sure you want to remove {name} from the room?",
         confirmDelete: "Are you sure you want to delete this room?",
+        confirmLeaveRoom: "Are you sure you want to leave this room?",
         nowHost: "You are now the host of this room! You can now roll the letter and start the next round.",
 
         // Categories
