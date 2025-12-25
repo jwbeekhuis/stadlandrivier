@@ -758,10 +758,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         voteCounts.classList.remove('hidden');
 
-        // Show Result Overlay if verdict exists 
+        // Show Result Overlay if verdict exists
         if (state.verdict) {
             votingResultOverlay.classList.remove('hidden');
             votingActions.classList.add('hidden'); // Hide buttons
+            stopVoteTimer(); // Stop timer when verdict is shown
 
             if (state.verdict === 'approved') {
                 votingVerdictIcon.innerHTML = '<i class="fa-solid fa-check" style="color: #4ade80;"></i>';
@@ -772,7 +773,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 votingVerdictText.textContent = "AFGEKEURD!";
                 votingVerdictText.style.color = "#f87171";
             }
-            // Don't return - let voter names continue to display below
+            // Verdict shown, don't show voting UI anymore
+            return;
         } else {
             votingResultOverlay.classList.add('hidden');
         }
@@ -884,6 +886,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentVotes = Object.keys(state.votes || {}).length;
 
         if (potentialVoters <= 0 || currentVotes >= potentialVoters) {
+            // Everyone has voted - stop timer immediately
+            stopVoteTimer();
+
             // Tally
             const yesVotes = Object.values(state.votes || {}).filter(v => v === true).length;
             const noVotes = Object.values(state.votes || {}).filter(v => v === false).length;
@@ -1039,8 +1044,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Starting Score Calculation...");
         const players = data.players;
 
-        // Reset scores
-        players.forEach(p => p.score = 0);
+        // Calculate round scores (don't reset total scores)
+        const roundScores = {};
+        players.forEach(p => {
+            roundScores[p.uid] = 0;
+        });
 
         for (const cat of activeCategories) {
             console.log(`Scoring Category: ${cat}`);
@@ -1083,12 +1091,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         res.points = 10;
                     }
                     console.log(`-> ${p.name} gets ${res.points} pts for '${res.answer}'`);
-                    p.score += res.points;
+                    roundScores[p.uid] += res.points;
                 }
             });
         }
 
-        console.log("Final Scores:", players.map(p => `${p.name}: ${p.score}`));
+        // Add round scores to total scores
+        players.forEach(p => {
+            p.score += roundScores[p.uid];
+        });
+
+        console.log("Round Scores:", players.map(p => `${p.name}: +${roundScores[p.uid]}`));
+        console.log("Total Scores:", players.map(p => `${p.name}: ${p.score}`));
 
         // Update history with points information
         const history = data.gameHistory || [];
