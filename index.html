@@ -22,63 +22,71 @@
 
     <main class="app-container">
         <header class="game-header">
-            <h1>Stad <span class="highlight">Land</span> Rivier <small
-                    style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;">by
-                    JW</small></h1>
+            <h1>Stad <span class="highlight">Land</span> Rivier</h1>
+            <div class="header-controls">
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme"><i
+                        class="fa-solid fa-moon"></i></button>
+            </div>
         </header>
 
         <!-- Lobby Screen -->
         <section id="lobby-screen" class="glass-panel lobby-panel">
-            <div class="logo-circle"><i class="fa-solid fa-earth-europe"></i></div>
             <h2>Welkom!</h2>
-            <input type="text" id="player-name" placeholder="Jouw Naam" maxlength="12">
+            <div class="input-group">
+                <label for="player-name">Jouw Naam</label>
+                <input type="text" id="player-name" placeholder="Typ je naam...">
+            </div>
 
             <div class="lobby-actions">
                 <button id="create-room-btn" class="primary-btn">Nieuwe Kamer</button>
+                <div class="divider">OF</div>
                 <div class="join-group">
-                    <input type="text" id="room-code-input" placeholder="CODE" maxlength="4">
-                    <button id="join-room-btn" class="secondary-btn">Meedoen</button>
+                    <input type="text" id="room-code-input" placeholder="Kamer Code (bijv. X4K9)" maxlength="4">
+                    <button id="join-room-btn" class="secondary-btn">Join Kamer</button>
                 </div>
             </div>
         </section>
 
-        <!-- Game Controls (Host only, mostly) -->
-        <section id="controls-panel" class="glass-panel controls-panel hidden">
+        <!-- Game Controls (Hidden in Lobby) -->
+        <section id="game-controls" class="glass-panel controls-panel hidden">
             <div class="room-info">
-                <span class="room-code" id="room-code-display">????</span>
-                <span class="player-count" id="player-count-display">👤 0</span>
-                <button id="theme-toggle" class="icon-btn" title="Wissel Thema"><i class="fa-solid fa-sun"></i></button>
+                <span>Kamer: <strong id="room-code-display">---</strong></span>
+                <span id="player-count">👤 1</span>
             </div>
-            <div id="players-list" class="players-list">
-                <!-- Player tags injected here -->
+            <div class="letter-display-container">
+                <div class="letter-circle">
+                    <span id="current-letter">?</span>
+                </div>
+                <!-- Only Host sees this initially, but we handle visibility in JS -->
+                <button id="roll-btn" class="primary-btn pulse">DRAAI LETTER</button>
+            </div>
+
+            <div class="timer-container">
+                <svg class="progress-ring" width="120" height="120">
+                    <circle class="progress-ring__circle" stroke="white" stroke-width="4" fill="transparent" r="52"
+                        cx="60" cy="60" />
+                </svg>
+                <div class="timer-text" id="timer-display">60</div>
             </div>
         </section>
 
-        <!-- Game Board -->
         <section id="game-board" class="glass-panel game-board hidden">
-            <div class="game-header">
-                <div class="letter-display" id="letter-display">?</div>
-                <div class="timer-container">
-                    <svg class="timer-ring" width="80" height="80">
-                        <circle class="timer-circle-bg" stroke="rgba(255,255,255,0.1)" stroke-width="6"
-                            fill="transparent" r="36" cx="40" cy="40" />
-                        <circle id="timer-circle" class="timer-circle-fg" stroke="var(--accent-color)" stroke-width="6"
-                            fill="transparent" r="36" cx="40" cy="40" />
-                    </svg>
-                    <span id="timer-display">30</span>
-                </div>
+            <div class="controls-bar">
+                <button id="shuffle-btn" class="sm-btn" title="Nieuwe Categorieën"><i class="fa-solid fa-shuffle"></i>
+                    Mix Categorieën</button>
             </div>
 
-            <div class="game-controls">
-                <button id="roll-btn" class="primary-btn hidden">DRAAI LETTER</button>
-                <button id="stop-btn" class="danger-btn hidden">STOP!</button>
-                <button id="shuffle-btn" class="secondary-btn hidden"
-                    style="margin-top: 10px; font-size: 0.8rem; padding: 5px 10px;"><i class="fa-solid fa-shuffle"></i>
-                    Nieuwe Categorieën</button>
+            <!-- Player List -->
+            <div id="players-list" class="players-list">
+                <!-- Players injected here -->
             </div>
 
-            <div id="categories-container" class="categories-grid">
-                <!-- Inputs injected here -->
+            <div class="categories-grid" id="categories-container">
+                <!-- Categories will be injected here via JS -->
+            </div>
+
+            <div class="action-bar">
+                <button id="stop-btn" class="danger-btn">STOP DE RONDE</button>
             </div>
         </section>
 
@@ -139,7 +147,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=11"></script>
+    <script type="module" src="script.js?v=10"></script>
 </body>
 
 </html>

@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     // Screens
     const lobbyScreen = document.getElementById('lobby-screen');
-    const controlsPanel = document.getElementById('controls-panel');
+    const controlsPanel = document.getElementById('game-controls');
     const gameBoard = document.getElementById('game-board');
     const resultsBoard = document.getElementById('results-board');
     const votingScreen = document.getElementById('voting-screen');
@@ -42,12 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Game Elements
     const roomCodeDisplay = document.getElementById('room-code-display');
-    const playerCountDisplay = document.getElementById('player-count-display');
+    const playerCountDisplay = document.getElementById('player-count');
     const rollBtn = document.getElementById('roll-btn');
     const stopBtn = document.getElementById('stop-btn');
-    const letterDisplay = document.getElementById('letter-display');
+    const letterDisplay = document.getElementById('current-letter');
     const timerDisplay = document.getElementById('timer-display');
-    const timerCircle = document.getElementById('timer-circle');
+    const timerCircle = document.querySelector('.progress-ring__circle');
     const categoriesContainer = document.getElementById('categories-container');
     const nextRoundBtn = document.getElementById('next-round-btn');
     const shuffleBtn = document.getElementById('shuffle-btn');
@@ -97,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         voteYesBtn.addEventListener('click', () => castVote(true));
         voteNoBtn.addEventListener('click', () => castVote(false));
-        setupSecretFeatures();
     }
 
     // --- Multiplayer / Lobby Logic ---
@@ -195,22 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentUser.uid === data.hostId) {
             isHost = true;
-
-            // Actions visibility
-            if (data.status === 'lobby') {
-                rollBtn.classList.remove('hidden');
-                rollBtn.disabled = false;
-                stopBtn.classList.add('hidden');
-                if (shuffleBtn) shuffleBtn.classList.remove('hidden');
-            } else if (data.status === 'playing') {
-                rollBtn.classList.add('hidden');
-                stopBtn.classList.remove('hidden');
-                if (shuffleBtn) shuffleBtn.classList.add('hidden');
-            } else {
-                rollBtn.classList.add('hidden');
-                stopBtn.classList.add('hidden');
-                if (shuffleBtn) shuffleBtn.classList.add('hidden');
-            }
+            rollBtn.disabled = data.status === 'playing';
+            stopBtn.classList.remove('hidden');
+            if (shuffleBtn) shuffleBtn.classList.remove('hidden');
         } else {
             isHost = false;
             rollBtn.classList.add('hidden');
@@ -269,8 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsBoard.classList.add('hidden');
         votingScreen.classList.add('hidden');
         categoriesContainer.classList.remove('hidden');
-        // Clear history UI
-        document.getElementById('game-history-log').classList.add('hidden');
 
         enableInputs();
         startTimerLocal();
@@ -307,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const roomRef = doc(db, "rooms", roomId);
-        const freshSnap = await getGet(roomRef);
+        const freshSnap = await getDoc(roomRef);
         if (!freshSnap.exists()) return;
 
         const freshPlayers = freshSnap.data().players;
@@ -513,29 +497,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function levenshteinDistance(a, b) {
+        // Create matrix
         const matrix = [];
-        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+        // Increment along the first column of each row
+        for (let i = 0; i <= b.length; i++) {
+            matrix[i] = [i];
+        }
+
+        // Increment each column in the first row
+        for (let j = 0; j <= a.length; j++) {
+            matrix[0][j] = j;
+        }
+
+        // Fill in the rest of the matrix
         for (let i = 1; i <= b.length; i++) {
             for (let j = 1; j <= a.length; j++) {
                 if (b.charAt(i - 1) === a.charAt(j - 1)) {
                     matrix[i][j] = matrix[i - 1][j - 1];
                 } else {
-                    matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1));
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        Math.min(
+                            matrix[i][j - 1] + 1, // insertion
+                            matrix[i - 1][j] + 1  // deletion
+                        )
+                    );
                 }
             }
         }
+
         return matrix[b.length][a.length];
     }
 
     function areWordsFuzzyMatching(word1, word2) {
         const w1 = normalizeAnswer(word1);
         const w2 = normalizeAnswer(word2);
-        if (w1 === w2) return true;
+
+        if (w1 === w2) return true; // Direct match
+
         const dist = levenshteinDistance(w1, w2);
         const len = Math.max(w1.length, w2.length);
-        if (len > 4) return dist <= 2;
-        else return dist <= 1;
+
+        // Rules:
+        // Length > 4: Allow 2 typos
+        // Length <= 4: Allow 1 typo
+        if (len > 4) {
+            return dist <= 2;
+        } else {
+            return dist <= 1;
+        }
     }
 
     function generateRoomCode() {
@@ -551,6 +562,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return letters[Math.floor(Math.random() * letters.length)];
     }
 
+    // --- Library & Scoring ---
+
     async function checkLibrary(category, word) {
         const cleanWord = normalizeAnswer(word);
         const docId = `${category}_${cleanWord}`.replace(/\s/g, '_');
@@ -564,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const docId = `${category}_${cleanWord}`.replace(/\s/g, '_');
         await setDoc(doc(db, "library", docId), {
             category: category,
-            word: word,
+            word: word, // Keep original display version
             cleanWord: cleanWord,
             approvedAt: Date.now()
         }, { merge: true });
@@ -573,37 +586,57 @@ document.addEventListener('DOMContentLoaded', () => {
     async function calculateFinalScores(data) {
         console.log("Starting Score Calculation...");
         const players = data.players;
+
+        // Reset scores
         players.forEach(p => p.score = 0);
 
         for (const cat of activeCategories) {
+            console.log(`Scoring Category: ${cat}`);
             const validAnswers = [];
+
+            // 1. Collect Valid Answers
             players.forEach(p => {
                 if (p.verifiedResults && p.verifiedResults[cat]) {
                     const res = p.verifiedResults[cat];
+                    console.log(`Player ${p.name} - ${cat}: ${res.answer} (Valid: ${res.isValid})`);
                     if (res.isValid) {
-                        validAnswers.push({ uid: p.uid, answer: normalizeAnswer(res.answer) });
+                        // Store both normalized and distinct original for display if needed? 
+                        // No logic only cares about normalized matches
+                        validAnswers.push({
+                            uid: p.uid,
+                            answer: normalizeAnswer(res.answer)
+                        });
                     }
+                } else {
+                    console.log(`Player ${p.name} - ${cat}: No verified result`);
                 }
             });
 
+            // 2. Assign Points
             players.forEach(p => {
                 const res = p.verifiedResults ? p.verifiedResults[cat] : null;
                 if (res && res.isValid) {
                     const myAns = normalizeAnswer(res.answer);
+
+                    // Fuzzy duplicate check
                     const othersWithSame = validAnswers.filter(a => a.uid !== p.uid && areWordsFuzzyMatching(a.answer, myAns));
                     const othersWithAny = validAnswers.filter(a => a.uid !== p.uid);
 
                     if (othersWithSame.length > 0) {
-                        res.points = 5;
+                        res.points = 5; // Shared (or close enough!)
+                        console.log(` -> Match found for '${myAns}' with '${othersWithSame[0].answer}'`);
                     } else if (othersWithAny.length === 0) {
                         res.points = 20;
                     } else {
                         res.points = 10;
                     }
+                    console.log(`-> ${p.name} gets ${res.points} pts for '${res.answer}'`);
                     p.score += res.points;
                 }
             });
         }
+
+        console.log("Final Scores:", players.map(p => `${p.name}: ${p.score}`));
 
         await updateDoc(doc(db, "rooms", roomId), {
             players: players,
@@ -619,13 +652,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const sortedPlayers = [...data.players].sort((a, b) => b.score - a.score);
 
-        // Winner Confetti! (Only for the winner)
-        if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0 && sortedPlayers[0].uid === currentUser.uid) {
+        // Winner Confetti!
+        if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0) {
             confetti({
-                particleCount: 200,
-                spread: 100,
+                particleCount: 150,
+                spread: 70,
                 origin: { y: 0.6 },
-                colors: ['#22c55e', '#38bdf8', '#ffffff', '#fbbf24']
+                colors: ['#22c55e', '#38bdf8', '#ffffff']
             });
         }
 
@@ -646,102 +679,86 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    count++;
-    if (count >= batchSize) {
-        await batch.commit();
-        batch = writeBatch(db);
-        count = 0;
-    }
-}
-            if (count > 0) await batch.commit();
-
-alert("📚 Bibliotheek is volledig gewist!");
-        } catch (e) {
-    console.error(e);
-    alert("Fout bij wissen: " + e.message);
-}
+    function resetBoard() {
+        resultsBoard.classList.add('hidden');
+        votingScreen.classList.add('hidden');
+        enterGameUI(roomId);
+        letterDisplay.textContent = '?';
+        timerCircle.style.strokeDashoffset = 0;
+        updateTimerDisplay();
+        renderCategories();
     }
 
-function resetBoard() {
-    resultsBoard.classList.add('hidden');
-    votingScreen.classList.add('hidden');
-    enterGameUI(roomId);
-    letterDisplay.textContent = '?';
-    timerCircle.style.strokeDashoffset = 0;
-    updateTimerDisplay();
-    renderCategories();
-}
+    // --- Utilities ---
 
-// --- Utilities ---
-
-function generateRoomCode() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
-}
-
-function getRandomCategories() {
-    return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 6);
-}
-
-function getRandomLetter() {
-    const alphabet = "ABCDEFGHIJKLMNOPRSTUVWZ";
-    return alphabet[Math.floor(Math.random() * alphabet.length)];
-}
-
-function toggleTheme() {
-    document.body.classList.toggle('light-mode');
-    const icon = themeToggleBtn.querySelector('i');
-    if (document.body.classList.contains('light-mode')) {
-        icon.classList.remove('fa-moon');
-        icon.classList.add('fa-sun');
-    } else {
-        icon.classList.remove('fa-sun');
-        icon.classList.add('fa-moon');
+    function generateRoomCode() {
+        return Math.random().toString(36).substring(2, 6).toUpperCase();
     }
-}
 
-function renderCategories() {
-    categoriesContainer.innerHTML = '';
-    activeCategories.forEach(cat => {
-        const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
-        const div = document.createElement('div');
-        div.className = 'category-input-group';
-        div.innerHTML = `
+    function getRandomCategories() {
+        return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 6);
+    }
+
+    function getRandomLetter() {
+        const alphabet = "ABCDEFGHIJKLMNOPRSTUVWZ";
+        return alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        const icon = themeToggleBtn.querySelector('i');
+        if (document.body.classList.contains('light-mode')) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        } else {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+    }
+
+    function renderCategories() {
+        categoriesContainer.innerHTML = '';
+        activeCategories.forEach(cat => {
+            const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
+            const div = document.createElement('div');
+            div.className = 'category-input-group';
+            div.innerHTML = `
                 <label for="input-${safeId}">${cat}</label>
                 <input type="text" id="input-${safeId}" placeholder="${cat}..." disabled autocomplete="off">
             `;
-        categoriesContainer.appendChild(div);
-    });
-}
+            categoriesContainer.appendChild(div);
+        });
+    }
 
-function updateInputPlaceholders() {
-    activeCategories.forEach(cat => {
-        const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
-        const input = document.getElementById(`input-${safeId}`);
-        if (input) input.placeholder = `${cat} met ${currentLetter}`;
-    });
-}
+    function updateInputPlaceholders() {
+        activeCategories.forEach(cat => {
+            const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
+            const input = document.getElementById(`input-${safeId}`);
+            if (input) input.placeholder = `${cat} met ${currentLetter}`;
+        });
+    }
 
-function updateTimerDisplay() {
-    timerDisplay.textContent = Math.max(0, timeLeft);
-    const offset = circumference - (timeLeft / gameDuration) * circumference;
-    timerCircle.style.strokeDashoffset = offset;
-    timerCircle.style.stroke = timeLeft <= 10 ? 'var(--danger-color)' : 'var(--accent-color)';
-}
+    function updateTimerDisplay() {
+        timerDisplay.textContent = Math.max(0, timeLeft);
+        const offset = circumference - (timeLeft / gameDuration) * circumference;
+        timerCircle.style.strokeDashoffset = offset;
+        timerCircle.style.stroke = timeLeft <= 10 ? 'var(--danger-color)' : 'var(--accent-color)';
+    }
 
-function enableInputs() {
-    const inputs = document.querySelectorAll('.category-input-group input');
-    inputs.forEach(input => {
-        input.disabled = false;
-        input.value = '';
-    });
-    if (inputs.length > 0) inputs[0].focus();
-}
+    function enableInputs() {
+        const inputs = document.querySelectorAll('.category-input-group input');
+        inputs.forEach(input => {
+            input.disabled = false;
+            input.value = '';
+        });
+        if (inputs.length > 0) inputs[0].focus();
+    }
 
-function disableInputs() {
-    const inputs = document.querySelectorAll('.category-input-group input');
-    inputs.forEach(input => input.disabled = true);
-}
+    function disableInputs() {
+        const inputs = document.querySelectorAll('.category-input-group input');
+        inputs.forEach(input => input.disabled = true);
+    }
 
-// Start
-init();
+    // Start
+    init();
 });
