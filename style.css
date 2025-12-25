@@ -342,25 +342,32 @@ body {
 }
 
 /* Tutorial Section */
+.tutorial-panel {
+    max-width: 700px;
+    margin: 20px auto;
+    text-align: left;
+}
+
 .tutorial-section {
-    margin-top: 30px;
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 15px;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+    border: none;
 }
 
 .tutorial-toggle {
-    padding: 15px 20px;
+    padding: 0 0 20px 0;
     cursor: pointer;
-    font-weight: 600;
-    font-size: 1.05rem;
+    font-weight: 700;
+    font-size: 1.4rem;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     user-select: none;
-    transition: background 0.2s;
+    transition: opacity 0.2s;
     list-style: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 25px;
 }
 
 .tutorial-toggle::-webkit-details-marker {
@@ -368,49 +375,66 @@ body {
 }
 
 .tutorial-toggle:hover {
-    background: rgba(255, 255, 255, 0.05);
+    opacity: 0.8;
 }
 
 .tutorial-toggle i {
     color: var(--primary-color);
-    font-size: 1.2rem;
+    font-size: 1.5rem;
 }
 
 .tutorial-content {
-    padding: 0 20px 20px 20px;
+    padding: 0;
     text-align: left;
     animation: fadeIn 0.3s ease;
 }
 
 .tutorial-content h3 {
-    font-size: 1.1rem;
-    margin: 20px 0 10px 0;
+    font-size: 1.15rem;
+    margin: 25px 0 12px 0;
     color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .tutorial-content h3:first-child {
-    margin-top: 10px;
+    margin-top: 0;
 }
 
 .tutorial-content p {
     margin: 10px 0;
-    line-height: 1.6;
-    opacity: 0.9;
+    line-height: 1.7;
+    opacity: 0.95;
+    font-size: 1rem;
 }
 
 .tutorial-content ul {
-    margin: 10px 0;
-    padding-left: 25px;
+    margin: 12px 0;
+    padding-left: 30px;
+    list-style: none;
 }
 
 .tutorial-content li {
-    margin: 8px 0;
-    line-height: 1.5;
-    opacity: 0.9;
+    margin: 10px 0;
+    line-height: 1.6;
+    opacity: 0.95;
+    font-size: 1rem;
+    position: relative;
+    padding-left: 8px;
+}
+
+.tutorial-content li:before {
+    content: "•";
+    color: var(--accent-color);
+    font-weight: bold;
+    position: absolute;
+    left: -18px;
 }
 
 .tutorial-content strong {
     color: var(--accent-color);
+    font-weight: 700;
 }
 
 .game-controls {
