@@ -1,0 +1,264 @@
+export const translations = {
+    nl: {
+        // Header
+        title: "Stad Land Rivier",
+        by: "by JW",
+
+        // Lobby
+        welcome: "Welkom!",
+        yourName: "Jouw Naam",
+        namePlaceholder: "Typ je naam...",
+        roomName: "Kamer Naam (optioneel)",
+        roomNamePlaceholder: "Bijv. Vrienden Groep...",
+        gameTime: "Speeltijd:",
+        seconds: "seconden",
+        newRoom: "Nieuwe Kamer",
+        activeRooms: "Actieve Kamers",
+        loading: "Laden...",
+        noRooms: "Geen actieve kamers gevonden. Maak er een!",
+        host: "Host:",
+        joinRoom: "Meedoen",
+
+        // Tutorial
+        howItWorks: "Hoe werkt het?",
+        tutorialRoomTitle: "🚪 Kamer Maken & Deelnemen",
+        tutorialActiveRooms: "Actieve kamers: Zie direct welke kamers beschikbaar zijn! Vul alleen je naam in en klik op \"Meedoen\" bij een kamer.",
+        tutorialNewRoom: "Nieuwe kamer: Maak je eigen kamer met \"Nieuwe Kamer\". Je kunt de speeltijd instellen (30-300 seconden) met de slider. De code verschijnt automatisch bij anderen.",
+        tutorialHost: "Host: De maker van de kamer kan de letter draaien, categorieën shuffelen, de volgende ronde starten, spelers verwijderen en de kamer verwijderen. Als de host de kamer verlaat, neemt de volgende speler automatisch over!",
+        tutorialKicked: "Uit kamer verwijderd? Als de host de kamer verwijdert of je uit de kamer verwijdert, word je automatisch teruggestuurd naar het beginscherm.",
+        tutorialReconnect: "Verbinding verbroken? Je naam wordt automatisch onthouden. Herlaad de pagina en klik gewoon opnieuw op \"Meedoen\" - je komt terug in dezelfde kamer! Inactieve spelers worden na 30 seconden automatisch verwijderd.",
+
+        tutorialLibraryTitle: "📚 Bibliotheek (Per Kamer)",
+        tutorialLibrary: "Elke kamer heeft zijn eigen woordenbibliotheek. Goedgekeurde antwoorden worden opgeslagen en bij latere rondes automatisch goedgekeurd - maar alleen binnen dezelfde kamer!",
+
+        tutorialRulesTitle: "🎮 Spelregels",
+        tutorialRules: "De host draait een letter en iedereen heeft de ingestelde tijd (standaard 30 seconden) om antwoorden in te vullen voor elke categorie die met die letter beginnen.",
+
+        tutorialPointsTitle: "🏆 Punten Verdienen",
+        tutorialPoints20: "20 punten - Jij bent de enige met een geldig antwoord",
+        tutorialPoints10: "10 punten - Je hebt een uniek antwoord in een categorie waar anderen ook wat hebben",
+        tutorialPoints5: "5 punten - Je antwoord komt (bijna) overeen met dat van iemand anders",
+
+        tutorialRecognitionTitle: "🔍 Slimme Woordherkenning",
+        tutorialRecognition: "Het spel herkent woorden die op elkaar lijken! Kleine typfouten of meervoud/enkelvoud worden als hetzelfde gezien. Bijvoorbeeld: \"Amsterdam\" en \"Amsterdm\" worden als gedeeld antwoord beschouwd.",
+
+        tutorialVotingTitle: "✅ Stemproces",
+        tutorialVotingIntro: "Na de tijd stemt iedereen op alle antwoorden:",
+        tutorialVoting1: "Je ziet elk antwoord één voor één",
+        tutorialVoting2: "Je hebt 15 seconden per antwoord om te stemmen",
+        tutorialVoting3: "Bij de laatste 5 seconden verschijnt een \"+10s Meer Tijd\" knop",
+        tutorialVoting4: "Als je niet stemt binnen de tijd, wordt het antwoord automatisch goedgekeurd",
+        tutorialVoting5: "Als iedereen gestemd heeft, wordt het resultaat direct getoond!",
+        tutorialVoting6: "Stem ✅ (goed) of ❌ (fout)",
+        tutorialVoting7: "Je kunt je stem aanpassen zolang de stemtijd loopt - klik gewoon opnieuw op een knop!",
+        tutorialVoting8: "Je mag ook op je eigen antwoorden stemmen - dit maakt het eerlijker en je kunt meediscussiëren!",
+        tutorialVoting9: "Goedgekeurde antwoorden worden opgeslagen in de kamerbibliotheek",
+        tutorialVoting10: "Meerderheid beslist of het antwoord geldig is",
+
+        tutorialLogTitle: "📊 Ronde Logboek",
+        tutorialLog: "Aan het eind zie je een volledig overzicht van alle antwoorden, stemmen en punten - zo kan je precies controleren hoe de scores tot stand zijn gekomen!",
+
+        // Game Controls
+        room: "Kamer:",
+        deleteRoom: "Verwijder Kamer",
+        rollLetter: "DRAAI LETTER",
+        stopRound: "STOP DE RONDE",
+        mixCategories: "Mix Categorieën",
+
+        // Voting
+        checkAnswer: "Controleer Antwoord",
+        hasAnswered: "Heeft",
+        at: "bij",
+        theFollowingAnswer: "het volgende antwoord:",
+        moreTime: "+10s Meer Tijd",
+        waitingForVotes: "Wachten op stemmen...",
+        verdictDecided: "Verdict besloten!",
+        approved: "GOEDGEKEURD!",
+        rejected: "AFGEKEURD!",
+        youVotedYes: "Je hebt ✅ gestemd. Je kunt je stem aanpassen.",
+        youVotedNo: "Je hebt ❌ gestemd. Je kunt je stem aanpassen.",
+        youVotedYesOwn: "Je hebt ✅ gestemd op je eigen antwoord. Je kunt je stem aanpassen.",
+        youVotedNoOwn: "Je hebt ❌ gestemd op je eigen antwoord. Je kunt je stem aanpassen.",
+        isAnswerCorrect: "Is dit antwoord goed of fout?",
+        isOwnAnswerCorrect: "Is je eigen antwoord goed of fout?",
+
+        // Results
+        results: "Resultaten",
+        name: "Naam",
+        points: "Punten",
+        nextRound: "VOLGENDE RONDE",
+        roundLog: "Ronde Logboek",
+        uniqueAnswer: "Uniek antwoord",
+        onlyInCategory: "Enige in categorie",
+        sharedAnswer: "Gedeeld antwoord",
+        notApproved: "Niet goedgekeurd",
+        autoApproved: "(Auto)",
+        votedYes: "stemde ✅",
+        votedNo: "stemde ❌",
+
+        // Alerts
+        enterName: "Vul eerst je naam in!",
+        roomNotExist: "Deze kamer bestaat niet meer.",
+        roomDeleted: "Deze kamer is verwijderd.",
+        kickedFromRoom: "Je bent uit de kamer verwijderd.",
+        confirmKick: "Weet je zeker dat je {name} uit de kamer wilt verwijderen?",
+        confirmDelete: "Weet je zeker dat je deze kamer wilt verwijderen?",
+        nowHost: "Je bent nu de host van deze kamer! Je kunt nu de letter draaien en de volgende ronde starten.",
+
+        // Categories
+        categories: {
+            'Stad': 'Stad',
+            'Land': 'Land',
+            'Rivier': 'Rivier',
+            'Dier': 'Dier',
+            'Naam': 'Naam',
+            'Beroep': 'Beroep',
+            'Merk': 'Merk',
+            'Film of Serie': 'Film of Serie',
+            'Sport': 'Sport',
+            'Kledingstuk': 'Kledingstuk',
+            'Lichaamsdeel': 'Lichaamsdeel',
+            'Kleur': 'Kleur',
+            'Automerk': 'Automerk',
+            'Voorwerp in Huis': 'Voorwerp in Huis',
+            'Muziekinstrument': 'Muziekinstrument',
+            'Liedje': 'Liedje',
+            'Vakantie-item': 'Vakantie-item',
+            'Schoolvak': 'Schoolvak',
+            'Hoofdstad': 'Hoofdstad',
+            'Smoesje': 'Smoesje',
+            'Hobby': 'Hobby'
+        }
+    },
+    en: {
+        // Header
+        title: "City Country River",
+        by: "by JW",
+
+        // Lobby
+        welcome: "Welcome!",
+        yourName: "Your Name",
+        namePlaceholder: "Enter your name...",
+        roomName: "Room Name (optional)",
+        roomNamePlaceholder: "E.g. Friends Group...",
+        gameTime: "Game Time:",
+        seconds: "seconds",
+        newRoom: "New Room",
+        activeRooms: "Active Rooms",
+        loading: "Loading...",
+        noRooms: "No active rooms found. Create one!",
+        host: "Host:",
+        joinRoom: "Join",
+
+        // Tutorial
+        howItWorks: "How does it work?",
+        tutorialRoomTitle: "🚪 Creating & Joining Rooms",
+        tutorialActiveRooms: "Active rooms: See which rooms are available! Just enter your name and click \"Join\" on a room.",
+        tutorialNewRoom: "New room: Create your own room with \"New Room\". You can set the game time (30-300 seconds) with the slider. The code appears automatically for others.",
+        tutorialHost: "Host: The room creator can roll the letter, shuffle categories, start the next round, remove players and delete the room. If the host leaves, the next player automatically takes over!",
+        tutorialKicked: "Kicked from room? If the host deletes the room or removes you, you'll be automatically redirected to the home screen.",
+        tutorialReconnect: "Connection lost? Your name is automatically saved. Reload the page and simply click \"Join\" again - you'll return to the same room! Inactive players are automatically removed after 30 seconds.",
+
+        tutorialLibraryTitle: "📚 Library (Per Room)",
+        tutorialLibrary: "Each room has its own word library. Approved answers are saved and automatically approved in future rounds - but only within the same room!",
+
+        tutorialRulesTitle: "🎮 Game Rules",
+        tutorialRules: "The host rolls a letter and everyone has the set time (default 30 seconds) to fill in answers for each category that start with that letter.",
+
+        tutorialPointsTitle: "🏆 Earning Points",
+        tutorialPoints20: "20 points - You're the only one with a valid answer",
+        tutorialPoints10: "10 points - You have a unique answer in a category where others also have something",
+        tutorialPoints5: "5 points - Your answer is (almost) the same as someone else's",
+
+        tutorialRecognitionTitle: "🔍 Smart Word Recognition",
+        tutorialRecognition: "The game recognizes similar words! Small typos or plural/singular are seen as the same. For example: \"Amsterdam\" and \"Amsterdm\" are considered shared answers.",
+
+        tutorialVotingTitle: "✅ Voting Process",
+        tutorialVotingIntro: "After time's up, everyone votes on all answers:",
+        tutorialVoting1: "You see each answer one by one",
+        tutorialVoting2: "You have 15 seconds per answer to vote",
+        tutorialVoting3: "In the last 5 seconds a \"+10s More Time\" button appears",
+        tutorialVoting4: "If you don't vote in time, the answer is automatically approved",
+        tutorialVoting5: "If everyone has voted, the result is shown immediately!",
+        tutorialVoting6: "Vote ✅ (correct) or ❌ (incorrect)",
+        tutorialVoting7: "You can change your vote as long as voting time is running - just click a button again!",
+        tutorialVoting8: "You can also vote on your own answers - this makes it fairer and you can participate in discussions!",
+        tutorialVoting9: "Approved answers are saved in the room library",
+        tutorialVoting10: "Majority decides if the answer is valid",
+
+        tutorialLogTitle: "📊 Round Log",
+        tutorialLog: "At the end you see a complete overview of all answers, votes and points - so you can check exactly how the scores were calculated!",
+
+        // Game Controls
+        room: "Room:",
+        deleteRoom: "Delete Room",
+        rollLetter: "ROLL LETTER",
+        stopRound: "STOP THE ROUND",
+        mixCategories: "Mix Categories",
+
+        // Voting
+        checkAnswer: "Check Answer",
+        hasAnswered: "Has",
+        at: "for",
+        theFollowingAnswer: "the following answer:",
+        moreTime: "+10s More Time",
+        waitingForVotes: "Waiting for votes...",
+        verdictDecided: "Verdict decided!",
+        approved: "APPROVED!",
+        rejected: "REJECTED!",
+        youVotedYes: "You voted ✅. You can change your vote.",
+        youVotedNo: "You voted ❌. You can change your vote.",
+        youVotedYesOwn: "You voted ✅ on your own answer. You can change your vote.",
+        youVotedNoOwn: "You voted ❌ on your own answer. You can change your vote.",
+        isAnswerCorrect: "Is this answer correct or incorrect?",
+        isOwnAnswerCorrect: "Is your own answer correct or incorrect?",
+
+        // Results
+        results: "Results",
+        name: "Name",
+        points: "Points",
+        nextRound: "NEXT ROUND",
+        roundLog: "Round Log",
+        uniqueAnswer: "Unique answer",
+        onlyInCategory: "Only in category",
+        sharedAnswer: "Shared answer",
+        notApproved: "Not approved",
+        autoApproved: "(Auto)",
+        votedYes: "voted ✅",
+        votedNo: "voted ❌",
+
+        // Alerts
+        enterName: "Please enter your name first!",
+        roomNotExist: "This room no longer exists.",
+        roomDeleted: "This room has been deleted.",
+        kickedFromRoom: "You have been removed from the room.",
+        confirmKick: "Are you sure you want to remove {name} from the room?",
+        confirmDelete: "Are you sure you want to delete this room?",
+        nowHost: "You are now the host of this room! You can now roll the letter and start the next round.",
+
+        // Categories
+        categories: {
+            'Stad': 'City',
+            'Land': 'Country',
+            'Rivier': 'River',
+            'Dier': 'Animal',
+            'Naam': 'Name',
+            'Beroep': 'Profession',
+            'Merk': 'Brand',
+            'Film of Serie': 'Movie or Series',
+            'Sport': 'Sport',
+            'Kledingstuk': 'Clothing',
+            'Lichaamsdeel': 'Body Part',
+            'Kleur': 'Color',
+            'Automerk': 'Car Brand',
+            'Voorwerp in Huis': 'Household Item',
+            'Muziekinstrument': 'Musical Instrument',
+            'Liedje': 'Song',
+            'Vakantie-item': 'Holiday Item',
+            'Schoolvak': 'School Subject',
+            'Hoofdstad': 'Capital',
+            'Smoesje': 'Excuse',
+            'Hobby': 'Hobby'
+        }
+    }
+};

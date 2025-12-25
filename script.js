@@ -1,6 +1,47 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
+import { translations } from './translations.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Language Management ---
+    let currentLanguage = localStorage.getItem('language') || 'nl';
+
+    function t(key) {
+        const keys = key.split('.');
+        let value = translations[currentLanguage];
+        for (const k of keys) {
+            value = value?.[k];
+        }
+        return value || key;
+    }
+
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        localStorage.setItem('language', lang);
+        updateAllTranslations();
+    }
+
+    function updateAllTranslations() {
+        // Update all elements with data-i18n attribute
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const translation = t(key);
+
+            if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')) {
+                el.placeholder = translation;
+            } else if (el.tagName === 'INPUT' && el.type !== 'range') {
+                el.value = translation;
+            } else {
+                el.textContent = translation;
+            }
+        });
+
+        // Update title separately to preserve HTML
+        const titleEl = document.querySelector('[data-i18n="title"]');
+        if (titleEl) {
+            const parts = t('title').split(' ');
+            titleEl.innerHTML = `${parts[0]} <span class="highlight">${parts[1]}</span> ${parts[2]} <small style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;" data-i18n="by">${t('by')}</small>`;
+        }
+    }
     // --- Configuration ---
     const allCategories = [
         'Stad', 'Land', 'Rivier', 'Dier', 'Plant', 'Jongensnaam',
@@ -58,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextRoundBtn = document.getElementById('next-round-btn');
     const shuffleBtn = document.getElementById('shuffle-btn');
     const themeToggleBtn = document.getElementById('theme-toggle');
+    const languageToggleBtn = document.getElementById('language-toggle');
     const playersList = document.getElementById('players-list');
 
     // Voting Elements
@@ -113,7 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (shuffleBtn) shuffleBtn.addEventListener('click', handleShuffleClick);
         if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+        if (languageToggleBtn) languageToggleBtn.addEventListener('click', () => {
+            setLanguage(currentLanguage === 'nl' ? 'en' : 'nl');
+        });
         if (nextRoundBtn) nextRoundBtn.addEventListener('click', handleNextRound);
+
+        // Initialize translations
+        updateAllTranslations();
 
         voteYesBtn.addEventListener('click', () => castVote(true));
         voteNoBtn.addEventListener('click', () => castVote(false));
@@ -252,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!playerToKick) return;
 
-            if (!confirm(`Weet je zeker dat je ${playerToKick.name} uit de kamer wilt verwijderen?`)) {
+            if (!confirm(t('confirmKick').replace('{name}', playerToKick.name))) {
                 return;
             }
 
@@ -270,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function createRoom() {
         const name = playerNameInput.value.trim();
-        if (!name) return alert("Vul eerst je naam in!");
+        if (!name) return alert(t('enterName'));
 
         // Save name to localStorage
         localStorage.setItem('playerName', name);
@@ -349,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         roomUnsubscribe = onSnapshot(doc(db, "rooms", code), (doc) => {
             if (!doc.exists()) {
                 // Room doesn't exist anymore
-                returnToLobby("Deze kamer bestaat niet meer.");
+                returnToLobby(t('roomNotExist'));
                 return;
             }
 
@@ -357,14 +405,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check if room is deleted
             if (data.status === 'deleted') {
-                returnToLobby("Deze kamer is verwijderd.");
+                returnToLobby(t('roomDeleted'));
                 return;
             }
 
             // Check if current player is still in the room
             const stillInRoom = data.players.some(p => p.uid === currentUser.uid);
             if (!stillInRoom) {
-                returnToLobby("Je bent uit de kamer verwijderd.");
+                returnToLobby(t('kickedFromRoom'));
                 return;
             }
 

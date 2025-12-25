@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=42">
+    <link rel="stylesheet" href="style.css?v=43">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -22,10 +22,12 @@
 
     <main class="app-container">
         <header class="game-header">
-            <h1>Stad <span class="highlight">Land</span> Rivier <small
-                    style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;">by
+            <h1 data-i18n="title">Stad <span class="highlight">Land</span> Rivier <small
+                    style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;" data-i18n="by">by
                     JW</small></h1>
             <div class="header-controls">
+                <button id="language-toggle" class="icon-btn" aria-label="Toggle Language" title="EN/NL"><i
+                        class="fa-solid fa-language"></i></button>
                 <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme"><i
                         class="fa-solid fa-moon"></i></button>
             </div>
@@ -247,7 +249,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=42"></script>
+    <script type="module" src="script.js?v=43"></script>
 </body>
 
 </html>
