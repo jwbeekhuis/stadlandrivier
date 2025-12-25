@@ -523,10 +523,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const roomRef = doc(db, "rooms", roomId);
             await updateDoc(roomRef, { "votingState.verdict": verdict });
 
-            // 2. Wait 3 seconds, THEN finalize
+            // 2. Wait 5 seconds (3s verdict + 2s to see voters), THEN finalize
             setTimeout(() => {
                 markAnswerVerified(state.targetPlayerIndex, state.category, state.answer, isApproved, false);
-            }, 3000);
+            }, 5000);
         }
     }
 
