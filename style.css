@@ -341,6 +341,78 @@ body {
     font-weight: normal;
 }
 
+/* Tutorial Section */
+.tutorial-section {
+    margin-top: 30px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tutorial-toggle {
+    padding: 15px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+    transition: background 0.2s;
+    list-style: none;
+}
+
+.tutorial-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.tutorial-toggle:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tutorial-toggle i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.tutorial-content {
+    padding: 0 20px 20px 20px;
+    text-align: left;
+    animation: fadeIn 0.3s ease;
+}
+
+.tutorial-content h3 {
+    font-size: 1.1rem;
+    margin: 20px 0 10px 0;
+    color: var(--primary-color);
+}
+
+.tutorial-content h3:first-child {
+    margin-top: 10px;
+}
+
+.tutorial-content p {
+    margin: 10px 0;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.tutorial-content ul {
+    margin: 10px 0;
+    padding-left: 25px;
+}
+
+.tutorial-content li {
+    margin: 8px 0;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.tutorial-content strong {
+    color: var(--accent-color);
+}
+
 .game-controls {
     display: flex;
     justify-content: center;
