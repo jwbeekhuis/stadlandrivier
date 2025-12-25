@@ -97,6 +97,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
         voteYesBtn.addEventListener('click', () => castVote(true));
         voteNoBtn.addEventListener('click', () => castVote(false));
+
+        setupSecretFeatures();
+    }
+
+    // Secret admin features
+    let titleClickCount = 0;
+    let titleClickTimer = null;
+
+    function setupSecretFeatures() {
+        const title = document.querySelector('header h1');
+        if (!title) return;
+
+        title.style.cursor = 'pointer';
+        title.addEventListener('click', async () => {
+            titleClickCount++;
+
+            if (titleClickTimer) clearTimeout(titleClickTimer);
+            titleClickTimer = setTimeout(() => { titleClickCount = 0; }, 2000);
+
+            if (titleClickCount === 5) {
+                const confirmed = confirm("⚠️ SECRET MENU ⚠️\n\nWil je de hele woordenbibliotheek wissen (flushen)?\nDit kan niet ongedaan worden gemaakt!");
+                if (confirmed) {
+                    await flushLibrary();
+                }
+                titleClickCount = 0;
+            }
+        });
+    }
+
+    async function flushLibrary() {
+        const password = prompt("Voer wachtwoord in (of typ 'flush' als je zeker bent):");
+        if (password !== 'flush') return alert("Geannuleerd.");
+
+        alert("Bezig met flushen... dit kan even duren.");
+        try {
+            const snap = await getDocs(collection(db, "library"));
+            const batchSize = 400;
+            let batch = writeBatch(db);
+            let count = 0;
+
+            for (const docSnap of snap.docs) {
+                batch.delete(docSnap.ref);
+                count++;
+                if (count >= batchSize) {
+                    await batch.commit();
+                    batch = writeBatch(db);
+                    count = 0;
+                }
+            }
+            if (count > 0) await batch.commit();
+
+            alert("📚 Bibliotheek is volledig gewist!");
+        } catch (e) {
+            console.error(e);
+            alert("Fout bij wissen: " + e.message);
+        }
     }
 
     // --- Multiplayer / Lobby Logic ---
@@ -245,7 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleNextRound() {
         if (!isHost) return;
-        await updateDoc(doc(db, "rooms", roomId), { status: 'lobby' });
+        await updateDoc(doc(db, "rooms", roomId), {
+            status: 'lobby',
+            gameHistory: []
+        });
     }
 
     // --- Local Logic ---
@@ -388,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
         yesCountDisplay.textContent = yesVotes.length;
         noCountDisplay.textContent = noVotes.length;
 
-        // Render Names
+        // Render Names with icons
         document.getElementById('yes-voters').innerHTML = yesVotes.map(n => `<span class="voter-name"><i class="fa-solid fa-user"></i> ${n}</span>`).join('');
         document.getElementById('no-voters').innerHTML = noVotes.map(n => `<span class="voter-name"><i class="fa-solid fa-user"></i> ${n}</span>`).join('');
 
@@ -470,18 +529,32 @@ document.addEventListener('DOMContentLoaded', () => {
     async function markAnswerVerified(pIdx, cat, answer, isValid, isAuto) {
         const roomRef = doc(db, "rooms", roomId);
 
-        // Need to read fresh again to ensure no overwrite race conditions (using transaction better, but simple get/set ok for this scale)
         const freshSnap = await getDoc(roomRef);
         const players = freshSnap.data().players;
+        const history = freshSnap.data().gameHistory || [];
 
         if (!players[pIdx].verifiedResults) players[pIdx].verifiedResults = {};
         players[pIdx].verifiedResults[cat] = { isValid: isValid, answer: answer, points: 0 };
 
+        // Track history for infographic
+        history.push({
+            playerName: players[pIdx].name,
+            category: cat,
+            answer: answer,
+            isValid: isValid,
+            isAuto: isAuto,
+            votes: isAuto ? null : (freshSnap.data().votingState?.votes || {})
+        });
+
         if (isValid && !isAuto) addToLibrary(cat, answer);
 
-        await updateDoc(roomRef, { players: players, votingState: null, "votingState.verdict": null });
+        await updateDoc(roomRef, {
+            players: players,
+            votingState: null,
+            "votingState.verdict": null,
+            gameHistory: history
+        });
 
-        // Host continues loop
         if (isHost && !isAuto) processNextVoteItem();
     }
 
@@ -652,8 +725,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const sortedPlayers = [...data.players].sort((a, b) => b.score - a.score);
 
-        // Winner Confetti!
-        if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0) {
+        // Winner Confetti! (Only for the winner)
+        if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0 && sortedPlayers[0].uid === currentUser.uid) {
             confetti({
                 particleCount: 150,
                 spread: 70,
@@ -675,6 +748,53 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td><strong>${p.name}</strong></td>
                     <td class="text-right text-accent">${p.score}</td>
                 </tr>
+            `;
+        }).join('');
+
+        // Render game history infographic
+        renderGameLog(data);
+    }
+
+    function renderGameLog(data) {
+        const logBox = document.getElementById('game-history-log');
+        const logEntries = document.getElementById('log-entries');
+        const history = data.gameHistory || [];
+
+        if (history.length === 0) {
+            logBox.classList.add('hidden');
+            return;
+        }
+
+        logBox.classList.remove('hidden');
+        logEntries.innerHTML = history.map(entry => {
+            const votes = entry.votes || {};
+            const yes = Object.values(votes).filter(v => v === true).length;
+            const no = Object.values(votes).filter(v => v === false).length;
+            const voterNames = Object.entries(votes).map(([uid, v]) => {
+                const p = data.players.find(pl => pl.uid === uid);
+                return `${p ? p.name : 'Unknown'} (${v ? '✅' : '❌'})`;
+            }).join(', ');
+
+            return `
+                <div class="log-entry ${entry.isAuto ? 'auto' : 'manual'}">
+                    <div class="log-main">
+                        <div>
+                            <span class="log-player">${entry.playerName}</span>
+                            <span class="log-cat">bij ${entry.category}</span>
+                            <span class="log-word">"${entry.answer}"</span>
+                        </div>
+                        <div class="log-status">
+                            ${entry.isValid ? '✅' : '❌'} 
+                            <small>${entry.isAuto ? '(Auto-Doc)' : '(Manual)'}</small>
+                        </div>
+                    </div>
+                    ${!entry.isAuto ? `
+                        <div class="log-details">
+                            <span class="vote-tally">Stemmen: <strong>${yes}✅ / ${no}❌</strong></span>
+                            <span class="voters-string" style="font-size: 0.75rem; opacity: 0.5;">${voterNames}</span>
+                        </div>
+                    ` : ''}
+                </div>
             `;
         }).join('');
     }

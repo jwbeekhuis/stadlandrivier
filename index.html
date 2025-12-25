@@ -22,7 +22,9 @@
 
     <main class="app-container">
         <header class="game-header">
-            <h1>Stad <span class="highlight">Land</span> Rivier</h1>
+            <h1>Stad <span class="highlight">Land</span> Rivier <small
+                    style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;">by
+                    JW</small></h1>
             <div class="header-controls">
                 <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme"><i
                         class="fa-solid fa-moon"></i></button>
@@ -143,11 +145,19 @@
                     </tbody>
                 </table>
             </div>
+
+            <div id="game-history-log" class="history-log hidden">
+                <h3 class="log-title">Ronde Logboek</h3>
+                <div id="log-entries" class="log-entries">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
             <button id="next-round-btn" class="primary-btn pulse">VOLGENDE RONDE</button>
         </section>
     </main>
 
-    <script type="module" src="script.js?v=10"></script>
+    <script type="module" src="script.js?v=12"></script>
 </body>
 
 </html>

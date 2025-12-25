@@ -138,6 +138,186 @@ body {
     margin: 40px auto;
 }
 
+.voters-list {
+    display: flex;
+    flex-direction: column !important;
+    /* Force column */
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.voter-name {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 30px;
+    white-space: nowrap;
+    animation: fadeIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    /* Fill column width */
+    max-width: 160px;
+    justify-content: flex-start;
+    /* Icon on the left */
+}
+
+.result-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--card-radius);
+    animation: fadeIn 0.3s ease;
+    z-index: 10;
+}
+
+/* Results Table - More Spacious */
+.results-board {
+    padding: 60px 40px;
+    /* Even more breathing room */
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 20px;
+    /* Increased row space */
+    text-align: left;
+}
+
+.results-table td {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 30px 25px;
+    /* Maximum padding for vertical space */
+    font-size: 1.2rem;
+}
+
+.results-table td:first-child {
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.results-table td:last-child {
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.rank-1 {
+    font-size: 1.5rem;
+}
+
+.rank-2 {
+    font-size: 1.3rem;
+}
+
+.rank-3 {
+    font-size: 1.2rem;
+}
+
+/* Game History Log (Infographic) */
+.history-log {
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    text-align: left;
+}
+
+.log-title {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    opacity: 0.8;
+}
+
+.log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.log-entry {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid var(--accent-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.log-entry.auto {
+    border-left-color: #22c55e;
+}
+
+.log-entry.manual {
+    border-left-color: #fbbf24;
+}
+
+.log-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.log-player {
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+
+.log-cat {
+    opacity: 0.6;
+    font-size: 0.9rem;
+}
+
+.log-word {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-top: 5px;
+    display: block;
+}
+
+.log-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.vote-tally {
+    display: flex;
+    gap: 10px;
+}
+
+.game-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    align-items: center;
+}
+
 .lobby-actions {
     display: flex;
     flex-direction: column;
