@@ -252,6 +252,12 @@ body {
     text-align: left;
 }
 
+.log-title {
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    opacity: 0.8;
+}
+
 .verdict-icon {
     font-size: 3rem;
     animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);

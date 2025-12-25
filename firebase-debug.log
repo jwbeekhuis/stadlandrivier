@@ -1,0 +1,31 @@
+[debug] [2025-12-25T01:08:49.642Z] ----------------------------------------------------------------------
+[debug] [2025-12-25T01:08:49.646Z] Command:       C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\firebase-tools\lib\bin\firebase.js deploy --project stadlandrivier --only hosting
+[debug] [2025-12-25T01:08:49.647Z] CLI Version:   13.35.1
+[debug] [2025-12-25T01:08:49.648Z] Platform:      win32
+[debug] [2025-12-25T01:08:49.648Z] Node Version:  v18.20.6
+[debug] [2025-12-25T01:08:49.653Z] Time:          Thu Dec 25 2025 02:08:49 GMT+0100 (Central European Standard Time)
+[debug] [2025-12-25T01:08:49.654Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-25T01:08:50.193Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-25T01:08:50.195Z] > authorizing via signed-in user (jwbeekhuis@gmail.com)
+[debug] [2025-12-25T01:08:50.195Z] [iam] checking project stadlandrivier for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-25T01:08:50.199Z] Checked if tokens are valid: true, expires at: 1766627526579
+[debug] [2025-12-25T01:08:50.200Z] Checked if tokens are valid: true, expires at: 1766627526579
+[debug] [2025-12-25T01:08:50.205Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions [none]
+[debug] [2025-12-25T01:08:50.206Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions x-goog-quota-user=projects/stadlandrivier
+[debug] [2025-12-25T01:08:50.206Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-25T01:08:50.973Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions 200
+[debug] [2025-12-25T01:08:50.973Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-25T01:08:50.974Z] Checked if tokens are valid: true, expires at: 1766627526579
+[debug] [2025-12-25T01:08:50.975Z] Checked if tokens are valid: true, expires at: 1766627526579
+[debug] [2025-12-25T01:08:50.976Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/stadlandrivier [none]
+[debug] [2025-12-25T01:08:51.231Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/stadlandrivier 200
+[debug] [2025-12-25T01:08:51.232Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/stadlandrivier {"projectId":"stadlandrivier","projectNumber":"749426554950","displayName":"StadLandRivier","name":"projects/stadlandrivier","resources":{"hostingSite":"stadlandrivier"},"state":"ACTIVE","etag":"1_fee73d26-3a7c-49ed-9caf-3e2fbc58083a"}
+[info] 
+[info] === Deploying to 'stadlandrivier'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-12-25T01:08:51.250Z] Checked if tokens are valid: true, expires at: 1766627526579
+[debug] [2025-12-25T01:08:51.250Z] Checked if tokens are valid: true, expires at: 1766627526579
+[debug] [2025-12-25T01:08:51.251Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stadlandrivier/versions [none]
+[debug] [2025-12-25T01:08:51.251Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/stadlandrivier/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
