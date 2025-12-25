@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=50';
+import { translations } from './translations.js?v=64';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -202,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let voteTimerInterval = null;
     let voteTimeLeft = 0;
     let voteMaxTime = 15;
+    let resultsShown = false; // Track if results have been shown for current round
 
     // --- DOM Elements ---
     // Screens
@@ -234,24 +235,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const languageToggleBtn = document.getElementById('language-toggle');
     const playersList = document.getElementById('players-list');
 
-    // Voting Elements
-    const votingPlayerName = document.getElementById('voting-player-name');
-    const votingCategory = document.getElementById('voting-category');
-    const votingAnswerDisplay = document.getElementById('voting-answer-display');
-    const voteYesBtn = document.getElementById('vote-yes-btn');
-    const voteNoBtn = document.getElementById('vote-no-btn');
-    const votingStatusText = document.getElementById('voting-status-text');
-    const votingActions = document.getElementById('voting-actions');
-    const voteCounts = document.querySelector('.vote-counts');
-    const yesCountDisplay = document.getElementById('yes-count');
-    const noCountDisplay = document.getElementById('no-count');
-    const votingResultOverlay = document.getElementById('voting-result-overlay');
-    const votingVerdictIcon = document.getElementById('voting-verdict-icon');
-    const votingVerdictText = document.getElementById('voting-verdict-text');
+    // Voting Elements (NEW BATCH VOTING)
+    const votingCategoryTitle = document.getElementById('voting-category-title');
+    const votingItemsContainer = document.getElementById('voting-items-container');
+    const votedCountDisplay = document.getElementById('voted-count');
+    const totalVotesCountDisplay = document.getElementById('total-votes-count');
     const voteTimer = document.getElementById('vote-timer');
     const voteTimeLeftDisplay = document.getElementById('vote-time-left');
     const voteProgressBar = document.getElementById('vote-progress-bar');
     const moreTimeBtn = document.getElementById('more-time-btn');
+
+    let currentCategoryVotes = {}; // Store votes for current category
+    let currentVotingCategory = null; // Track which category we're voting on
+    let isRenderingVotes = false; // Prevent re-rendering while voting
+    let isSubmittingVotes = false; // Prevent double submission
 
 
     // Circle Config
@@ -295,8 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize translations
         updateAllTranslations();
 
-        voteYesBtn.addEventListener('click', () => castVote(true));
-        voteNoBtn.addEventListener('click', () => castVote(false));
+        // Voting event listeners removed - now using inline buttons in vote cards
         if (moreTimeBtn) moreTimeBtn.addEventListener('click', requestMoreVoteTime);
 
         // Duration slider
@@ -577,6 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (data.status === 'playing' && !isGameActive) {
+            resultsShown = false; // Reset flag when new game starts
             startGameLocal();
         } else if (data.status === 'voting') {
             isGameActive = false;
@@ -585,8 +582,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.status === 'finished') {
             isGameActive = false;
             stopGameLocal();
-            showResults(data);
+            if (!resultsShown) {
+                console.log('Showing results for the first time');
+                resultsShown = true;
+                showResults(data);
+            } else {
+                console.log('Results already shown, skipping duplicate call');
+            }
         } else if (data.status === 'lobby') {
+            resultsShown = false; // Reset when returning to lobby
             resetBoard();
         }
 
@@ -783,9 +787,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const roomRef = doc(db, "rooms", roomId);
             const roomSnap = await getDoc(roomRef);
 
-            if (!roomSnap.exists()) return;
+            if (!roomSnap.exists()) {
+                console.log("Room no longer exists, stopping heartbeat");
+                stopHeartbeat();
+                return;
+            }
 
             const players = roomSnap.data().players;
+            const playerExists = players.find(p => p.uid === currentUser.uid);
+
+            if (!playerExists) {
+                console.log("Player no longer in room, stopping heartbeat");
+                stopHeartbeat();
+                return;
+            }
+
             const updatedPlayers = players.map(p =>
                 p.uid === currentUser.uid
                     ? { ...p, lastSeen: Date.now() }
@@ -793,8 +809,10 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             await updateDoc(roomRef, { players: updatedPlayers });
+            console.log("Heartbeat updated successfully");
         } catch (e) {
             console.error("Heartbeat error:", e);
+            // Don't stop heartbeat on error, might be temporary network issue
         }
     }
 
@@ -810,17 +828,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = roomSnap.data();
             const players = data.players;
             const now = Date.now();
-            const inactiveThreshold = 30000; // 30 seconds
+            const inactiveThreshold = 60000; // 60 seconds (increased from 30 to prevent false positives)
 
             const activePlayers = players.filter(p => {
-                // Keep players who have been seen recently
-                return (now - (p.lastSeen || 0)) < inactiveThreshold;
+                const timeSinceLastSeen = now - (p.lastSeen || 0);
+                const isActive = timeSinceLastSeen < inactiveThreshold;
+
+                // Log inactivity status for debugging
+                if (!isActive) {
+                    console.log(`Player ${p.name} (${p.uid}) inactive for ${Math.round(timeSinceLastSeen / 1000)}s`);
+                }
+
+                return isActive;
             });
 
             // Only update if players were removed
             if (activePlayers.length < players.length) {
                 const removedCount = players.length - activePlayers.length;
-                console.log(`Removing ${removedCount} inactive player(s)`);
+                const removedPlayers = players.filter(p => !activePlayers.find(ap => ap.uid === p.uid));
+                console.log(`Removing ${removedCount} inactive player(s):`, removedPlayers.map(p => p.name).join(', '));
 
                 // Check if the first player (host) was removed
                 const oldHostUid = players[0]?.uid;
@@ -908,16 +934,18 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'voting',
             votingState: null
         });
-        setTimeout(processNextVoteItem, 2000);
+        setTimeout(processNextCategory, 2000);
     }
 
-    async function processNextVoteItem() {
+    // NEW BATCH VOTING SYSTEM - Process entire category at once
+    async function processNextCategory() {
         if (!isHost) return;
 
         const roomRef = doc(db, "rooms", roomId);
         const snap = await getDoc(roomRef);
         const data = snap.data();
 
+        // Auto-approve library answers for ALL players first
         for (let pIndex = 0; pIndex < data.players.length; pIndex++) {
             const player = data.players[pIndex];
             for (const cat of activeCategories) {
@@ -929,138 +957,339 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isKnown = await checkLibrary(cat, answer);
                 if (isKnown) {
                     await markAnswerVerified(pIndex, cat, answer, true, true);
-                    processNextVoteItem();
-                    return;
                 }
-
-                await updateDoc(roomRef, {
-                    votingState: {
-                        targetPlayerIndex: pIndex,
-                        targetPlayerName: player.name,
-                        targetUid: player.uid,
-                        category: cat,
-                        answer: answer,
-                        votes: {},
-                        autoApproved: false,
-                        verdict: null
-                    }
-                });
-                return;
             }
         }
-        // Get fresh data for final score calculation
+
+        // Now process categories one at a time for batch voting
         const freshSnap = await getDoc(roomRef);
-        calculateFinalScores(freshSnap.data());
+        const freshData = freshSnap.data();
+
+        for (let catIndex = 0; catIndex < activeCategories.length; catIndex++) {
+            const cat = activeCategories[catIndex];
+
+            // Collect all unverified answers for this category
+            const answersToVote = [];
+            for (let pIndex = 0; pIndex < freshData.players.length; pIndex++) {
+                const player = freshData.players[pIndex];
+                const answer = player.answers[cat];
+                if (!answer) continue; // Skip empty answers
+
+                if (player.verifiedResults && player.verifiedResults[cat]) continue; // Already verified
+
+                answersToVote.push({
+                    playerIndex: pIndex,
+                    playerName: player.name,
+                    playerUid: player.uid,
+                    answer: answer
+                });
+            }
+
+            // If there are answers to vote on for this category, set voting state
+            if (answersToVote.length > 0) {
+                await updateDoc(roomRef, {
+                    votingState: {
+                        category: cat,
+                        categoryIndex: catIndex,
+                        answers: answersToVote,
+                        votes: {}, // votes[voterUid][targetUid] = true/false
+                        allPlayersVoted: {} // allPlayersVoted[uid] = true when done
+                    },
+                    currentVotingCategory: cat
+                });
+                return; // Stop here, wait for votes
+            }
+        }
+
+        // All categories processed - calculate final scores
+        const finalSnap = await getDoc(roomRef);
+        calculateFinalScores(finalSnap.data());
     }
 
+    // NEW BATCH VOTING UI - Show all answers for category at once
     function showVotingUI(state) {
         if (!state) {
             votingScreen.classList.remove('hidden');
             gameBoard.classList.add('hidden');
-            votingStatusText.textContent = t('loading');
-            votingActions.classList.add('hidden');
-            voteCounts.classList.add('hidden');
-            votingResultOverlay.classList.add('hidden');
+            votingItemsContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">' + t('loading') + '</p>';
+            isRenderingVotes = false;
             return;
         }
+
+        // Prevent re-rendering if already showing this category
+        if (currentVotingCategory === state.category && isRenderingVotes) {
+            console.log('Already rendering this category, skipping update');
+            return;
+        }
+
+        currentVotingCategory = state.category;
+        isRenderingVotes = true;
 
         votingScreen.classList.remove('hidden');
         gameBoard.classList.add('hidden');
         resultsBoard.classList.add('hidden');
         categoriesContainer.classList.add('hidden');
 
-        votingPlayerName.textContent = state.targetPlayerName;
-        votingCategory.textContent = t('categories.' + state.category);
-        votingAnswerDisplay.textContent = state.answer;
+        // Set category title
+        votingCategoryTitle.textContent = t('categories.' + state.category);
 
-        // Show Live Stats
-        const yesVotes = [];
-        const noVotes = [];
+        // Preserve existing votes before re-rendering
+        const previousVotes = {...currentCategoryVotes};
+        currentCategoryVotes = {};
 
-        const voteEntries = Object.entries(state.votes || {});
-        voteEntries.forEach(([uid, vote]) => {
-            // Find player name (optimize with map if needed, but array small enough)
-            const p = roomData.players.find(pl => pl.uid === uid);
-            const name = p ? p.name : 'Unknown';
-            if (vote === true) yesVotes.push(name);
-            else noVotes.push(name);
-        });
+        // Clear and render all answer cards
+        votingItemsContainer.innerHTML = '';
 
-        yesCountDisplay.textContent = yesVotes.length;
-        noCountDisplay.textContent = noVotes.length;
+        const answers = state.answers || [];
+        // Sort by playerIndex to maintain stable order (prevents jumping)
+        const sortedAnswers = answers.sort((a, b) => a.playerIndex - b.playerIndex);
 
-        // Render Names with icons
-        document.getElementById('yes-voters').innerHTML = yesVotes.map(n => `<span class="voter-name"><i class="fa-solid fa-user"></i> ${n}</span>`).join('');
-        document.getElementById('no-voters').innerHTML = noVotes.map(n => `<span class="voter-name"><i class="fa-solid fa-user"></i> ${n}</span>`).join('');
+        sortedAnswers.forEach((answerData, index) => {
+            const isMyAnswer = answerData.playerUid === currentUser.uid;
+            const voteKey = `${answerData.playerUid}_${index}`;
 
-        voteCounts.classList.remove('hidden');
-
-        // Show Result Overlay if verdict exists
-        if (state.verdict) {
-            votingResultOverlay.classList.remove('hidden');
-            votingActions.classList.add('hidden'); // Hide buttons
-            stopVoteTimer(); // Stop timer when verdict is shown
-
-            if (state.verdict === 'approved') {
-                votingVerdictIcon.innerHTML = '<i class="fa-solid fa-check" style="color: #4ade80;"></i>';
-                votingVerdictText.textContent = t('approved');
-                votingVerdictText.style.color = "#4ade80";
-            } else {
-                votingVerdictIcon.innerHTML = '<i class="fa-solid fa-xmark" style="color: #f87171;"></i>';
-                votingVerdictText.textContent = t('rejected');
-                votingVerdictText.style.color = "#f87171";
+            // Check if we already voted on this answer
+            let myVote = state.allPlayersVoted?.[currentUser.uid]?.[voteKey];
+            if (myVote === undefined && previousVotes[voteKey] !== undefined) {
+                myVote = previousVotes[voteKey];
+            }
+            if (myVote !== undefined) {
+                currentCategoryVotes[voteKey] = myVote;
             }
 
-            // Update status text when verdict is shown
-            votingStatusText.textContent = t('verdictDecided');
+            // Check for duplicates (fuzzy matching)
+            const normalizedAnswer = normalizeAnswer(answerData.answer);
+            const duplicates = sortedAnswers.filter((other, otherIndex) =>
+                otherIndex < index && areWordsFuzzyMatching(normalizeAnswer(other.answer), normalizedAnswer)
+            );
+            const isDuplicate = duplicates.length > 0;
 
-            // Verdict shown, don't show voting UI anymore
-            return;
-        } else {
-            votingResultOverlay.classList.add('hidden');
-        }
+            // Calculate vote stats for this answer
+            const votesForThisAnswer = {};
+            Object.entries(state.votes || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
 
-        // Everyone can vote, including on their own answers
-        votingActions.classList.remove('hidden');
+            const yesCount = Object.values(votesForThisAnswer).filter(v => v === true).length;
+            const noCount = Object.values(votesForThisAnswer).filter(v => v === false).length;
 
-        // Show which vote is currently selected
-        const currentVote = state.votes?.[currentUser.uid];
-        const isMyAnswer = currentUser.uid === state.targetUid;
+            // Create voter names list
+            const voterNamesList = Object.entries(votesForThisAnswer).map(([uid, vote]) => {
+                const p = roomData.players.find(pl => pl.uid === uid);
+                const name = p ? p.name : 'Unknown';
+                return vote ? `${name}✅` : `${name}❌`;
+            }).join(', ');
 
-        if (currentVote === true) {
-            voteYesBtn.classList.add('selected');
-            voteNoBtn.classList.remove('selected');
-            votingStatusText.textContent = isMyAnswer
-                ? t('youVotedYesOwn')
-                : t('youVotedYes');
-        } else if (currentVote === false) {
-            voteNoBtn.classList.add('selected');
-            voteYesBtn.classList.remove('selected');
-            votingStatusText.textContent = isMyAnswer
-                ? t('youVotedNoOwn')
-                : t('youVotedNo');
-        } else {
-            voteYesBtn.classList.remove('selected');
-            voteNoBtn.classList.remove('selected');
-            votingStatusText.textContent = isMyAnswer
-                ? t('isOwnAnswerCorrect')
-                : t('isAnswerCorrect');
-        }
+            // Create answer card
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'voting-item';
+            itemDiv.innerHTML = `
+                <div class="voting-item-header">
+                    <span class="voting-player-name">${answerData.playerName}</span>
+                    ${isMyAnswer ? '<span class="own-answer-badge">' + t('yourAnswer') + '</span>' : ''}
+                    ${isDuplicate ? '<span class="duplicate-badge">' + t('duplicate') + ' ' + duplicates[0].playerName + '</span>' : ''}
+                </div>
+                <div class="voting-answer-text">${answerData.answer}</div>
+                <div class="voting-item-actions">
+                    <button class="vote-btn vote-no ${myVote === false ? 'selected' : ''}" data-vote-key="${voteKey}" data-vote="false">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <button class="vote-btn vote-yes ${myVote === true ? 'selected' : ''}" data-vote-key="${voteKey}" data-vote="true">
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                </div>
+                <div class="vote-stats">
+                    <span class="vote-count">${yesCount}✅ ${noCount}❌</span>
+                    ${voterNamesList ? '<div class="voter-names">' + voterNamesList + '</div>' : ''}
+                </div>
+            `;
 
-        // Start vote timer if not already running
+            votingItemsContainer.appendChild(itemDiv);
+        });
+
+        // Add click listeners to all vote buttons
+        document.querySelectorAll('.vote-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const voteKey = e.currentTarget.getAttribute('data-vote-key');
+                const voteValue = e.currentTarget.getAttribute('data-vote') === 'true';
+
+                // Store vote locally
+                currentCategoryVotes[voteKey] = voteValue;
+
+                // Update button states
+                const container = e.currentTarget.closest('.voting-item');
+                container.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
+                e.currentTarget.classList.add('selected');
+
+                // Update progress
+                updateVotingProgress(answers.length);
+
+                // Sync to Firebase
+                syncVoteToFirebase(voteKey, voteValue);
+            });
+        });
+
+        // Update vote counter
+        totalVotesCountDisplay.textContent = answers.length;
+        updateVotingProgress(answers.length);
+
+        // Start timer if not running
         if (!voteTimerInterval) {
             startVoteTimer();
         }
+    }
 
-        if (isHost) {
-            checkVotingComplete(state);
+    function updateVotingProgress(totalCount) {
+        const votedCount = Object.keys(currentCategoryVotes).length;
+        votedCountDisplay.textContent = votedCount;
+
+        // Auto-submit when all votes are cast
+        if (votedCount >= totalCount) {
+            console.log('All votes cast, auto-submitting...');
+            submitCategoryVotes();
         }
+    }
+
+    async function syncVoteToFirebase(voteKey, voteValue) {
+        if (!roomId || !currentUser) return;
+
+        try {
+            const roomRef = doc(db, "rooms", roomId);
+            const key = `votingState.votes.${currentUser.uid}.${voteKey}`;
+            await updateDoc(roomRef, { [key]: voteValue });
+        } catch (e) {
+            console.error("Error syncing vote:", e);
+        }
+    }
+
+    async function submitCategoryVotes() {
+        if (!roomData.votingState) return;
+        if (isSubmittingVotes) {
+            console.log('Already submitting votes, skipping...');
+            return;
+        }
+
+        isSubmittingVotes = true;
+        stopVoteTimer();
+
+        // Auto-approve any unanswered votes
+        const state = roomData.votingState;
+        const answers = state.answers || [];
+
+        answers.forEach((answerData, index) => {
+            const voteKey = `${answerData.playerUid}_${index}`;
+            if (currentCategoryVotes[voteKey] === undefined) {
+                currentCategoryVotes[voteKey] = true; // Auto-approve
+            }
+        });
+
+        // Submit all votes to Firebase
+        const roomRef = doc(db, "rooms", roomId);
+        const updates = {};
+        updates[`votingState.allPlayersVoted.${currentUser.uid}`] = currentCategoryVotes;
+
+        await updateDoc(roomRef, updates);
+
+        // Host checks if all players voted
+        if (isHost) {
+            setTimeout(() => checkAllPlayersVoted(), 500);
+        }
+
+        // Reset flag after 2 seconds
+        setTimeout(() => {
+            isSubmittingVotes = false;
+        }, 2000);
+    }
+
+    async function checkAllPlayersVoted() {
+        if (!isHost || !roomData.votingState) return;
+
+        const state = roomData.votingState;
+        const allPlayersVoted = state.allPlayersVoted || {};
+        const playerCount = roomData.players.length;
+        const votedCount = Object.keys(allPlayersVoted).length;
+
+        console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
+
+        if (votedCount >= playerCount) {
+            // Everyone voted - process results
+            console.log('All players voted, processing category results...');
+            await processCategoryResults(state);
+        }
+    }
+
+    async function processCategoryResults(state) {
+        if (!isHost) return;
+
+        const roomRef = doc(db, "rooms", roomId);
+        const freshSnap = await getDoc(roomRef);
+        const freshData = freshSnap.data();
+        const players = freshData.players;
+        const history = freshData.gameHistory || [];
+
+        const answers = state.answers || [];
+
+        // Tally votes for each answer
+        for (let i = 0; i < answers.length; i++) {
+            const answerData = answers[i];
+            const voteKey = `${answerData.playerUid}_${i}`;
+
+            // Collect all votes for this answer
+            const votesForAnswer = {};
+            Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            // Calculate verdict (majority wins, ties approve)
+            const yesVotes = Object.values(votesForAnswer).filter(v => v === true).length;
+            const noVotes = Object.values(votesForAnswer).filter(v => v === false).length;
+            const isApproved = yesVotes >= noVotes;
+
+            // Mark answer as verified
+            if (!players[answerData.playerIndex].verifiedResults) {
+                players[answerData.playerIndex].verifiedResults = {};
+            }
+            players[answerData.playerIndex].verifiedResults[state.category] = {
+                isValid: isApproved,
+                answer: answerData.answer,
+                points: 0
+            };
+
+            // Add to history
+            history.push({
+                playerName: answerData.playerName,
+                category: state.category,
+                answer: answerData.answer,
+                isValid: isApproved,
+                isAuto: false,
+                votes: votesForAnswer
+            });
+
+            // Add to library if approved
+            if (isApproved) {
+                addToLibrary(state.category, answerData.answer);
+            }
+        }
+
+        // Update database and move to next category
+        await updateDoc(roomRef, {
+            players: players,
+            votingState: null,
+            gameHistory: history
+        });
+
+        // Continue to next category
+        setTimeout(() => processNextCategory(), 1000);
     }
 
     function startVoteTimer() {
         stopVoteTimer();
-        voteTimeLeft = 15;
-        voteMaxTime = 15; // Track max time for percentage calculation
+        voteTimeLeft = 30; // 30 seconds for batch voting
+        voteMaxTime = 30; // Track max time for percentage calculation
         voteTimer.classList.remove('hidden');
         moreTimeBtn.classList.add('hidden');
 
@@ -1072,27 +1301,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (voteTimeLeft === 0) {
                 stopVoteTimer();
-
-                // Check if we already voted
-                const currentVote = roomData.votingState?.votes?.[currentUser.uid];
-                if (currentVote === undefined) {
-                    // We haven't voted yet - check if there are other votes
-                    const votes = roomData.votingState?.votes || {};
-                    const voteValues = Object.values(votes);
-
-                    if (voteValues.length === 0) {
-                        // No votes at all - auto-approve
-                        castVote(true);
-                        console.log("Vote timeout - no votes, auto-approved");
-                    } else {
-                        // There are other votes - follow the majority
-                        const yesVotes = voteValues.filter(v => v === true).length;
-                        const noVotes = voteValues.filter(v => v === false).length;
-                        const shouldApprove = yesVotes >= noVotes;
-                        castVote(shouldApprove);
-                        console.log(`Vote timeout - following majority: ${shouldApprove ? 'approved' : 'rejected'}`);
-                    }
-                }
+                // Auto-submit with current votes (unanswered = auto-approve)
+                submitCategoryVotes();
+                console.log("Vote timeout - auto-submitting with current votes");
             } else if (voteTimeLeft <= 5 && moreTimeBtn.classList.contains('hidden')) {
                 // Show "More Time" button in last 5 seconds
                 moreTimeBtn.classList.remove('hidden');
@@ -1133,48 +1344,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Added 10 seconds to vote timer");
     }
 
-    async function castVote(isValid) {
-        if (!roomData.votingState) return;
-        // Optimization: Don't allow vote if verdict already set
-        if (roomData.votingState.verdict) return;
-
-        // Allow changing vote - don't stop timer
-        // Timer will continue running until timeout
-
-        const roomRef = doc(db, "rooms", roomId);
-        const key = `votingState.votes.${currentUser.uid}`;
-        await updateDoc(roomRef, { [key]: isValid });
-    }
-
-    async function checkVotingComplete(state) {
-        // Prevent re-checking if already decided
-        if (state.verdict) return;
-
-        const potentialVoters = roomData.players.length; // Everyone can vote now
-        const currentVotes = Object.keys(state.votes || {}).length;
-
-        if (potentialVoters <= 0 || currentVotes >= potentialVoters) {
-            // Everyone has voted - stop timer immediately
-            stopVoteTimer();
-
-            // Tally
-            const yesVotes = Object.values(state.votes || {}).filter(v => v === true).length;
-            const noVotes = Object.values(state.votes || {}).filter(v => v === false).length;
-            const isApproved = yesVotes >= noVotes;
-            const verdict = isApproved ? 'approved' : 'rejected';
-
-            // 1. Show Verdict (Update DB so everyone sees it)
-            const roomRef = doc(db, "rooms", roomId);
-            await updateDoc(roomRef, { "votingState.verdict": verdict });
-
-            // 2. Wait 3 seconds to show verdict, THEN finalize
-            setTimeout(() => {
-                if (isHost) {
-                    markAnswerVerified(state.targetPlayerIndex, state.category, state.answer, isApproved, false);
-                }
-            }, 3000);
-        }
-    }
+    // OLD VOTING FUNCTIONS - Removed for batch voting system
+    // castVote() and checkVotingComplete() replaced by new system
 
     async function markAnswerVerified(pIdx, cat, answer, isValid, isAuto) {
         const roomRef = doc(db, "rooms", roomId);

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=50">
+    <link rel="stylesheet" href="style.css?v=64">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -85,7 +85,7 @@
                         volgende ronde starten, spelers verwijderen en de kamer verwijderen. Als de host de kamer verlaat, neemt de volgende speler automatisch over!</p>
                     <p><strong>Uit kamer verwijderd?</strong> Als de host de kamer verwijdert of je uit de kamer verwijdert, word je automatisch teruggestuurd naar het beginscherm.</p>
                     <p><strong>Verbinding verbroken?</strong> Je naam wordt automatisch onthouden. Herlaad de pagina en
-                        klik gewoon opnieuw op "Meedoen" - je komt terug in dezelfde kamer! Inactieve spelers worden na 30 seconden automatisch verwijderd.</p>
+                        klik gewoon opnieuw op "Meedoen" - je komt terug in dezelfde kamer! Inactieve spelers worden na 60 seconden automatisch verwijderd.</p>
 
                     <h3>📚 Bibliotheek (Per Kamer)</h3>
                     <p>Elke kamer heeft zijn <strong>eigen woordenbibliotheek</strong>. Goedgekeurde antwoorden worden
@@ -111,14 +111,16 @@
                     <h3>✅ Stemproces</h3>
                     <p>Na de tijd stemt iedereen op alle antwoorden:</p>
                     <ul>
-                        <li>Je ziet elk antwoord één voor één</li>
-                        <li>Je hebt <strong>15 seconden</strong> per antwoord om te stemmen</li>
+                        <li>Je ziet alle antwoorden voor één categorie tegelijk</li>
+                        <li>Je hebt <strong>30 seconden</strong> per categorie om op alle antwoorden te stemmen</li>
                         <li>Bij de laatste 5 seconden verschijnt een "+10s Meer Tijd" knop</li>
-                        <li>Als je niet stemt binnen de tijd, wordt het antwoord automatisch goedgekeurd</li>
-                        <li><strong>Als iedereen gestemd heeft, wordt het resultaat direct getoond!</strong></li>
-                        <li>Stem ✅ (goed) of ❌ (fout)</li>
+                        <li>Als je niet op alle antwoorden stemt binnen de tijd, worden de overgebleven antwoorden automatisch goedgekeurd</li>
+                        <li><strong>Als je alle antwoorden beoordeeld hebt, worden je stemmen direct ingediend!</strong></li>
+                        <li><strong>Als iedereen gestemd heeft, gaat het spel automatisch naar de volgende categorie!</strong></li>
+                        <li>Stem ✅ (goed) of ❌ (fout) voor elk antwoord</li>
                         <li><strong>Je kunt je stem aanpassen</strong> zolang de stemtijd loopt - klik gewoon opnieuw op een knop!</li>
                         <li><strong>Je mag ook op je eigen antwoorden stemmen</strong> - dit maakt het eerlijker en je kunt meediscussiëren!</li>
+                        <li>Dubbele antwoorden worden automatisch gedetecteerd en gemarkeerd</li>
                         <li>Goedgekeurde antwoorden worden opgeslagen in de kamerbibliotheek</li>
                         <li>Meerderheid beslist of het antwoord geldig is</li>
                     </ul>
@@ -178,45 +180,26 @@
 
         <!-- Voting Screen -->
         <section id="voting-screen" class="glass-panel voting-panel hidden">
-            <h2 data-i18n="checkAnswer">Controleer Antwoord</h2>
+            <h2><span data-i18n="checkAllAnswers">Controleer Alle Antwoorden</span> - <span id="voting-category-title">---</span></h2>
+
+            <div id="vote-timer" class="vote-timer">
+                <div class="vote-progress-container">
+                    <div class="vote-progress-bar" id="vote-progress-bar"></div>
+                    <span class="vote-time-text" id="vote-time-left">30</span>
+                </div>
+                <button id="more-time-btn" class="more-time-btn hidden" data-i18n="moreTime">+10s Meer Tijd</button>
+            </div>
+
             <div class="voting-content">
-                <p class="voting-context"><span data-i18n="hasAnswered">Heeft</span> <strong id="voting-player-name">---</strong> <span data-i18n="at">bij</span> <span
-                        id="voting-category">---</span> <span data-i18n="theFollowingAnswer">het volgende antwoord:</span></p>
-                <div class="voting-answer" id="voting-answer-display">---</div>
+                <p class="voting-instructions" data-i18n="voteAllInstructions">Stem op alle antwoorden hieronder. Je kunt je stem aanpassen tot de tijd om is.</p>
 
-                <div id="voting-actions" class="voting-actions">
-                    <button id="vote-no-btn" class="icon-btn-lg danger"><i class="fa-solid fa-xmark"></i></button>
-                    <button id="vote-yes-btn" class="icon-btn-lg success"><i class="fa-solid fa-check"></i></button>
+                <div id="voting-items-container" class="voting-items-grid">
+                    <!-- Voting items will be injected here via JS -->
                 </div>
 
-                <div id="vote-timer" class="vote-timer hidden">
-                    <div class="vote-progress-container">
-                        <div class="vote-progress-bar" id="vote-progress-bar"></div>
-                        <span class="vote-time-text" id="vote-time-left">15</span>
-                    </div>
-                    <button id="more-time-btn" class="more-time-btn hidden" data-i18n="moreTime">+10s Meer Tijd</button>
-                </div>
-
-                <div id="voting-status">
-                    <div class="vote-counts hidden">
-                        <div class="vote-column">
-                            <span class="vote-pill success"><i class="fa-solid fa-check"></i> <span
-                                    id="yes-count">0</span></span>
-                            <div id="yes-voters" class="voters-list"></div>
-                        </div>
-                        <div class="vote-column">
-                            <span class="vote-pill danger"><i class="fa-solid fa-xmark"></i> <span
-                                    id="no-count">0</span></span>
-                            <div id="no-voters" class="voters-list"></div>
-                        </div>
-                    </div>
-                    <p id="voting-status-text" data-i18n="waitingForVotes">Wachten op stemmen...</p>
-                </div>
-
-                <!-- 5s Result Overlay -->
-                <div id="voting-result-overlay" class="result-overlay hidden">
-                    <div id="voting-verdict-icon" class="verdict-icon"></div>
-                    <h3 id="voting-verdict-text">GOEDGEKEURD!</h3>
+                <div class="voting-submit-container">
+                    <p class="vote-progress-text"><span id="voted-count">0</span> / <span id="total-votes-count">0</span> <span data-i18n="voted">gestemd</span></p>
+                    <p class="vote-info-text" data-i18n="autoSubmitInfo">Stemmen worden automatisch ingediend wanneer je alles hebt beoordeeld</p>
                 </div>
             </div>
         </section>
@@ -249,7 +232,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=50"></script>
+    <script type="module" src="script.js?v=64"></script>
 </body>
 
 </html>

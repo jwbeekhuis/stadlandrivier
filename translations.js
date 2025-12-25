@@ -26,7 +26,7 @@ export const translations = {
         tutorialNewRoom: "Nieuwe kamer: Maak je eigen kamer met \"Nieuwe Kamer\". Je kunt de speeltijd instellen (30-300 seconden) met de slider. De code verschijnt automatisch bij anderen.",
         tutorialHost: "Host: De maker van de kamer kan de letter draaien, categorieën shuffelen, de volgende ronde starten, spelers verwijderen en de kamer verwijderen. Als de host de kamer verlaat, neemt de volgende speler automatisch over!",
         tutorialKicked: "Uit kamer verwijderd? Als de host de kamer verwijdert of je uit de kamer verwijdert, word je automatisch teruggestuurd naar het beginscherm.",
-        tutorialReconnect: "Verbinding verbroken? Je naam wordt automatisch onthouden. Herlaad de pagina en klik gewoon opnieuw op \"Meedoen\" - je komt terug in dezelfde kamer! Inactieve spelers worden na 30 seconden automatisch verwijderd.",
+        tutorialReconnect: "Verbinding verbroken? Je naam wordt automatisch onthouden. Herlaad de pagina en klik gewoon opnieuw op \"Meedoen\" - je komt terug in dezelfde kamer! Inactieve spelers worden na 60 seconden automatisch verwijderd.",
 
         tutorialLibraryTitle: "📚 Bibliotheek (Per Kamer)",
         tutorialLibrary: "Elke kamer heeft zijn eigen woordenbibliotheek. Goedgekeurde antwoorden worden opgeslagen en bij latere rondes automatisch goedgekeurd - maar alleen binnen dezelfde kamer!",
@@ -67,6 +67,12 @@ export const translations = {
 
         // Voting
         checkAnswer: "Controleer Antwoord",
+        checkAllAnswers: "Controleer Alle Antwoorden",
+        voteAllInstructions: "Stem op alle antwoorden hieronder. Je kunt je stem aanpassen tot de tijd om is.",
+        yourAnswer: "Jouw antwoord",
+        duplicate: "Dubbel met",
+        voted: "gestemd",
+        autoSubmitInfo: "Stemmen worden automatisch ingediend wanneer je alles hebt beoordeeld",
         hasAnswered: "Heeft",
         at: "bij",
         theFollowingAnswer: "het volgende antwoord:",
@@ -162,7 +168,7 @@ export const translations = {
         tutorialNewRoom: "New room: Create your own room with \"New Room\". You can set the game time (30-300 seconds) with the slider. The code appears automatically for others.",
         tutorialHost: "Host: The room creator can roll the letter, shuffle categories, start the next round, remove players and delete the room. If the host leaves, the next player automatically takes over!",
         tutorialKicked: "Kicked from room? If the host deletes the room or removes you, you'll be automatically redirected to the home screen.",
-        tutorialReconnect: "Connection lost? Your name is automatically saved. Reload the page and simply click \"Join\" again - you'll return to the same room! Inactive players are automatically removed after 30 seconds.",
+        tutorialReconnect: "Connection lost? Your name is automatically saved. Reload the page and simply click \"Join\" again - you'll return to the same room! Inactive players are automatically removed after 60 seconds.",
 
         tutorialLibraryTitle: "📚 Library (Per Room)",
         tutorialLibrary: "Each room has its own word library. Approved answers are saved and automatically approved in future rounds - but only within the same room!",
@@ -203,6 +209,12 @@ export const translations = {
 
         // Voting
         checkAnswer: "Check Answer",
+        checkAllAnswers: "Check All Answers",
+        voteAllInstructions: "Vote on all answers below. You can change your votes until time runs out.",
+        yourAnswer: "Your answer",
+        duplicate: "Duplicate with",
+        voted: "voted",
+        autoSubmitInfo: "Votes will be automatically submitted when you've reviewed everything",
         hasAnswered: "Has",
         at: "for",
         theFollowingAnswer: "the following answer:",
