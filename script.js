@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isHost = false;
     let roomUnsubscribe = null;
     let roomData = null; // Store full room data
+    let heartbeatInterval = null;
 
     // --- DOM Elements ---
     // Screens
@@ -87,6 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const userCred = await signInAnonymously(auth);
             currentUser = userCred.user;
             console.log("Logged in as", currentUser.uid);
+
+            // Load saved name from localStorage
+            const savedName = localStorage.getItem('playerName');
+            if (savedName) {
+                playerNameInput.value = savedName;
+            }
         } catch (e) {
             console.error("Auth error:", e);
             alert("Er ging iets mis met inloggen. Controleer je internetverbinding en Firebase config.");
@@ -219,6 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = playerNameInput.value.trim();
         if (!name) return alert("Vul eerst je naam in!");
 
+        // Save name to localStorage
+        localStorage.setItem('playerName', name);
+
         roomId = code;
         isHost = false;
 
@@ -229,12 +239,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return alert("Kamer niet meer beschikbaar!");
         }
 
-        await updateDoc(roomRef, {
-            players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false })
-        });
+        const roomData = roomSnap.data();
+        const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
+
+        if (existingPlayer) {
+            // Player already exists, update their info
+            const updatedPlayers = roomData.players.map(p =>
+                p.uid === currentUser.uid
+                    ? { ...p, name: name, lastSeen: Date.now() }
+                    : p
+            );
+            await updateDoc(roomRef, { players: updatedPlayers });
+        } else {
+            // New player, add them
+            await updateDoc(roomRef, {
+                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() })
+            });
+        }
 
         enterGameUI(code);
         subscribeToRoom(code);
+        startHeartbeat();
     };
 
     window.deleteRoom = async function (code) {
@@ -260,6 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = playerNameInput.value.trim();
         if (!name) return alert("Vul eerst je naam in!");
 
+        // Save name to localStorage
+        localStorage.setItem('playerName', name);
+
         const roomName = roomNameInput.value.trim() || `${name}'s Kamer`;
         const code = generateRoomCode();
         roomId = code;
@@ -274,13 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
             currentLetter: '?',
             categories: getRandomCategories(),
             timerEnd: null,
-            players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false }],
+            players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }],
             votingState: null,
             createdAt: Date.now()
         });
 
         enterGameUI(code);
         subscribeToRoom(code);
+        startHeartbeat();
     }
 
     async function joinRoom() {
@@ -288,6 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const code = roomCodeInput.value.trim().toUpperCase();
         if (!name) return alert("Vul eerst je naam in!");
         if (code.length !== 4) return alert("Ongeldige code");
+
+        // Save name to localStorage
+        localStorage.setItem('playerName', name);
 
         roomId = code;
         isHost = false;
@@ -299,12 +331,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return alert("Kamer niet gevonden!");
         }
 
-        await updateDoc(roomRef, {
-            players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false })
-        });
+        const roomData = roomSnap.data();
+        const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
+
+        if (existingPlayer) {
+            // Player already exists, update their info
+            const updatedPlayers = roomData.players.map(p =>
+                p.uid === currentUser.uid
+                    ? { ...p, name: name, lastSeen: Date.now() }
+                    : p
+            );
+            await updateDoc(roomRef, { players: updatedPlayers });
+        } else {
+            // New player, add them
+            await updateDoc(roomRef, {
+                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() })
+            });
+        }
 
         enterGameUI(code);
         subscribeToRoom(code);
+        startHeartbeat();
     }
 
     function subscribeToRoom(code) {
@@ -426,6 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Unsubscribe and return to lobby
             if (roomUnsubscribe) roomUnsubscribe();
+            stopHeartbeat();
 
             // Reset local state
             roomId = null;
@@ -443,6 +491,79 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error("Error deleting room:", e);
             alert("Fout bij verwijderen: " + e.message);
+        }
+    }
+
+    // --- Heartbeat & Activity Tracking ---
+    function startHeartbeat() {
+        stopHeartbeat(); // Clear any existing interval
+
+        // Update immediately
+        updatePlayerHeartbeat();
+
+        // Then update every 10 seconds
+        heartbeatInterval = setInterval(() => {
+            updatePlayerHeartbeat();
+            if (isHost) {
+                cleanupInactivePlayers();
+            }
+        }, 10000);
+    }
+
+    function stopHeartbeat() {
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+            heartbeatInterval = null;
+        }
+    }
+
+    async function updatePlayerHeartbeat() {
+        if (!roomId || !currentUser) return;
+
+        try {
+            const roomRef = doc(db, "rooms", roomId);
+            const roomSnap = await getDoc(roomRef);
+
+            if (!roomSnap.exists()) return;
+
+            const players = roomSnap.data().players;
+            const updatedPlayers = players.map(p =>
+                p.uid === currentUser.uid
+                    ? { ...p, lastSeen: Date.now() }
+                    : p
+            );
+
+            await updateDoc(roomRef, { players: updatedPlayers });
+        } catch (e) {
+            console.error("Heartbeat error:", e);
+        }
+    }
+
+    async function cleanupInactivePlayers() {
+        if (!roomId || !isHost) return;
+
+        try {
+            const roomRef = doc(db, "rooms", roomId);
+            const roomSnap = await getDoc(roomRef);
+
+            if (!roomSnap.exists()) return;
+
+            const players = roomSnap.data().players;
+            const now = Date.now();
+            const inactiveThreshold = 30000; // 30 seconds
+
+            const activePlayers = players.filter(p => {
+                // Keep players who have been seen recently
+                return (now - (p.lastSeen || 0)) < inactiveThreshold;
+            });
+
+            // Only update if players were removed
+            if (activePlayers.length < players.length) {
+                console.log(`Removing ${players.length - activePlayers.length} inactive player(s)`);
+                await updateDoc(roomRef, { players: activePlayers });
+            }
+        } catch (e) {
+            console.error("Cleanup error:", e);
         }
     }
 
