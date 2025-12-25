@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=65';
+import { translations } from './translations.js?v=66';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -1259,15 +1259,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 points: 0
             };
 
-            // Add to history
-            history.push({
-                playerName: answerData.playerName,
-                category: state.category,
-                answer: answerData.answer,
-                isValid: isApproved,
-                isAuto: false,
-                votes: votesForAnswer
-            });
+            // Add to history (only if not already in history from auto-approval)
+            const alreadyInHistory = history.some(entry =>
+                entry.playerName === answerData.playerName &&
+                entry.category === state.category &&
+                normalizeAnswer(entry.answer) === normalizeAnswer(answerData.answer)
+            );
+
+            if (!alreadyInHistory) {
+                history.push({
+                    playerName: answerData.playerName,
+                    category: state.category,
+                    answer: answerData.answer,
+                    isValid: isApproved,
+                    isAuto: false,
+                    votes: votesForAnswer
+                });
+            }
 
             // Add to library if approved
             if (isApproved) {
