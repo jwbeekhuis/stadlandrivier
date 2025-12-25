@@ -578,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.status === 'voting') {
             isGameActive = false;
             stopGameLocal();
+            // Always call showVotingUI to update vote stats in real-time
             showVotingUI(data.votingState);
         } else if (data.status === 'finished') {
             isGameActive = false;
@@ -1008,7 +1009,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update only vote stats without re-rendering entire UI
     function updateVoteStats(state) {
-        if (!state || !state.answers) return;
+        if (!state || !state.answers) {
+            console.log('updateVoteStats: no state or answers');
+            return;
+        }
+
+        console.log('updateVoteStats: Updating vote stats for', state.answers.length, 'answers');
 
         const answers = state.answers || [];
         const sortedAnswers = answers.sort((a, b) => a.playerIndex - b.playerIndex);
@@ -1036,6 +1042,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const yesCount = Object.values(votesForThisAnswer).filter(v => v === true).length;
             const noCount = Object.values(votesForThisAnswer).filter(v => v === false).length;
 
+            console.log(`Vote stats for ${answerData.answer}: ${yesCount}✅ ${noCount}❌`);
+
             // Create voter names list
             const voterNamesList = Object.entries(votesForThisAnswer).map(([uid, vote]) => {
                 const p = roomData.players.find(pl => pl.uid === uid);
@@ -1052,7 +1060,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="vote-count">${yesCount}✅ ${noCount}❌</span>
                         ${voterNamesList ? '<div class="voter-names">' + voterNamesList + '</div>' : ''}
                     `;
+                    console.log(`Updated vote stats for item ${index}`);
+                } else {
+                    console.log(`No vote-stats div found for item ${index}`);
                 }
+            } else {
+                console.log(`No voting item found at index ${index}`);
             }
         });
 
