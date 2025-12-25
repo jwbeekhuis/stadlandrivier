@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=27">
+    <link rel="stylesheet" href="style.css?v=28">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -120,6 +120,9 @@
             <div class="room-info">
                 <span>Kamer: <strong id="room-code-display">---</strong></span>
                 <span id="player-count">👤 1</span>
+                <button id="delete-room-game-btn" class="delete-room-game-btn hidden" title="Verwijder kamer">
+                    <i class="fa-solid fa-trash"></i> Verwijder Kamer
+                </button>
             </div>
             <div class="letter-display-container">
                 <div class="letter-circle">
@@ -223,7 +226,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=27"></script>
+    <script type="module" src="script.js?v=28"></script>
 </body>
 
 </html>

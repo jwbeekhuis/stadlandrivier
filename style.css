@@ -641,11 +641,40 @@ body.light-mode .lobby-panel input:focus {
     width: 100%;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     background: rgba(0, 0, 0, 0.2);
     padding: 10px 15px;
     border-radius: 10px;
     margin-bottom: 20px;
     font-weight: 600;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.delete-room-game-btn {
+    background: transparent;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: var(--font-main);
+}
+
+.delete-room-game-btn:hover {
+    background: var(--danger-color);
+    color: white;
+    transform: scale(1.05);
+}
+
+.delete-room-game-btn.hidden {
+    display: none;
 }
 
 .players-list {

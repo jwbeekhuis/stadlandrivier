@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerCountDisplay = document.getElementById('player-count');
     const rollBtn = document.getElementById('roll-btn');
     const stopBtn = document.getElementById('stop-btn');
+    const deleteRoomGameBtn = document.getElementById('delete-room-game-btn');
     const letterDisplay = document.getElementById('current-letter');
     const timerDisplay = document.getElementById('timer-display');
     const timerCircle = document.querySelector('.progress-ring__circle');
@@ -95,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         joinRoomBtn.addEventListener('click', joinRoom);
         rollBtn.addEventListener('click', handleRollClick);
         stopBtn.addEventListener('click', handleStopClick);
+        if (deleteRoomGameBtn) deleteRoomGameBtn.addEventListener('click', handleDeleteRoomClick);
 
         if (shuffleBtn) shuffleBtn.addEventListener('click', handleShuffleClick);
         if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
@@ -353,11 +355,13 @@ document.addEventListener('DOMContentLoaded', () => {
             rollBtn.disabled = data.status === 'playing';
             stopBtn.classList.remove('hidden');
             if (shuffleBtn) shuffleBtn.classList.remove('hidden');
+            if (deleteRoomGameBtn) deleteRoomGameBtn.classList.remove('hidden');
         } else {
             isHost = false;
             rollBtn.classList.add('hidden');
             stopBtn.classList.add('hidden');
             if (shuffleBtn) shuffleBtn.classList.add('hidden');
+            if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
         }
     }
 
@@ -405,6 +409,41 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'lobby',
             gameHistory: []
         });
+    }
+
+    async function handleDeleteRoomClick() {
+        if (!isHost) return;
+
+        if (!confirm("Weet je zeker dat je deze kamer definitief wilt verwijderen?\n\nAlle spelers worden verwijderd en de kamer wordt gesloten.")) {
+            return;
+        }
+
+        try {
+            const roomRef = doc(db, "rooms", roomId);
+            await updateDoc(roomRef, {
+                status: 'deleted'
+            });
+
+            // Unsubscribe and return to lobby
+            if (roomUnsubscribe) roomUnsubscribe();
+
+            // Reset local state
+            roomId = null;
+            isHost = false;
+            roomData = null;
+
+            // Return to lobby
+            controlsPanel.classList.add('hidden');
+            gameBoard.classList.add('hidden');
+            resultsBoard.classList.add('hidden');
+            votingScreen.classList.add('hidden');
+            lobbyScreen.classList.remove('hidden');
+
+            alert("Kamer is verwijderd!");
+        } catch (e) {
+            console.error("Error deleting room:", e);
+            alert("Fout bij verwijderen: " + e.message);
+        }
     }
 
     // --- Local Logic ---
