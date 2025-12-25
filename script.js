@@ -403,7 +403,19 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.status === 'finished') {
             isGameActive = false;
             stopGameLocal();
-            showResults(data);
+
+            // Check if scores have been calculated (at least one player should have verifiedResults with points)
+            const scoresCalculated = data.players.some(p => {
+                if (!p.verifiedResults) return false;
+                return Object.values(p.verifiedResults).some(r => r.points !== undefined && r.points > 0);
+            });
+
+            // Only show results if scores are calculated, otherwise wait for next update
+            if (scoresCalculated || data.players.every(p => !p.verifiedResults || Object.keys(p.verifiedResults).length === 0)) {
+                showResults(data);
+            } else {
+                console.log("Waiting for score calculation to complete...");
+            }
         } else if (data.status === 'lobby') {
             resetBoard();
         }
