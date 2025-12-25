@@ -1,0 +1,21 @@
+[debug] [2025-12-25T01:41:48.997Z] ----------------------------------------------------------------------
+[debug] [2025-12-25T01:41:49.003Z] Command:       C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\firebase-tools\lib\bin\firebase.js deploy --project stadlandrivier --only hosting
+[debug] [2025-12-25T01:41:49.004Z] CLI Version:   13.35.1
+[debug] [2025-12-25T01:41:49.005Z] Platform:      win32
+[debug] [2025-12-25T01:41:49.006Z] Node Version:  v18.20.6
+[debug] [2025-12-25T01:41:49.028Z] Time:          Thu Dec 25 2025 02:41:49 GMT+0100 (Central European Standard Time)
+[debug] [2025-12-25T01:41:49.029Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-25T01:41:49.906Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-12-25T01:41:49.909Z] > authorizing via signed-in user (jwbeekhuis@gmail.com)
+[debug] [2025-12-25T01:41:49.910Z] [iam] checking project stadlandrivier for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-25T01:41:49.916Z] Checked if tokens are valid: false, expires at: 1766627526579
+[debug] [2025-12-25T01:41:49.916Z] Checked if tokens are valid: false, expires at: 1766627526579
+[debug] [2025-12-25T01:41:49.918Z] > refreshing access token with scopes: []
+[debug] [2025-12-25T01:41:49.946Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-25T01:41:49.947Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-25T01:41:50.367Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-25T01:41:50.368Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-25T01:41:50.513Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions [none]
+[debug] [2025-12-25T01:41:50.514Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions x-goog-quota-user=projects/stadlandrivier
+[debug] [2025-12-25T01:41:50.515Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/stadlandrivier:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}

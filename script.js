@@ -1,4 +1,4 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, signInAnonymously, auth } from './firebase-config.js?v=2';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration ---
@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         voteNoBtn.addEventListener('click', () => castVote(false));
 
         setupSecretFeatures();
+        subscribeToActiveRooms();
     }
 
     // Secret admin features
@@ -159,6 +160,74 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Room Discovery ---
+    function subscribeToActiveRooms() {
+        const roomsQuery = query(
+            collection(db, "rooms"),
+            where("status", "in", ["lobby", "playing"]),
+            orderBy("createdAt", "desc"),
+            limit(10)
+        );
+
+        onSnapshot(roomsQuery, (snapshot) => {
+            const rooms = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                rooms.push({ id: doc.id, ...data });
+            });
+            renderRoomsList(rooms);
+        });
+    }
+
+    function renderRoomsList(rooms) {
+        const list = document.getElementById("active-rooms-list");
+
+        if (rooms.length === 0) {
+            list.innerHTML = '<p class="no-rooms">Geen actieve kamers gevonden. Maak er een!</p>';
+            return;
+        }
+
+        list.innerHTML = rooms.map(room => {
+            const playerCount = room.players?.length || 0;
+            const hostName = room.players?.[0]?.name || "Unknown";
+
+            return `
+                <div class="room-card" data-room-id="${room.id}">
+                    <div class="room-code">${room.id}</div>
+                    <div class="room-info">
+                        <span class="room-host">Host: ${hostName}</span>
+                        <span class="room-players">👤 ${playerCount}</span>
+                    </div>
+                    <button class="join-room-quick-btn" onclick="quickJoinRoom('${room.id}')">
+                        Meedoen
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.quickJoinRoom = async function (code) {
+        const name = playerNameInput.value.trim();
+        if (!name) return alert("Vul eerst je naam in!");
+
+        roomId = code;
+        isHost = false;
+
+        const roomRef = doc(db, "rooms", code);
+        const roomSnap = await getDoc(roomRef);
+
+        if (!roomSnap.exists()) {
+            return alert("Kamer niet meer beschikbaar!");
+        }
+
+        await updateDoc(roomRef, {
+            players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false })
+        });
+
+        enterGameUI(code);
+        subscribeToRoom(code);
+    };
+
     // --- Multiplayer / Lobby Logic ---
 
     async function createRoom() {
@@ -178,7 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
             categories: getRandomCategories(),
             timerEnd: null,
             players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false }],
-            votingState: null
+            votingState: null,
+            createdAt: Date.now()
         });
 
         enterGameUI(code);
@@ -471,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 votingVerdictText.textContent = "AFGEKEURD!";
                 votingVerdictText.style.color = "#f87171";
             }
-            return;
+            // Don't return - let voter names continue to display below
         } else {
             votingResultOverlay.classList.add('hidden');
         }
@@ -644,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkLibrary(category, word) {
         const cleanWord = normalizeAnswer(word);
         const letter = currentLetter;
-        const docId = `${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');
+        const docId = `${roomId}_${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');
         const docRef = doc(db, "library", docId);
         const snap = await getDoc(docRef);
         return snap.exists();
@@ -653,11 +723,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function addToLibrary(category, word) {
         const cleanWord = normalizeAnswer(word);
         const letter = currentLetter;
-        const docId = `${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');
+        const docId = `${roomId}_${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');
         await setDoc(doc(db, "library", docId), {
+            roomId: roomId,
             category: category,
             letter: letter,
-            word: word, // Keep original display version
+            word: word,
             cleanWord: cleanWord,
             approvedAt: Date.now()
         }, { merge: true });

@@ -47,15 +47,24 @@
                     <button id="join-room-btn" class="secondary-btn">Join Kamer</button>
                 </div>
             </div>
+
+            <!-- Active Rooms -->
+            <div class="active-rooms-container">
+                <h3 class="rooms-title">Actieve Kamers</h3>
+                <div id="active-rooms-list" class="rooms-list">
+                    <p class="loading-rooms">Laden...</p>
+                </div>
+            </div>
         </section>
 
         <!-- Tutorial Section (Separate Panel) -->
         <section class="glass-panel tutorial-panel">
-            <details class="tutorial-section" open>
+            <details class="tutorial-section" open id="tutorial-details">
                 <summary class="tutorial-toggle">
                     <i class="fa-solid fa-circle-info"></i> Hoe werkt het?
                 </summary>
-                <div class="tutorial-content">
+                <div class="tutorial-content"
+                    onclick="document.getElementById('tutorial-details').open = !document.getElementById('tutorial-details').open">
                     <h3>🚪 Kamer Maken & Deelnemen</h3>
                     <p><strong>Nieuwe kamer maken:</strong> Vul je naam in en klik op "Nieuwe Kamer". Je krijgt een
                         4-letterige kamercode. Deel deze code met je vrienden!</p>
@@ -210,7 +219,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=24"></script>
+    <script type="module" src="script.js?v=25"></script>
 </body>
 
 </html>
