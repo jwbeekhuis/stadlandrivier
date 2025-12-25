@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=64';
+import { translations } from './translations.js?v=65';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -1429,12 +1429,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (w1 === w2) return true; // Direct match
 
-        const dist = levenshteinDistance(w1, w2);
+        // Don't fuzzy match very short answers (≤ 2 chars) - they must be exact
+        // This prevents "1" matching with "3", "a" matching with "b", etc.
         const len = Math.max(w1.length, w2.length);
+        if (len <= 2) return false;
+
+        const dist = levenshteinDistance(w1, w2);
 
         // Rules:
-        // Length > 4: Allow 2 typos
-        // Length <= 4: Allow 1 typo
+        // Length > 4: Allow 2 typos (for "Amsterdam" vs "Amsterdm")
+        // Length 3-4: Allow 1 typo (for "Den" vs "Dan")
         if (len > 4) {
             return dist <= 2;
         } else {
