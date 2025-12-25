@@ -1127,3 +1127,39 @@ h1 {
         box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2);
     }
 }
+
+.vote-counts {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.vote-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.vote-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.vote-pill.success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 2px solid #22c55e;
+}
+
+.vote-pill.danger {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 2px solid #ef4444;
+}
