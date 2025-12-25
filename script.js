@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=47';
+import { translations } from './translations.js?v=48';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Refresh room list
-        listenToActiveRooms();
+        subscribeToActiveRooms();
     }
 
     // --- Actions ---
