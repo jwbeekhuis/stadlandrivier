@@ -1,4 +1,4 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, arrayUnion, signInAnonymously, auth } from './firebase-config.js';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, signInAnonymously, auth } from './firebase-config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Configuration ---
