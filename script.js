@@ -765,13 +765,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update immediately
         updatePlayerHeartbeat();
 
-        // Then update every 10 seconds
+        // Then update every 5 seconds (increased frequency to prevent false positives)
         heartbeatInterval = setInterval(() => {
             updatePlayerHeartbeat();
             if (isHost) {
                 cleanupInactivePlayers();
             }
-        }, 10000);
+        }, 5000);
     }
 
     function stopHeartbeat() {
@@ -781,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function updatePlayerHeartbeat() {
+    async function updatePlayerHeartbeat(retryCount = 0) {
         if (!roomId || !currentUser) return;
 
         try {
@@ -813,7 +813,16 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Heartbeat updated successfully");
         } catch (e) {
             console.error("Heartbeat error:", e);
-            // Don't stop heartbeat on error, might be temporary network issue
+
+            // Retry up to 3 times with exponential backoff
+            if (retryCount < 3) {
+                const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Max 5s delay
+                console.log(`Retrying heartbeat in ${retryDelay}ms (attempt ${retryCount + 1}/3)`);
+                setTimeout(() => updatePlayerHeartbeat(retryCount + 1), retryDelay);
+            } else {
+                console.error("Heartbeat failed after 3 retries, but keeping connection alive");
+                // Don't stop heartbeat - next interval will try again
+            }
         }
     }
 
@@ -829,7 +838,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = roomSnap.data();
             const players = data.players;
             const now = Date.now();
-            const inactiveThreshold = 60000; // 60 seconds (increased from 30 to prevent false positives)
+
+            // Increased threshold to 2 minutes to be more forgiving
+            // Also add grace period during voting (3 minutes)
+            const isVoting = data.status === 'voting';
+            const inactiveThreshold = isVoting ? 180000 : 120000; // 3min during voting, 2min otherwise
 
             const activePlayers = players.filter(p => {
                 const timeSinceLastSeen = now - (p.lastSeen || 0);
@@ -837,7 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Log inactivity status for debugging
                 if (!isActive) {
-                    console.log(`Player ${p.name} (${p.uid}) inactive for ${Math.round(timeSinceLastSeen / 1000)}s`);
+                    console.log(`Player ${p.name} (${p.uid}) inactive for ${Math.round(timeSinceLastSeen / 1000)}s (threshold: ${inactiveThreshold/1000}s)`);
                 }
 
                 return isActive;
