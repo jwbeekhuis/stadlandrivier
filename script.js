@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=50';
+import { translations } from './translations.js?v=58';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -202,6 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let voteTimerInterval = null;
     let voteTimeLeft = 0;
     let voteMaxTime = 15;
+    let resultsShown = false; // Track if results have been shown for current round
 
     // --- DOM Elements ---
     // Screens
@@ -294,6 +295,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initialize translations
         updateAllTranslations();
+
+        // Tutorial collapse state
+        const tutorialDetails = document.getElementById('tutorial-details');
+        if (tutorialDetails) {
+            // Load saved state
+            const tutorialOpen = localStorage.getItem('tutorialOpen');
+            if (tutorialOpen !== null) {
+                tutorialDetails.open = tutorialOpen === 'true';
+            }
+
+            // Save state on toggle
+            tutorialDetails.addEventListener('toggle', () => {
+                localStorage.setItem('tutorialOpen', tutorialDetails.open);
+            });
+        }
 
         voteYesBtn.addEventListener('click', () => castVote(true));
         voteNoBtn.addEventListener('click', () => castVote(false));
@@ -585,9 +601,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.status === 'finished') {
             isGameActive = false;
             stopGameLocal();
-            showResults(data);
+            if (!resultsShown) {
+                resultsShown = true;
+                showResults(data);
+            }
         } else if (data.status === 'lobby') {
             resetBoard();
+            resultsShown = false; // Reset for next round
         }
 
         const wasHost = isHost;
@@ -763,9 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Then update every 10 seconds
         heartbeatInterval = setInterval(() => {
             updatePlayerHeartbeat();
-            if (isHost) {
-                cleanupInactivePlayers();
-            }
+            // Automatic cleanup disabled - host can manually kick players
         }, 10000);
     }
 
@@ -1311,12 +1329,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function calculateFinalScores(data) {
         console.log("Starting Score Calculation...");
-        const players = data.players;
 
-        // Calculate round scores (don't reset total scores)
+        // Calculate round scores for each player
         const roundScores = {};
-        players.forEach(p => {
+        const updatedVerifiedResults = {};
+
+        // Initialize
+        data.players.forEach(p => {
             roundScores[p.uid] = 0;
+            updatedVerifiedResults[p.uid] = p.verifiedResults ? JSON.parse(JSON.stringify(p.verifiedResults)) : {};
         });
 
         for (const cat of activeCategories) {
@@ -1324,13 +1345,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const validAnswers = [];
 
             // 1. Collect Valid Answers
-            players.forEach(p => {
-                if (p.verifiedResults && p.verifiedResults[cat]) {
-                    const res = p.verifiedResults[cat];
+            data.players.forEach(p => {
+                const res = updatedVerifiedResults[p.uid]?.[cat];
+                if (res) {
                     console.log(`Player ${p.name} - ${cat}: ${res.answer} (Valid: ${res.isValid})`);
                     if (res.isValid) {
-                        // Store both normalized and distinct original for display if needed? 
-                        // No logic only cares about normalized matches
                         validAnswers.push({
                             uid: p.uid,
                             answer: normalizeAnswer(res.answer)
@@ -1342,8 +1361,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // 2. Assign Points
-            players.forEach(p => {
-                const res = p.verifiedResults ? p.verifiedResults[cat] : null;
+            data.players.forEach(p => {
+                const res = updatedVerifiedResults[p.uid]?.[cat];
                 if (res && res.isValid) {
                     const myAns = normalizeAnswer(res.answer);
 
@@ -1352,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const othersWithAny = validAnswers.filter(a => a.uid !== p.uid);
 
                     if (othersWithSame.length > 0) {
-                        res.points = 5; // Shared (or close enough!)
+                        res.points = 5;
                         console.log(` -> Match found for '${myAns}' with '${othersWithSame[0].answer}'`);
                     } else if (othersWithAny.length === 0) {
                         res.points = 20;
@@ -1365,18 +1384,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Add round scores to total scores
-        players.forEach(p => {
-            p.score += roundScores[p.uid];
-        });
+        // Build updated players array with new scores and verifiedResults
+        const updatedPlayers = data.players.map(p => ({
+            uid: p.uid,
+            name: p.name,
+            score: (p.score || 0) + roundScores[p.uid],
+            answers: p.answers || {},
+            verifiedResults: updatedVerifiedResults[p.uid] || {},
+            isVerified: p.isVerified,
+            lastSeen: p.lastSeen
+        }));
 
-        console.log("Round Scores:", players.map(p => `${p.name}: +${roundScores[p.uid]}`));
-        console.log("Total Scores:", players.map(p => `${p.name}: ${p.score}`));
+        console.log("Round Scores:", updatedPlayers.map(p => `${p.name}: +${roundScores[p.uid]}`));
+        console.log("Total Scores:", updatedPlayers.map(p => `${p.name}: ${p.score}`));
 
         // Update history with points information
-        const history = data.gameHistory || [];
+        const history = JSON.parse(JSON.stringify(data.gameHistory || []));
         history.forEach(entry => {
-            const player = players.find(p => p.name === entry.playerName);
+            const player = updatedPlayers.find(p => p.name === entry.playerName);
             if (player && player.verifiedResults && player.verifiedResults[entry.category]) {
                 const result = player.verifiedResults[entry.category];
                 entry.points = result.points || 0;
@@ -1390,7 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         await updateDoc(doc(db, "rooms", roomId), {
-            players: players,
+            players: updatedPlayers,
             status: 'finished',
             votingState: null,
             gameHistory: history
@@ -1439,15 +1464,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const logEntries = document.getElementById('log-entries');
         const history = data.gameHistory || [];
 
-        console.log('renderGameLog called', { historyLength: history.length, logBox, logEntries });
-
         if (history.length === 0) {
             logBox.classList.add('hidden');
-            console.log('No history, hiding log');
             return;
         }
 
-        console.log('Rendering game log with', history.length, 'entries');
         logBox.classList.remove('hidden');
         logEntries.innerHTML = history.map(entry => {
             const votes = entry.votes || {};
@@ -1526,7 +1547,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
             const translationKey = 'categories.' + cat;
             const translatedCat = t(translationKey);
-            console.log(`Translation Debug: cat="${cat}", key="${translationKey}", translated="${translatedCat}"`);
             const div = document.createElement('div');
             div.className = 'category-input-group';
             div.innerHTML = `
