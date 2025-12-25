@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stad, Land, Rivier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="game-header">
+            <h1>Stad <span class="highlight">Land</span> Rivier <small
+                    style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;">by
+                    JW</small></h1>
+        </header>
+
+        <!-- Lobby Screen -->
+        <section id="lobby-screen" class="glass-panel lobby-panel">
+            <div class="logo-circle"><i class="fa-solid fa-earth-europe"></i></div>
+            <h2>Welkom!</h2>
+            <input type="text" id="player-name" placeholder="Jouw Naam" maxlength="12">
+
+            <div class="lobby-actions">
+                <button id="create-room-btn" class="primary-btn">Nieuwe Kamer</button>
+                <div class="join-group">
+                    <input type="text" id="room-code-input" placeholder="CODE" maxlength="4">
+                    <button id="join-room-btn" class="secondary-btn">Meedoen</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Controls (Host only, mostly) -->
+        <section id="controls-panel" class="glass-panel controls-panel hidden">
+            <div class="room-info">
+                <span class="room-code" id="room-code-display">????</span>
+                <span class="player-count" id="player-count-display">👤 0</span>
+                <button id="theme-toggle" class="icon-btn" title="Wissel Thema"><i class="fa-solid fa-sun"></i></button>
+            </div>
+            <div id="players-list" class="players-list">
+                <!-- Player tags injected here -->
+            </div>
+        </section>
+
+        <!-- Game Board -->
+        <section id="game-board" class="glass-panel game-board hidden">
+            <div class="game-header">
+                <div class="letter-display" id="letter-display">?</div>
+                <div class="timer-container">
+                    <svg class="timer-ring" width="80" height="80">
+                        <circle class="timer-circle-bg" stroke="rgba(255,255,255,0.1)" stroke-width="6"
+                            fill="transparent" r="36" cx="40" cy="40" />
+                        <circle id="timer-circle" class="timer-circle-fg" stroke="var(--accent-color)" stroke-width="6"
+                            fill="transparent" r="36" cx="40" cy="40" />
+                    </svg>
+                    <span id="timer-display">30</span>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <button id="roll-btn" class="primary-btn hidden">DRAAI LETTER</button>
+                <button id="stop-btn" class="danger-btn hidden">STOP!</button>
+                <button id="shuffle-btn" class="secondary-btn hidden"
+                    style="margin-top: 10px; font-size: 0.8rem; padding: 5px 10px;"><i class="fa-solid fa-shuffle"></i>
+                    Nieuwe Categorieën</button>
+            </div>
+
+            <div id="categories-container" class="categories-grid">
+                <!-- Inputs injected here -->
+            </div>
+        </section>
+
+        <!-- Voting Screen -->
+        <section id="voting-screen" class="glass-panel voting-panel hidden">
+            <h2>Controleer Antwoord</h2>
+            <div class="voting-content">
+                <p class="voting-context">Heeft <strong id="voting-player-name">---</strong> bij <span
+                        id="voting-category">---</span> het volgende antwoord:</p>
+                <div class="voting-answer" id="voting-answer-display">---</div>
+
+                <div id="voting-actions" class="voting-actions">
+                    <button id="vote-no-btn" class="icon-btn-lg danger"><i class="fa-solid fa-xmark"></i></button>
+                    <button id="vote-yes-btn" class="icon-btn-lg success"><i class="fa-solid fa-check"></i></button>
+                </div>
+
+                <div id="voting-status">
+                    <div class="vote-counts hidden">
+                        <div class="vote-column">
+                            <span class="vote-pill success"><i class="fa-solid fa-check"></i> <span
+                                    id="yes-count">0</span></span>
+                            <div id="yes-voters" class="voters-list"></div>
+                        </div>
+                        <div class="vote-column">
+                            <span class="vote-pill danger"><i class="fa-solid fa-xmark"></i> <span
+                                    id="no-count">0</span></span>
+                            <div id="no-voters" class="voters-list"></div>
+                        </div>
+                    </div>
+                    <p id="voting-status-text">Wachten op stemmen...</p>
+                </div>
+
+                <!-- 5s Result Overlay -->
+                <div id="voting-result-overlay" class="result-overlay hidden">
+                    <div id="voting-verdict-icon" class="verdict-icon"></div>
+                    <h3 id="voting-verdict-text">GOEDGEKEURD!</h3>
+                </div>
+            </div>
+        </section>
+
+        <section id="results-board" class="glass-panel results-board hidden">
+            <h2>Resultaten</h2>
+            <div class="results-table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Naam</th>
+                            <th class="text-right">Punten</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-list">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="next-round-btn" class="primary-btn pulse">VOLGENDE RONDE</button>
+        </section>
+    </main>
+
+    <script type="module" src="script.js?v=11"></script>
+</body>
+
+</html>
