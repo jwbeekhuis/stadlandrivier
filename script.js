@@ -1016,13 +1016,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Reset votes when switching to a new category
+        if (currentVotingCategory !== state.category) {
+            console.log(`Switching to new category: ${state.category}`);
+            currentCategoryVotes = {}; // Clear votes from previous category
+            currentVotingCategory = state.category;
+            isRenderingVotes = false; // Allow fresh render
+        }
+
         // Prevent re-rendering if already showing this category
         if (currentVotingCategory === state.category && isRenderingVotes) {
             console.log('Already rendering this category, skipping update');
             return;
         }
 
-        currentVotingCategory = state.category;
         isRenderingVotes = true;
 
         votingScreen.classList.remove('hidden');
@@ -1032,10 +1039,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set category title
         votingCategoryTitle.textContent = t('categories.' + state.category);
-
-        // Preserve existing votes before re-rendering
-        const previousVotes = {...currentCategoryVotes};
-        currentCategoryVotes = {};
 
         // Clear and render all answer cards
         votingItemsContainer.innerHTML = '';
@@ -1048,11 +1051,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const isMyAnswer = answerData.playerUid === currentUser.uid;
             const voteKey = `${answerData.playerUid}_${index}`;
 
-            // Check if we already voted on this answer
+            // Check if we already voted on this answer (only from finalized votes, not previousVotes)
             let myVote = state.allPlayersVoted?.[currentUser.uid]?.[voteKey];
-            if (myVote === undefined && previousVotes[voteKey] !== undefined) {
-                myVote = previousVotes[voteKey];
-            }
             if (myVote !== undefined) {
                 currentCategoryVotes[voteKey] = myVote;
             }
@@ -1064,9 +1064,18 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             const isDuplicate = duplicates.length > 0;
 
-            // Calculate vote stats for this answer
+            // Calculate vote stats for this answer (from both live votes and submitted votes)
             const votesForThisAnswer = {};
+
+            // First get live votes from state.votes
             Object.entries(state.votes || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            // Then get submitted votes from state.allPlayersVoted (these are finalized)
+            Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
                 if (voterVotes[voteKey] !== undefined) {
                     votesForThisAnswer[voterUid] = voterVotes[voteKey];
                 }
