@@ -767,17 +767,27 @@ document.addEventListener('DOMContentLoaded', () => {
             votingStatusText.textContent = "Je medespelers stemmen op jouw antwoord...";
             stopVoteTimer();
         } else {
-            // Check if I already voted
-            if (state.votes && state.votes[currentUser.uid] !== undefined) {
-                votingActions.classList.add('hidden');
-                voteTimer.classList.add('hidden');
-                votingStatusText.textContent = "Je hebt gestemd. Wachten op de rest...";
-                stopVoteTimer();
-            } else {
-                votingActions.classList.remove('hidden');
-                votingStatusText.textContent = "Is dit antwoord goed of fout?";
+            // Always show voting buttons - allow changing vote
+            votingActions.classList.remove('hidden');
 
-                // Start vote timer
+            // Show which vote is currently selected
+            const currentVote = state.votes?.[currentUser.uid];
+            if (currentVote === true) {
+                voteYesBtn.classList.add('selected');
+                voteNoBtn.classList.remove('selected');
+                votingStatusText.textContent = "Je hebt ✅ gestemd. Je kunt je stem aanpassen.";
+            } else if (currentVote === false) {
+                voteNoBtn.classList.add('selected');
+                voteYesBtn.classList.remove('selected');
+                votingStatusText.textContent = "Je hebt ❌ gestemd. Je kunt je stem aanpassen.";
+            } else {
+                voteYesBtn.classList.remove('selected');
+                voteNoBtn.classList.remove('selected');
+                votingStatusText.textContent = "Is dit antwoord goed of fout?";
+            }
+
+            // Start vote timer if not already running
+            if (!voteTimerInterval) {
                 startVoteTimer();
             }
         }
@@ -841,8 +851,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Optimization: Don't allow vote if verdict already set
         if (roomData.votingState.verdict) return;
 
-        // Stop timer when vote is cast
-        stopVoteTimer();
+        // Allow changing vote - don't stop timer
+        // Timer will continue running until timeout
 
         const roomRef = doc(db, "rooms", roomId);
         const key = `votingState.votes.${currentUser.uid}`;

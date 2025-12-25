@@ -1065,3 +1065,18 @@ h1 {
     background: linear-gradient(135deg, #ef4444, #dc2626);
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
 }
+
+.icon-btn-lg.selected {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
+    animation: pulse-selected 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-selected {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2);
+    }
+}
