@@ -718,10 +718,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log("Final Scores:", players.map(p => `${p.name}: ${p.score}`));
 
+        // Update history with points information
+        const history = data.gameHistory || [];
+        history.forEach(entry => {
+            const player = players.find(p => p.name === entry.playerName);
+            if (player && player.verifiedResults && player.verifiedResults[entry.category]) {
+                const result = player.verifiedResults[entry.category];
+                entry.points = result.points || 0;
+
+                // Add reasoning
+                if (result.points === 20) entry.pointsReason = "Uniek antwoord";
+                else if (result.points === 10) entry.pointsReason = "Enige in categorie";
+                else if (result.points === 5) entry.pointsReason = "Gedeeld antwoord";
+                else entry.pointsReason = "Niet goedgekeurd";
+            }
+        });
+
         await updateDoc(doc(db, "rooms", roomId), {
             players: players,
             status: 'finished',
-            votingState: null
+            votingState: null,
+            gameHistory: history
         });
     }
 
@@ -797,6 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="log-status">
                             ${entry.isValid ? '✅' : '❌'} 
                             <small>${entry.isAuto ? '(Auto-Doc)' : '(Manual)'}</small>
+                            ${entry.points !== undefined ? `<div class="log-points"><strong>+${entry.points} pts</strong> <span class="log-reason">${entry.pointsReason || ''}</span></div>` : ''}
                         </div>
                     </div>
                     ${!entry.isAuto ? `
