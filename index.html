@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=41">
+    <link rel="stylesheet" href="style.css?v=42">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -188,7 +188,10 @@
                 </div>
 
                 <div id="vote-timer" class="vote-timer hidden">
-                    <span id="vote-time-left">15</span>s
+                    <div class="vote-progress-container">
+                        <div class="vote-progress-bar" id="vote-progress-bar"></div>
+                        <span class="vote-time-text" id="vote-time-left">15</span>
+                    </div>
                     <button id="more-time-btn" class="more-time-btn hidden">+10s Meer Tijd</button>
                 </div>
 
@@ -244,7 +247,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=41"></script>
+    <script type="module" src="script.js?v=42"></script>
 </body>
 
 </html>

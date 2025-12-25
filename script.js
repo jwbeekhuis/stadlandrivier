@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let heartbeatInterval = null;
     let voteTimerInterval = null;
     let voteTimeLeft = 0;
+    let voteMaxTime = 15;
 
     // --- DOM Elements ---
     // Screens
@@ -75,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const votingVerdictText = document.getElementById('voting-verdict-text');
     const voteTimer = document.getElementById('vote-timer');
     const voteTimeLeftDisplay = document.getElementById('vote-time-left');
+    const voteProgressBar = document.getElementById('vote-progress-bar');
     const moreTimeBtn = document.getElementById('more-time-btn');
 
 
@@ -890,6 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startVoteTimer() {
         stopVoteTimer();
         voteTimeLeft = 15;
+        voteMaxTime = 15; // Track max time for percentage calculation
         voteTimer.classList.remove('hidden');
         moreTimeBtn.classList.add('hidden');
 
@@ -922,17 +925,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateVoteTimerDisplay() {
         voteTimeLeftDisplay.textContent = voteTimeLeft;
 
-        // Change color when time is running out
+        // Update progress bar width
+        const percentage = (voteTimeLeft / voteMaxTime) * 100;
+        voteProgressBar.style.width = percentage + '%';
+
+        // Change progress bar color when time is running out
         if (voteTimeLeft <= 5) {
-            voteTimer.style.color = 'var(--danger-color)';
+            voteProgressBar.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+            voteProgressBar.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.5)';
         } else {
-            voteTimer.style.color = 'var(--text-color)';
+            voteProgressBar.style.background = 'linear-gradient(90deg, var(--accent-color), var(--secondary-color))';
+            voteProgressBar.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.5)';
         }
     }
 
     function requestMoreVoteTime() {
         voteTimeLeft += 10;
+        voteMaxTime += 10; // Also increase max time so percentage stays accurate
         moreTimeBtn.classList.add('hidden');
+        updateVoteTimerDisplay(); // Update display immediately
         console.log("Added 10 seconds to vote timer");
     }
 
@@ -970,10 +981,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const roomRef = doc(db, "rooms", roomId);
             await updateDoc(roomRef, { "votingState.verdict": verdict });
 
-            // 2. Wait 5 seconds (3s verdict + 2s to see voters), THEN finalize
+            // 2. Wait 3 seconds to show verdict, THEN finalize
             setTimeout(() => {
-                markAnswerVerified(state.targetPlayerIndex, state.category, state.answer, isApproved, false);
-            }, 5000);
+                if (isHost) {
+                    markAnswerVerified(state.targetPlayerIndex, state.category, state.answer, isApproved, false);
+                }
+            }, 3000);
         }
     }
 
