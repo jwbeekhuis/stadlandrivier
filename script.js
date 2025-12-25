@@ -1186,7 +1186,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateDoc(roomRef, {
             players: players,
             votingState: null,
-            "votingState.verdict": null,
             gameHistory: history
         });
 
