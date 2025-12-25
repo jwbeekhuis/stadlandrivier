@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=33">
+    <link rel="stylesheet" href="style.css?v=34">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -44,6 +44,15 @@
                 <input type="text" id="room-name-input" placeholder="Bijv. Vrienden Groep...">
             </div>
 
+            <div class="input-group">
+                <label for="game-duration-slider">Speltijd: <strong><span id="duration-value">30</span> seconden</strong></label>
+                <input type="range" id="game-duration-slider" min="30" max="300" step="10" value="30" class="duration-slider">
+                <div class="slider-labels">
+                    <span>30s</span>
+                    <span>300s</span>
+                </div>
+            </div>
+
             <div class="lobby-actions">
                 <button id="create-room-btn" class="primary-btn">Nieuwe Kamer</button>
             </div>
@@ -68,8 +77,8 @@
                     <h3>🚪 Kamer Maken & Deelnemen</h3>
                     <p><strong>Actieve kamers:</strong> Zie direct welke kamers beschikbaar zijn! Vul alleen je naam in
                         en klik op "Meedoen" bij een kamer.</p>
-                    <p><strong>Nieuwe kamer:</strong> Maak je eigen kamer met "Nieuwe Kamer". Je krijgt een 4-letterige
-                        code die automatisch verschijnt bij anderen.</p>
+                    <p><strong>Nieuwe kamer:</strong> Maak je eigen kamer met "Nieuwe Kamer". Je kunt de speltijd instellen
+                        (30-300 seconden) met de slider. De code verschijnt automatisch bij anderen.</p>
                     <p><strong>Host:</strong> De maker van de kamer kan de letter draaien, categorieën shuffelen, de
                         volgende ronde starten en spelers verwijderen. Als de host de kamer verlaat, neemt de volgende speler automatisch over!</p>
                     <p><strong>Verbinding verbroken?</strong> Je naam wordt automatisch onthouden. Herlaad de pagina en
@@ -80,7 +89,7 @@
                         opgeslagen en bij latere rondes automatisch goedgekeurd - maar alleen binnen dezelfde kamer!</p>
 
                     <h3>🎮 Spelregels</h3>
-                    <p>De host draait een letter en iedereen heeft <strong>30 seconden</strong> om antwoorden in te
+                    <p>De host draait een letter en iedereen heeft de ingestelde tijd (standaard <strong>30 seconden</strong>) om antwoorden in te
                         vullen voor elke categorie die met die letter beginnen.</p>
 
                     <h3>🏆 Punten Verdienen</h3>
@@ -97,7 +106,7 @@
                     </p>
 
                     <h3>✅ Stemproces</h3>
-                    <p>Na de tijd stemt iedereen op elkaars antwoorden:</p>
+                    <p>Na de tijd stemt iedereen op alle antwoorden:</p>
                     <ul>
                         <li>Je ziet elk antwoord één voor één</li>
                         <li>Je hebt <strong>15 seconden</strong> per antwoord om te stemmen</li>
@@ -105,7 +114,8 @@
                         <li>Als je niet stemt binnen de tijd, wordt het antwoord automatisch goedgekeurd</li>
                         <li>Stem ✅ (goed) of ❌ (fout)</li>
                         <li><strong>Je kunt je stem aanpassen</strong> zolang de stemtijd loopt - klik gewoon opnieuw op een knop!</li>
-                        <li>Je mag niet op je eigen antwoorden stemmen</li>
+                        <li><strong>Je mag ook op je eigen antwoorden stemmen</strong> - dit maakt het eerlijker en je kunt meediscussiëren!</li>
+                        <li>Goedgekeurde antwoorden worden opgeslagen in de kamerbibliotheek</li>
                         <li>Meerderheid beslist of het antwoord geldig is</li>
                     </ul>
 
@@ -232,7 +242,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=33"></script>
+    <script type="module" src="script.js?v=34"></script>
 </body>
 
 </html>

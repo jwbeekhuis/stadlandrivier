@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let activeCategories = [];
-    const gameDuration = 30; // Updated: 30 seconds
+    let gameDuration = 30; // Default: 30 seconds, can be changed by room creator
     let timerInterval;
     let timeLeft = gameDuration;
     let isGameActive = false;
@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerNameInput = document.getElementById('player-name');
     const roomNameInput = document.getElementById('room-name-input');
     const createRoomBtn = document.getElementById('create-room-btn');
+    const gameDurationSlider = document.getElementById('game-duration-slider');
+    const durationValueDisplay = document.getElementById('duration-value');
 
     // Game Elements
     const roomCodeDisplay = document.getElementById('room-code-display');
@@ -114,6 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
         voteYesBtn.addEventListener('click', () => castVote(true));
         voteNoBtn.addEventListener('click', () => castVote(false));
         if (moreTimeBtn) moreTimeBtn.addEventListener('click', requestMoreVoteTime);
+
+        // Duration slider
+        if (gameDurationSlider) {
+            gameDurationSlider.addEventListener('input', (e) => {
+                durationValueDisplay.textContent = e.target.value;
+            });
+        }
 
         subscribeToActiveRooms();
     }
@@ -265,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('playerName', name);
 
         const roomName = roomNameInput.value.trim() || `${name}'s Kamer`;
+        const selectedDuration = parseInt(gameDurationSlider.value) || 30;
         const code = generateRoomCode();
         roomId = code;
         isHost = true;
@@ -278,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentLetter: '?',
             categories: getRandomCategories(),
             timerEnd: null,
+            gameDuration: selectedDuration,
             players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }],
             votingState: null,
             createdAt: Date.now()
@@ -347,6 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
         roomCodeDisplay.textContent = data.roomId;
         playerCountDisplay.textContent = `👤 ${data.players.length}`;
         renderPlayersList(data.players);
+
+        // Update gameDuration from room data
+        if (data.gameDuration) {
+            gameDuration = data.gameDuration;
+        }
 
         if (JSON.stringify(activeCategories) !== JSON.stringify(data.categories)) {
             activeCategories = data.categories;
@@ -761,35 +777,36 @@ document.addEventListener('DOMContentLoaded', () => {
             votingResultOverlay.classList.add('hidden');
         }
 
-        if (currentUser.uid === state.targetUid) {
-            votingActions.classList.add('hidden');
-            voteTimer.classList.add('hidden');
-            votingStatusText.textContent = "Je medespelers stemmen op jouw antwoord...";
-            stopVoteTimer();
+        // Everyone can vote, including on their own answers
+        votingActions.classList.remove('hidden');
+
+        // Show which vote is currently selected
+        const currentVote = state.votes?.[currentUser.uid];
+        const isMyAnswer = currentUser.uid === state.targetUid;
+
+        if (currentVote === true) {
+            voteYesBtn.classList.add('selected');
+            voteNoBtn.classList.remove('selected');
+            votingStatusText.textContent = isMyAnswer
+                ? "Je hebt ✅ gestemd op je eigen antwoord. Je kunt je stem aanpassen."
+                : "Je hebt ✅ gestemd. Je kunt je stem aanpassen.";
+        } else if (currentVote === false) {
+            voteNoBtn.classList.add('selected');
+            voteYesBtn.classList.remove('selected');
+            votingStatusText.textContent = isMyAnswer
+                ? "Je hebt ❌ gestemd op je eigen antwoord. Je kunt je stem aanpassen."
+                : "Je hebt ❌ gestemd. Je kunt je stem aanpassen.";
         } else {
-            // Always show voting buttons - allow changing vote
-            votingActions.classList.remove('hidden');
+            voteYesBtn.classList.remove('selected');
+            voteNoBtn.classList.remove('selected');
+            votingStatusText.textContent = isMyAnswer
+                ? "Is je eigen antwoord goed of fout?"
+                : "Is dit antwoord goed of fout?";
+        }
 
-            // Show which vote is currently selected
-            const currentVote = state.votes?.[currentUser.uid];
-            if (currentVote === true) {
-                voteYesBtn.classList.add('selected');
-                voteNoBtn.classList.remove('selected');
-                votingStatusText.textContent = "Je hebt ✅ gestemd. Je kunt je stem aanpassen.";
-            } else if (currentVote === false) {
-                voteNoBtn.classList.add('selected');
-                voteYesBtn.classList.remove('selected');
-                votingStatusText.textContent = "Je hebt ❌ gestemd. Je kunt je stem aanpassen.";
-            } else {
-                voteYesBtn.classList.remove('selected');
-                voteNoBtn.classList.remove('selected');
-                votingStatusText.textContent = "Is dit antwoord goed of fout?";
-            }
-
-            // Start vote timer if not already running
-            if (!voteTimerInterval) {
-                startVoteTimer();
-            }
+        // Start vote timer if not already running
+        if (!voteTimerInterval) {
+            startVoteTimer();
         }
 
         if (isHost) {
@@ -863,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Prevent re-checking if already decided
         if (state.verdict) return;
 
-        const potentialVoters = roomData.players.length - 1; // Exclude target
+        const potentialVoters = roomData.players.length; // Everyone can vote now
         const currentVotes = Object.keys(state.votes || {}).length;
 
         if (potentialVoters <= 0 || currentVotes >= potentialVoters) {
