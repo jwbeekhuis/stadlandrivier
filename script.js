@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=49';
+import { translations } from './translations.js?v=50';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -120,10 +120,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateGameControlsContent() {
         // Update game controls text that's not in data-i18n
-        const roomLabel = document.querySelector('.room-info span');
-        if (roomLabel && roomLabel.textContent.includes('Kamer:')) {
-            const roomCode = document.getElementById('room-code-display').textContent;
-            roomLabel.innerHTML = `${t('room')} <strong id="room-code-display">${roomCode}</strong>`;
+        const roomCodeDisplay = document.getElementById('room-code-display');
+        if (roomCodeDisplay) {
+            const roomCode = roomCodeDisplay.textContent;
+            const roomLabel = document.querySelector('.room-info span');
+            if (roomLabel && roomCode !== '---') {
+                roomLabel.innerHTML = `<span data-i18n="room">${t('room')}</span> <strong id="room-code-display">${roomCode}</strong>`;
+            }
         }
 
         const deleteRoomBtn = document.getElementById('delete-room-game-btn');
