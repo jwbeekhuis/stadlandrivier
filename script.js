@@ -1106,7 +1106,10 @@ document.addEventListener('DOMContentLoaded', () => {
         categoriesContainer.classList.add('hidden');
 
         // Set category title
-        votingCategoryTitle.textContent = t('categories.' + state.category);
+        const translationKey = 'categories.' + state.category;
+        const translatedCategory = t(translationKey);
+        console.log(`Setting category title: category="${state.category}", key="${translationKey}", translated="${translatedCategory}"`);
+        votingCategoryTitle.textContent = translatedCategory;
 
         // Clear and render all answer cards
         votingItemsContainer.innerHTML = '';

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=69">
+    <link rel="stylesheet" href="style.css?v=70">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -180,7 +180,11 @@
 
         <!-- Voting Screen -->
         <section id="voting-screen" class="glass-panel voting-panel hidden">
-            <h2><span data-i18n="checkAllAnswers">Controleer Alle Antwoorden</span> - <span id="voting-category-title" style="color: var(--primary-color); font-weight: 800;">---</span></h2>
+            <h2 style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span data-i18n="checkAllAnswers">Controleer Alle Antwoorden</span>
+                <span style="color: var(--primary-color); font-weight: 800; font-size: 1.2em;">→</span>
+                <span id="voting-category-title" style="color: var(--primary-color); font-weight: 800; font-size: 1.2em;">---</span>
+            </h2>
 
             <div id="vote-timer" class="vote-timer">
                 <div class="vote-progress-container">
@@ -232,7 +236,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=69"></script>
+    <script type="module" src="script.js?v=70"></script>
 </body>
 
 </html>
