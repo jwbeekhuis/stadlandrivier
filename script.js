@@ -459,7 +459,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleDeleteRoomClick() {
-        if (!isHost) return;
+        console.log("Delete room clicked", { isHost, roomId });
+
+        if (!isHost) {
+            alert("Alleen de host kan de kamer verwijderen");
+            return;
+        }
+
+        if (!roomId) {
+            alert("Geen actieve kamer gevonden");
+            return;
+        }
 
         if (!confirm("Weet je zeker dat je deze kamer definitief wilt verwijderen?\n\nAlle spelers worden verwijderd en de kamer wordt gesloten.")) {
             return;
@@ -476,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stopHeartbeat();
 
             // Reset local state
+            const deletedRoomId = roomId;
             roomId = null;
             isHost = false;
             roomData = null;
@@ -487,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
             votingScreen.classList.add('hidden');
             lobbyScreen.classList.remove('hidden');
 
+            console.log(`Kamer ${deletedRoomId} is verwijderd!`);
             alert("Kamer is verwijderd!");
         } catch (e) {
             console.error("Error deleting room:", e);
