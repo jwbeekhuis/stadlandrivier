@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLanguage = lang;
         localStorage.setItem('language', lang);
         updateAllTranslations();
+        updateDynamicContent();
     }
 
     function updateAllTranslations() {
@@ -30,9 +31,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.placeholder = translation;
             } else if (el.tagName === 'INPUT' && el.type !== 'range') {
                 el.value = translation;
+            } else if (el.tagName === 'BUTTON') {
+                el.textContent = translation;
             } else {
                 el.textContent = translation;
             }
+        });
+
+        // Update elements with data-i18n-placeholder
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+            const key = el.getAttribute('data-i18n-placeholder');
+            el.placeholder = t(key);
         });
 
         // Update title separately to preserve HTML
@@ -40,6 +49,120 @@ document.addEventListener('DOMContentLoaded', () => {
         if (titleEl) {
             const parts = t('title').split(' ');
             titleEl.innerHTML = `${parts[0]} <span class="highlight">${parts[1]}</span> ${parts[2]} <small style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;" data-i18n="by">${t('by')}</small>`;
+        }
+
+        // Update tutorial content
+        updateTutorialContent();
+
+        // Update game controls
+        updateGameControlsContent();
+
+        // Update voting content
+        updateVotingContent();
+
+        // Update results content
+        updateResultsContent();
+    }
+
+    function updateTutorialContent() {
+        const tutorialContent = document.querySelector('.tutorial-content');
+        if (!tutorialContent) return;
+
+        tutorialContent.innerHTML = `
+            <h3>${t('tutorialRoomTitle')}</h3>
+            <p>${t('tutorialActiveRooms')}</p>
+            <p>${t('tutorialNewRoom')}</p>
+            <p>${t('tutorialHost')}</p>
+            <p>${t('tutorialKicked')}</p>
+            <p>${t('tutorialReconnect')}</p>
+
+            <h3>${t('tutorialLibraryTitle')}</h3>
+            <p>${t('tutorialLibrary')}</p>
+
+            <h3>${t('tutorialRulesTitle')}</h3>
+            <p>${t('tutorialRules')}</p>
+
+            <h3>${t('tutorialPointsTitle')}</h3>
+            <ul>
+                <li>${t('tutorialPoints20')}</li>
+                <li>${t('tutorialPoints10')}</li>
+                <li>${t('tutorialPoints5')}</li>
+            </ul>
+
+            <h3>${t('tutorialRecognitionTitle')}</h3>
+            <p>${t('tutorialRecognition')}</p>
+
+            <h3>${t('tutorialVotingTitle')}</h3>
+            <p>${t('tutorialVotingIntro')}</p>
+            <ul>
+                <li>${t('tutorialVoting1')}</li>
+                <li>${t('tutorialVoting2')}</li>
+                <li>${t('tutorialVoting3')}</li>
+                <li>${t('tutorialVoting4')}</li>
+                <li>${t('tutorialVoting5')}</li>
+                <li>${t('tutorialVoting6')}</li>
+                <li>${t('tutorialVoting7')}</li>
+                <li>${t('tutorialVoting8')}</li>
+                <li>${t('tutorialVoting9')}</li>
+                <li>${t('tutorialVoting10')}</li>
+            </ul>
+
+            <h3>${t('tutorialLogTitle')}</h3>
+            <p>${t('tutorialLog')}</p>
+        `;
+    }
+
+    function updateGameControlsContent() {
+        // Update game controls text that's not in data-i18n
+        const roomLabel = document.querySelector('.room-info span');
+        if (roomLabel && roomLabel.textContent.includes('Kamer:')) {
+            const roomCode = document.getElementById('room-code-display').textContent;
+            roomLabel.innerHTML = `${t('room')} <strong id="room-code-display">${roomCode}</strong>`;
+        }
+
+        const deleteRoomBtn = document.getElementById('delete-room-game-btn');
+        if (deleteRoomBtn) {
+            deleteRoomBtn.innerHTML = `<i class="fa-solid fa-trash"></i> ${t('deleteRoom')}`;
+            deleteRoomBtn.title = t('deleteRoom');
+        }
+
+        const rollBtn = document.getElementById('roll-btn');
+        if (rollBtn) rollBtn.textContent = t('rollLetter');
+
+        const stopBtn = document.getElementById('stop-btn');
+        if (stopBtn) stopBtn.textContent = t('stopRound');
+
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        if (shuffleBtn) {
+            shuffleBtn.innerHTML = `<i class="fa-solid fa-shuffle"></i> ${t('mixCategories')}`;
+            shuffleBtn.title = t('mixCategories');
+        }
+    }
+
+    function updateVotingContent() {
+        const moreTimeBtn = document.getElementById('more-time-btn');
+        if (moreTimeBtn) moreTimeBtn.textContent = t('moreTime');
+
+        const votingHeader = document.querySelector('#voting-screen h2');
+        if (votingHeader) votingHeader.textContent = t('checkAnswer');
+    }
+
+    function updateResultsContent() {
+        const resultsHeader = document.querySelector('#results-board h2');
+        if (resultsHeader) resultsHeader.textContent = t('results');
+
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        if (nextRoundBtn) nextRoundBtn.textContent = t('nextRound');
+
+        const logTitle = document.querySelector('.log-title');
+        if (logTitle) logTitle.textContent = t('roundLog');
+    }
+
+    function updateDynamicContent() {
+        // Update categories if they exist
+        if (activeCategories && activeCategories.length > 0) {
+            renderCategories();
+            updateInputPlaceholders();
         }
     }
     // --- Configuration ---
@@ -200,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const list = document.getElementById("active-rooms-list");
 
         if (rooms.length === 0) {
-            list.innerHTML = '<p class="no-rooms">Geen actieve kamers gevonden. Maak er een!</p>';
+            list.innerHTML = `<p class="no-rooms">${t('noRooms')}</p>`;
             return;
         }
 
@@ -214,15 +337,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="room-card" data-room-id="${room.id}">
                     <div class="room-header">
                         <div class="room-code">${room.id}</div>
-                        ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="Verwijder kamer"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="${t('deleteRoom')}"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                     <div class="room-name">${roomName}</div>
                     <div class="room-info">
-                        <span class="room-host">Host: ${hostName}</span>
+                        <span class="room-host">${t('host')} ${hostName}</span>
                         <span class="room-players">👤 ${playerCount}</span>
                     </div>
                     <button class="join-room-quick-btn" onclick="quickJoinRoom('${room.id}')">
-                        Meedoen
+                        ${t('joinRoom')}
                     </button>
                 </div>
             `;
@@ -231,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.quickJoinRoom = async function (code) {
         const name = playerNameInput.value.trim();
-        if (!name) return alert("Vul eerst je naam in!");
+        if (!name) return alert(t('enterName'));
 
         // Save name to localStorage
         localStorage.setItem('playerName', name);
@@ -243,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const roomSnap = await getDoc(roomRef);
 
         if (!roomSnap.exists()) {
-            return alert("Kamer niet meer beschikbaar!");
+            return alert(t('roomNotExist'));
         }
 
         const roomData = roomSnap.data();
@@ -485,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("You are now the host!");
                 // Show subtle notification
                 setTimeout(() => {
-                    if (confirm("Je bent nu de host van deze kamer! Je kunt nu de letter draaien en de volgende ronde starten.")) {
+                    if (confirm(t('nowHost'))) {
                         // User acknowledged
                     }
                 }, 500);
@@ -506,8 +629,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <span class="player-tag ${isMe ? 'me' : ''}">
-                    ${p.name} (${p.score} pts)
-                    ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="Verwijder speler"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                    ${p.name} (${p.score} ${t('points').toLowerCase()})
+                    ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="${t('confirmKick').replace('{name}', '')}"><i class="fa-solid fa-xmark"></i></button>` : ''}
                 </span>
             `;
         }).join('');
@@ -589,16 +712,16 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Delete room clicked", { isHost, roomId });
 
         if (!isHost) {
-            alert("Alleen de host kan de kamer verwijderen");
+            alert(t('confirmDelete'));
             return;
         }
 
         if (!roomId) {
-            alert("Geen actieve kamer gevonden");
+            alert(t('roomNotExist'));
             return;
         }
 
-        if (!confirm("Weet je zeker dat je deze kamer definitief wilt verwijderen?\n\nAlle spelers worden verwijderd en de kamer wordt gesloten.")) {
+        if (!confirm(t('confirmDelete'))) {
             return;
         }
 
@@ -625,11 +748,11 @@ document.addEventListener('DOMContentLoaded', () => {
             votingScreen.classList.add('hidden');
             lobbyScreen.classList.remove('hidden');
 
-            console.log(`Kamer ${deletedRoomId} is verwijderd!`);
-            alert("Kamer is verwijderd!");
+            console.log(`Room ${deletedRoomId} deleted!`);
+            alert(t('roomDeleted'));
         } catch (e) {
             console.error("Error deleting room:", e);
-            alert("Fout bij verwijderen: " + e.message);
+            alert("Error: " + e.message);
         }
     }
 
@@ -837,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state) {
             votingScreen.classList.remove('hidden');
             gameBoard.classList.add('hidden');
-            votingStatusText.textContent = "Laden...";
+            votingStatusText.textContent = t('loading');
             votingActions.classList.add('hidden');
             voteCounts.classList.add('hidden');
             votingResultOverlay.classList.add('hidden');
@@ -850,7 +973,7 @@ document.addEventListener('DOMContentLoaded', () => {
         categoriesContainer.classList.add('hidden');
 
         votingPlayerName.textContent = state.targetPlayerName;
-        votingCategory.textContent = state.category;
+        votingCategory.textContent = t('categories.' + state.category);
         votingAnswerDisplay.textContent = state.answer;
 
         // Show Live Stats
@@ -883,16 +1006,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (state.verdict === 'approved') {
                 votingVerdictIcon.innerHTML = '<i class="fa-solid fa-check" style="color: #4ade80;"></i>';
-                votingVerdictText.textContent = "GOEDGEKEURD!";
+                votingVerdictText.textContent = t('approved');
                 votingVerdictText.style.color = "#4ade80";
             } else {
                 votingVerdictIcon.innerHTML = '<i class="fa-solid fa-xmark" style="color: #f87171;"></i>';
-                votingVerdictText.textContent = "AFGEKEURD!";
+                votingVerdictText.textContent = t('rejected');
                 votingVerdictText.style.color = "#f87171";
             }
 
             // Update status text when verdict is shown
-            votingStatusText.textContent = "Verdict besloten!";
+            votingStatusText.textContent = t('verdictDecided');
 
             // Verdict shown, don't show voting UI anymore
             return;
@@ -911,20 +1034,20 @@ document.addEventListener('DOMContentLoaded', () => {
             voteYesBtn.classList.add('selected');
             voteNoBtn.classList.remove('selected');
             votingStatusText.textContent = isMyAnswer
-                ? "Je hebt ✅ gestemd op je eigen antwoord. Je kunt je stem aanpassen."
-                : "Je hebt ✅ gestemd. Je kunt je stem aanpassen.";
+                ? t('youVotedYesOwn')
+                : t('youVotedYes');
         } else if (currentVote === false) {
             voteNoBtn.classList.add('selected');
             voteYesBtn.classList.remove('selected');
             votingStatusText.textContent = isMyAnswer
-                ? "Je hebt ❌ gestemd op je eigen antwoord. Je kunt je stem aanpassen."
-                : "Je hebt ❌ gestemd. Je kunt je stem aanpassen.";
+                ? t('youVotedNoOwn')
+                : t('youVotedNo');
         } else {
             voteYesBtn.classList.remove('selected');
             voteNoBtn.classList.remove('selected');
             votingStatusText.textContent = isMyAnswer
-                ? "Is je eigen antwoord goed of fout?"
-                : "Is dit antwoord goed of fout?";
+                ? t('isOwnAnswerCorrect')
+                : t('isAnswerCorrect');
         }
 
         // Start vote timer if not already running
@@ -1245,10 +1368,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 entry.points = result.points || 0;
 
                 // Add reasoning
-                if (result.points === 20) entry.pointsReason = "Uniek antwoord";
-                else if (result.points === 10) entry.pointsReason = "Enige in categorie";
-                else if (result.points === 5) entry.pointsReason = "Gedeeld antwoord";
-                else entry.pointsReason = "Niet goedgekeurd";
+                if (result.points === 20) entry.pointsReason = t('uniqueAnswer');
+                else if (result.points === 10) entry.pointsReason = t('onlyInCategory');
+                else if (result.points === 5) entry.pointsReason = t('sharedAnswer');
+                else entry.pointsReason = t('notApproved');
             }
         });
 
@@ -1326,18 +1449,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="log-main">
                         <div>
                             <span class="log-player">${entry.playerName}</span>
-                            <span class="log-cat">bij ${entry.category}</span>
+                            <span class="log-cat">${t('at')} ${t('categories.' + entry.category)}</span>
                             <span class="log-word">"${entry.answer}"</span>
                         </div>
                         <div class="log-status">
-                            ${entry.isValid ? '✅' : '❌'} 
-                            <small>${entry.isAuto ? '(Auto-Doc)' : '(Manual)'}</small>
-                            ${entry.points !== undefined ? `<div class="log-points"><strong>+${entry.points} pts</strong> <span class="log-reason">${entry.pointsReason || ''}</span></div>` : ''}
+                            ${entry.isValid ? '✅' : '❌'}
+                            <small>${entry.isAuto ? t('autoApproved') : ''}</small>
+                            ${entry.points !== undefined ? `<div class="log-points"><strong>+${entry.points} ${t('points').toLowerCase()}</strong> <span class="log-reason">${entry.pointsReason || ''}</span></div>` : ''}
                         </div>
                     </div>
                     ${!entry.isAuto ? `
                         <div class="log-details">
-                            <span class="vote-tally">Stemmen: <strong>${yes}✅ / ${no}❌</strong></span>
+                            <span class="vote-tally">${t('waitingForVotes').replace('Wachten op stemmen...', 'Stemmen').replace('Waiting for votes...', 'Votes')}: <strong>${yes}✅ / ${no}❌</strong></span>
                             <span class="voters-string" style="font-size: 0.75rem; opacity: 0.5;">${voterNames}</span>
                         </div>
                     ` : ''}
@@ -1387,11 +1510,12 @@ document.addEventListener('DOMContentLoaded', () => {
         categoriesContainer.innerHTML = '';
         activeCategories.forEach(cat => {
             const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
+            const translatedCat = t('categories.' + cat);
             const div = document.createElement('div');
             div.className = 'category-input-group';
             div.innerHTML = `
-                <label for="input-${safeId}">${cat}</label>
-                <input type="text" id="input-${safeId}" placeholder="${cat}..." disabled autocomplete="off">
+                <label for="input-${safeId}">${translatedCat}</label>
+                <input type="text" id="input-${safeId}" placeholder="${translatedCat}..." disabled autocomplete="off">
             `;
             categoriesContainer.appendChild(div);
         });
@@ -1400,8 +1524,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateInputPlaceholders() {
         activeCategories.forEach(cat => {
             const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
+            const translatedCat = t('categories.' + cat);
             const input = document.getElementById(`input-${safeId}`);
-            if (input) input.placeholder = `${cat} met ${currentLetter}`;
+            if (input) input.placeholder = `${translatedCat} ${currentLanguage === 'nl' ? 'met' : 'with'} ${currentLetter}`;
         });
     }
 

@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=43">
+    <link rel="stylesheet" href="style.css?v=44">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -35,19 +35,19 @@
 
         <!-- Lobby Screen -->
         <section id="lobby-screen" class="glass-panel lobby-panel">
-            <h2>Welkom!</h2>
+            <h2 data-i18n="welcome">Welkom!</h2>
             <div class="input-group">
-                <label for="player-name">Jouw Naam</label>
-                <input type="text" id="player-name" placeholder="Typ je naam...">
+                <label for="player-name" data-i18n="yourName">Jouw Naam</label>
+                <input type="text" id="player-name" placeholder="Typ je naam..." data-i18n-placeholder="namePlaceholder">
             </div>
 
             <div class="input-group">
-                <label for="room-name-input">Kamer Naam (optioneel)</label>
-                <input type="text" id="room-name-input" placeholder="Bijv. Vrienden Groep...">
+                <label for="room-name-input" data-i18n="roomName">Kamer Naam (optioneel)</label>
+                <input type="text" id="room-name-input" placeholder="Bijv. Vrienden Groep..." data-i18n-placeholder="roomNamePlaceholder">
             </div>
 
             <div class="input-group">
-                <label for="game-duration-slider">Speeltijd: <strong><span id="duration-value">30</span> seconden</strong></label>
+                <label for="game-duration-slider"><span data-i18n="gameTime">Speeltijd:</span> <strong><span id="duration-value">30</span> <span data-i18n="seconds">seconden</span></strong></label>
                 <input type="range" id="game-duration-slider" min="30" max="300" step="10" value="30" class="duration-slider">
                 <div class="slider-labels">
                     <span>30s</span>
@@ -56,14 +56,14 @@
             </div>
 
             <div class="lobby-actions">
-                <button id="create-room-btn" class="primary-btn">Nieuwe Kamer</button>
+                <button id="create-room-btn" class="primary-btn" data-i18n="newRoom">Nieuwe Kamer</button>
             </div>
 
             <!-- Active Rooms -->
             <div class="active-rooms-container">
-                <h3 class="rooms-title">Actieve Kamers</h3>
+                <h3 class="rooms-title" data-i18n="activeRooms">Actieve Kamers</h3>
                 <div id="active-rooms-list" class="rooms-list">
-                    <p class="loading-rooms">Laden...</p>
+                    <p class="loading-rooms" data-i18n="loading">Laden...</p>
                 </div>
             </div>
         </section>
@@ -72,7 +72,7 @@
         <section class="glass-panel tutorial-panel">
             <details class="tutorial-section" open id="tutorial-details">
                 <summary class="tutorial-toggle">
-                    <i class="fa-solid fa-circle-info"></i> Hoe werkt het?
+                    <i class="fa-solid fa-circle-info"></i> <span data-i18n="howItWorks">Hoe werkt het?</span>
                 </summary>
                 <div class="tutorial-content"
                     onclick="document.getElementById('tutorial-details').open = !document.getElementById('tutorial-details').open">
@@ -133,9 +133,9 @@
         <!-- Game Controls (Hidden in Lobby) -->
         <section id="game-controls" class="glass-panel controls-panel hidden">
             <div class="room-info">
-                <span>Kamer: <strong id="room-code-display">---</strong></span>
+                <span><span data-i18n="room">Kamer:</span> <strong id="room-code-display">---</strong></span>
                 <span id="player-count">👤 1</span>
-                <button id="delete-room-game-btn" class="delete-room-game-btn hidden" title="Verwijder kamer">
+                <button id="delete-room-game-btn" class="delete-room-game-btn hidden" data-i18n="deleteRoom" title="Verwijder kamer">
                     <i class="fa-solid fa-trash"></i> Verwijder Kamer
                 </button>
             </div>
@@ -144,7 +144,7 @@
                     <span id="current-letter">?</span>
                 </div>
                 <!-- Only Host sees this initially, but we handle visibility in JS -->
-                <button id="roll-btn" class="primary-btn pulse">DRAAI LETTER</button>
+                <button id="roll-btn" class="primary-btn pulse" data-i18n="rollLetter">DRAAI LETTER</button>
             </div>
 
             <div class="timer-container">
@@ -158,7 +158,7 @@
 
         <section id="game-board" class="glass-panel game-board hidden">
             <div class="controls-bar">
-                <button id="shuffle-btn" class="sm-btn" title="Nieuwe Categorieën"><i class="fa-solid fa-shuffle"></i>
+                <button id="shuffle-btn" class="sm-btn" title="Nieuwe Categorieën" data-i18n="mixCategories"><i class="fa-solid fa-shuffle"></i>
                     Mix Categorieën</button>
             </div>
 
@@ -172,16 +172,16 @@
             </div>
 
             <div class="action-bar">
-                <button id="stop-btn" class="danger-btn">STOP DE RONDE</button>
+                <button id="stop-btn" class="danger-btn" data-i18n="stopRound">STOP DE RONDE</button>
             </div>
         </section>
 
         <!-- Voting Screen -->
         <section id="voting-screen" class="glass-panel voting-panel hidden">
-            <h2>Controleer Antwoord</h2>
+            <h2 data-i18n="checkAnswer">Controleer Antwoord</h2>
             <div class="voting-content">
-                <p class="voting-context">Heeft <strong id="voting-player-name">---</strong> bij <span
-                        id="voting-category">---</span> het volgende antwoord:</p>
+                <p class="voting-context"><span data-i18n="hasAnswered">Heeft</span> <strong id="voting-player-name">---</strong> <span data-i18n="at">bij</span> <span
+                        id="voting-category">---</span> <span data-i18n="theFollowingAnswer">het volgende antwoord:</span></p>
                 <div class="voting-answer" id="voting-answer-display">---</div>
 
                 <div id="voting-actions" class="voting-actions">
@@ -194,7 +194,7 @@
                         <div class="vote-progress-bar" id="vote-progress-bar"></div>
                         <span class="vote-time-text" id="vote-time-left">15</span>
                     </div>
-                    <button id="more-time-btn" class="more-time-btn hidden">+10s Meer Tijd</button>
+                    <button id="more-time-btn" class="more-time-btn hidden" data-i18n="moreTime">+10s Meer Tijd</button>
                 </div>
 
                 <div id="voting-status">
@@ -210,7 +210,7 @@
                             <div id="no-voters" class="voters-list"></div>
                         </div>
                     </div>
-                    <p id="voting-status-text">Wachten op stemmen...</p>
+                    <p id="voting-status-text" data-i18n="waitingForVotes">Wachten op stemmen...</p>
                 </div>
 
                 <!-- 5s Result Overlay -->
@@ -222,14 +222,14 @@
         </section>
 
         <section id="results-board" class="glass-panel results-board hidden">
-            <h2>Resultaten</h2>
+            <h2 data-i18n="results">Resultaten</h2>
             <div class="results-table-container">
                 <table class="results-table">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Naam</th>
-                            <th class="text-right">Punten</th>
+                            <th data-i18n="name">Naam</th>
+                            <th class="text-right" data-i18n="points">Punten</th>
                         </tr>
                     </thead>
                     <tbody id="results-list">
@@ -239,17 +239,17 @@
             </div>
 
             <div id="game-history-log" class="history-log hidden">
-                <h3 class="log-title">Ronde Logboek</h3>
+                <h3 class="log-title" data-i18n="roundLog">Ronde Logboek</h3>
                 <div id="log-entries" class="log-entries">
                     <!-- Injected via JS -->
                 </div>
             </div>
 
-            <button id="next-round-btn" class="primary-btn pulse">VOLGENDE RONDE</button>
+            <button id="next-round-btn" class="primary-btn pulse" data-i18n="nextRound">VOLGENDE RONDE</button>
         </section>
     </main>
 
-    <script type="module" src="script.js?v=43"></script>
+    <script type="module" src="script.js?v=44"></script>
 </body>
 
 </html>
