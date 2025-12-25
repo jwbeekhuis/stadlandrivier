@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=30">
+    <link rel="stylesheet" href="style.css?v=31">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -46,11 +46,6 @@
 
             <div class="lobby-actions">
                 <button id="create-room-btn" class="primary-btn">Nieuwe Kamer</button>
-                <div class="divider">OF</div>
-                <div class="join-group">
-                    <input type="text" id="room-code-input" placeholder="Kamer Code (bijv. X4K9)" maxlength="4">
-                    <button id="join-room-btn" class="secondary-btn">Join Kamer</button>
-                </div>
             </div>
 
             <!-- Active Rooms -->
@@ -76,7 +71,7 @@
                     <p><strong>Nieuwe kamer:</strong> Maak je eigen kamer met "Nieuwe Kamer". Je krijgt een 4-letterige
                         code die automatisch verschijnt bij anderen.</p>
                     <p><strong>Host:</strong> De maker van de kamer kan de letter draaien, categorieën shuffelen en de
-                        volgende ronde starten.</p>
+                        volgende ronde starten. Als de host de kamer verlaat, neemt de volgende speler automatisch over!</p>
                     <p><strong>Verbinding verbroken?</strong> Je naam wordt automatisch onthouden. Herlaad de pagina en
                         klik gewoon opnieuw op "Meedoen" - je komt terug in dezelfde kamer!</p>
 
@@ -228,7 +223,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=30"></script>
+    <script type="module" src="script.js?v=31"></script>
 </body>
 
 </html>

@@ -39,8 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerNameInput = document.getElementById('player-name');
     const roomNameInput = document.getElementById('room-name-input');
     const createRoomBtn = document.getElementById('create-room-btn');
-    const joinRoomBtn = document.getElementById('join-room-btn');
-    const roomCodeInput = document.getElementById('room-code-input');
 
     // Game Elements
     const roomCodeDisplay = document.getElementById('room-code-display');
@@ -100,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         createRoomBtn.addEventListener('click', createRoom);
-        joinRoomBtn.addEventListener('click', joinRoom);
         rollBtn.addEventListener('click', handleRollClick);
         stopBtn.addEventListener('click', handleStopClick);
         if (deleteRoomGameBtn) deleteRoomGameBtn.addEventListener('click', handleDeleteRoomClick);
@@ -397,12 +394,26 @@ document.addEventListener('DOMContentLoaded', () => {
             resetBoard();
         }
 
-        if (currentUser.uid === data.players[0]?.uid) {
+        const wasHost = isHost;
+        const shouldBeHost = currentUser.uid === data.players[0]?.uid;
+
+        if (shouldBeHost) {
             isHost = true;
             rollBtn.disabled = data.status === 'playing';
             stopBtn.classList.remove('hidden');
             if (shuffleBtn) shuffleBtn.classList.remove('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.remove('hidden');
+
+            // Notify if just became host
+            if (!wasHost && roomData) {
+                console.log("You are now the host!");
+                // Show subtle notification
+                setTimeout(() => {
+                    if (confirm("Je bent nu de host van deze kamer! Je kunt nu de letter draaien en de volgende ronde starten.")) {
+                        // User acknowledged
+                    }
+                }, 500);
+            }
         } else {
             isHost = false;
             rollBtn.classList.add('hidden');
@@ -560,7 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!roomSnap.exists()) return;
 
-            const players = roomSnap.data().players;
+            const data = roomSnap.data();
+            const players = data.players;
             const now = Date.now();
             const inactiveThreshold = 30000; // 30 seconds
 
@@ -571,8 +583,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Only update if players were removed
             if (activePlayers.length < players.length) {
-                console.log(`Removing ${players.length - activePlayers.length} inactive player(s)`);
-                await updateDoc(roomRef, { players: activePlayers });
+                const removedCount = players.length - activePlayers.length;
+                console.log(`Removing ${removedCount} inactive player(s)`);
+
+                // Check if the first player (host) was removed
+                const oldHostUid = players[0]?.uid;
+                const newHostUid = activePlayers[0]?.uid;
+
+                if (activePlayers.length > 0) {
+                    await updateDoc(roomRef, { players: activePlayers });
+
+                    // Log host change if it happened
+                    if (oldHostUid !== newHostUid) {
+                        console.log(`Host changed from ${players[0]?.name} to ${activePlayers[0]?.name}`);
+
+                        // Update hostId in room data for consistency
+                        await updateDoc(roomRef, { hostId: newHostUid });
+                    }
+                } else {
+                    // No players left, delete the room
+                    console.log("No active players left, deleting room");
+                    await updateDoc(roomRef, { status: 'deleted' });
+                }
             }
         } catch (e) {
             console.error("Cleanup error:", e);
