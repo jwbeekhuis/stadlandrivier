@@ -1006,6 +1006,60 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateFinalScores(finalSnap.data());
     }
 
+    // Update only vote stats without re-rendering entire UI
+    function updateVoteStats(state) {
+        if (!state || !state.answers) return;
+
+        const answers = state.answers || [];
+        const sortedAnswers = answers.sort((a, b) => a.playerIndex - b.playerIndex);
+
+        sortedAnswers.forEach((answerData, index) => {
+            const voteKey = `${answerData.playerUid}_${index}`;
+
+            // Calculate vote stats for this answer (from both live votes and submitted votes)
+            const votesForThisAnswer = {};
+
+            // First get live votes from state.votes
+            Object.entries(state.votes || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            // Then get submitted votes from state.allPlayersVoted (these are finalized)
+            Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            const yesCount = Object.values(votesForThisAnswer).filter(v => v === true).length;
+            const noCount = Object.values(votesForThisAnswer).filter(v => v === false).length;
+
+            // Create voter names list
+            const voterNamesList = Object.entries(votesForThisAnswer).map(([uid, vote]) => {
+                const p = roomData.players.find(pl => pl.uid === uid);
+                const name = p ? p.name : 'Unknown';
+                return vote ? `${name}✅` : `${name}❌`;
+            }).join(', ');
+
+            // Find the vote-stats div for this answer and update it
+            const votingItems = document.querySelectorAll('.voting-item');
+            if (votingItems[index]) {
+                const voteStatsDiv = votingItems[index].querySelector('.vote-stats');
+                if (voteStatsDiv) {
+                    voteStatsDiv.innerHTML = `
+                        <span class="vote-count">${yesCount}✅ ${noCount}❌</span>
+                        ${voterNamesList ? '<div class="voter-names">' + voterNamesList + '</div>' : ''}
+                    `;
+                }
+            }
+        });
+
+        // Check if all players voted (for non-host players to auto-advance)
+        checkIfAllPlayersVoted(state);
+    }
+
     // NEW BATCH VOTING UI - Show all answers for category at once
     function showVotingUI(state) {
         if (!state) {
@@ -1024,9 +1078,10 @@ document.addEventListener('DOMContentLoaded', () => {
             isRenderingVotes = false; // Allow fresh render
         }
 
-        // Prevent re-rendering if already showing this category
+        // If already showing this category, just update vote stats instead of full re-render
         if (currentVotingCategory === state.category && isRenderingVotes) {
-            console.log('Already rendering this category, skipping update');
+            console.log('Already rendering this category, updating vote stats only');
+            updateVoteStats(state);
             return;
         }
 
@@ -1210,6 +1265,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             isSubmittingVotes = false;
         }, 2000);
+    }
+
+    // Check if all players voted (for non-host players, to know when voting is complete)
+    function checkIfAllPlayersVoted(state) {
+        if (!state || !roomData) return;
+
+        const allPlayersVoted = state.allPlayersVoted || {};
+        const playerCount = roomData.players.length;
+        const votedCount = Object.keys(allPlayersVoted).length;
+
+        console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
+
+        // If all players voted and we're the host, process results
+        if (isHost && votedCount >= playerCount) {
+            console.log('All players voted, processing category results...');
+            processCategoryResults(state);
+        }
     }
 
     async function checkAllPlayersVoted() {
