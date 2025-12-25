@@ -391,7 +391,7 @@ body {
 
 .tutorial-content h3 {
     font-size: 1.15rem;
-    margin: 25px 0 12px 0;
+    margin: 35px 0 15px 0;
     color: var(--primary-color);
     display: flex;
     align-items: center;
@@ -403,14 +403,14 @@ body {
 }
 
 .tutorial-content p {
-    margin: 10px 0;
-    line-height: 1.7;
+    margin: 15px 0 20px 0;
+    line-height: 1.8;
     opacity: 0.95;
     font-size: 1rem;
 }
 
 .tutorial-content ul {
-    margin: 12px 0;
+    margin: 15px 0 25px 0;
     padding-left: 30px;
     list-style: none;
 }
