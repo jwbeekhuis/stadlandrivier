@@ -488,12 +488,47 @@ body {
     transform: translateY(-2px);
 }
 
+.room-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .room-code {
     font-size: 1.5rem;
     font-weight: 800;
     color: var(--accent-color);
-    text-align: center;
     letter-spacing: 2px;
+}
+
+.room-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    text-align: center;
+    margin: -5px 0 5px 0;
+    opacity: 0.9;
+}
+
+.delete-room-btn {
+    background: transparent;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.delete-room-btn:hover {
+    background: var(--danger-color);
+    color: white;
+    transform: scale(1.1);
 }
 
 .room-info {

@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Lobby Inputs
     const playerNameInput = document.getElementById('player-name');
+    const roomNameInput = document.getElementById('room-name-input');
     const createRoomBtn = document.getElementById('create-room-btn');
     const joinRoomBtn = document.getElementById('join-room-btn');
     const roomCodeInput = document.getElementById('room-code-input');
@@ -190,10 +191,16 @@ document.addEventListener('DOMContentLoaded', () => {
         list.innerHTML = rooms.map(room => {
             const playerCount = room.players?.length || 0;
             const hostName = room.players?.[0]?.name || "Unknown";
+            const roomName = room.roomName || `${hostName}'s Kamer`;
+            const isMyRoom = room.players?.some(p => p.uid === currentUser?.uid);
 
             return `
                 <div class="room-card" data-room-id="${room.id}">
-                    <div class="room-code">${room.id}</div>
+                    <div class="room-header">
+                        <div class="room-code">${room.id}</div>
+                        ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="Verwijder kamer"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                    <div class="room-name">${roomName}</div>
                     <div class="room-info">
                         <span class="room-host">Host: ${hostName}</span>
                         <span class="room-players">👤 ${playerCount}</span>
@@ -228,12 +235,30 @@ document.addEventListener('DOMContentLoaded', () => {
         subscribeToRoom(code);
     };
 
+    window.deleteRoom = async function (code) {
+        if (!confirm("Weet je zeker dat je deze kamer wilt verwijderen?")) {
+            return;
+        }
+
+        try {
+            const roomRef = doc(db, "rooms", code);
+            await updateDoc(roomRef, {
+                status: 'deleted'
+            });
+            alert("Kamer verwijderd!");
+        } catch (e) {
+            console.error("Error deleting room:", e);
+            alert("Fout bij verwijderen: " + e.message);
+        }
+    };
+
     // --- Multiplayer / Lobby Logic ---
 
     async function createRoom() {
         const name = playerNameInput.value.trim();
         if (!name) return alert("Vul eerst je naam in!");
 
+        const roomName = roomNameInput.value.trim() || `${name}'s Kamer`;
         const code = generateRoomCode();
         roomId = code;
         isHost = true;
@@ -241,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const roomRef = doc(db, "rooms", code);
         await setDoc(roomRef, {
             roomId: code,
+            roomName: roomName,
             hostId: currentUser.uid,
             status: 'lobby',
             currentLetter: '?',
@@ -322,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resetBoard();
         }
 
-        if (currentUser.uid === data.hostId) {
+        if (currentUser.uid === data.players[0]?.uid) {
             isHost = true;
             rollBtn.disabled = data.status === 'playing';
             stopBtn.classList.remove('hidden');
