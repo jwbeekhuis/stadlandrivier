@@ -69,11 +69,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const votingVerdictIcon = document.getElementById('voting-verdict-icon');
     const votingVerdictText = document.getElementById('voting-verdict-text');
 
+
     // Circle Config
-    const radius = timerCircle.r.baseVal.value;
-    const circumference = radius * 2 * Math.PI;
-    timerCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-    timerCircle.style.strokeDashoffset = 0;
+    let circumference = 0;
+    if (timerCircle) {
+        const radius = timerCircle.r.baseVal.value;
+        circumference = radius * 2 * Math.PI;
+        timerCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        timerCircle.style.strokeDashoffset = 0;
+    }
 
     // --- Initialization ---
     async function init() {
@@ -116,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (titleClickTimer) clearTimeout(titleClickTimer);
             titleClickTimer = setTimeout(() => { titleClickCount = 0; }, 2000);
 
-            if (titleClickCount === 5) {
+            if (titleClickCount === 1) {
                 const confirmed = confirm("⚠️ SECRET MENU ⚠️\n\nWil je de hele woordenbibliotheek wissen (flushen)?\nDit kan niet ongedaan worden gemaakt!");
                 if (confirmed) {
                     await flushLibrary();
@@ -639,7 +643,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkLibrary(category, word) {
         const cleanWord = normalizeAnswer(word);
-        const docId = `${category}_${cleanWord}`.replace(/\s/g, '_');
+        const letter = currentLetter;
+        const docId = `${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');
         const docRef = doc(db, "library", docId);
         const snap = await getDoc(docRef);
         return snap.exists();
@@ -647,9 +652,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function addToLibrary(category, word) {
         const cleanWord = normalizeAnswer(word);
-        const docId = `${category}_${cleanWord}`.replace(/\s/g, '_');
+        const letter = currentLetter;
+        const docId = `${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');
         await setDoc(doc(db, "library", docId), {
             category: category,
+            letter: letter,
             word: word, // Keep original display version
             cleanWord: cleanWord,
             approvedAt: Date.now()
@@ -760,11 +767,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const logEntries = document.getElementById('log-entries');
         const history = data.gameHistory || [];
 
+        console.log('renderGameLog called', { historyLength: history.length, logBox, logEntries });
+
         if (history.length === 0) {
             logBox.classList.add('hidden');
+            console.log('No history, hiding log');
             return;
         }
 
+        console.log('Rendering game log with', history.length, 'entries');
         logBox.classList.remove('hidden');
         logEntries.innerHTML = history.map(entry => {
             const votes = entry.votes || {};
@@ -860,9 +871,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateTimerDisplay() {
         timerDisplay.textContent = Math.max(0, timeLeft);
-        const offset = circumference - (timeLeft / gameDuration) * circumference;
-        timerCircle.style.strokeDashoffset = offset;
-        timerCircle.style.stroke = timeLeft <= 10 ? 'var(--danger-color)' : 'var(--accent-color)';
+        if (timerCircle) {
+            const offset = circumference - (timeLeft / gameDuration) * circumference;
+            timerCircle.style.strokeDashoffset = offset;
+            timerCircle.style.stroke = timeLeft <= 10 ? 'var(--danger-color)' : 'var(--accent-color)';
+        }
     }
 
     function enableInputs() {
