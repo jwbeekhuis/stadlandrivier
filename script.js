@@ -345,8 +345,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (roomUnsubscribe) roomUnsubscribe();
 
         roomUnsubscribe = onSnapshot(doc(db, "rooms", code), (doc) => {
-            if (!doc.exists()) return;
+            if (!doc.exists()) {
+                // Room doesn't exist anymore
+                returnToLobby("Deze kamer bestaat niet meer.");
+                return;
+            }
+
             const data = doc.data();
+
+            // Check if room is deleted
+            if (data.status === 'deleted') {
+                returnToLobby("Deze kamer is verwijderd.");
+                return;
+            }
+
+            // Check if current player is still in the room
+            const stillInRoom = data.players.some(p => p.uid === currentUser.uid);
+            if (!stillInRoom) {
+                returnToLobby("Je bent uit de kamer verwijderd.");
+                return;
+            }
+
             roomData = data;
             updateGameState(data);
         });
@@ -437,6 +456,40 @@ document.addEventListener('DOMContentLoaded', () => {
         controlsPanel.classList.remove('hidden');
         gameBoard.classList.remove('hidden');
         roomCodeDisplay.textContent = code;
+    }
+
+    function returnToLobby(message) {
+        // Stop heartbeat
+        stopHeartbeat();
+
+        // Unsubscribe from room
+        if (roomUnsubscribe) {
+            roomUnsubscribe();
+            roomUnsubscribe = null;
+        }
+
+        // Reset local state
+        roomId = null;
+        isHost = false;
+        roomData = null;
+        isGameActive = false;
+
+        // Hide all game screens
+        controlsPanel.classList.add('hidden');
+        gameBoard.classList.add('hidden');
+        votingScreen.classList.add('hidden');
+        resultsBoard.classList.add('hidden');
+
+        // Show lobby screen
+        lobbyScreen.classList.remove('hidden');
+
+        // Show message if provided
+        if (message) {
+            alert(message);
+        }
+
+        // Refresh room list
+        listenToActiveRooms();
     }
 
     // --- Actions ---
@@ -713,7 +766,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         }
-        calculateFinalScores(data);
+        // Get fresh data for final score calculation
+        const freshSnap = await getDoc(roomRef);
+        calculateFinalScores(freshSnap.data());
     }
 
     function showVotingUI(state) {
@@ -773,6 +828,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 votingVerdictText.textContent = "AFGEKEURD!";
                 votingVerdictText.style.color = "#f87171";
             }
+
+            // Update status text when verdict is shown
+            votingStatusText.textContent = "Verdict besloten!";
+
             // Verdict shown, don't show voting UI anymore
             return;
         } else {
