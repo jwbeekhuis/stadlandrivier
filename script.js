@@ -1,5 +1,5 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=99';
-import { translations } from './translations.js?v=99';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=100';
+import { translations } from './translations.js?v=100';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -885,8 +885,12 @@ document.addEventListener('DOMContentLoaded', () => {
             verifiedResults: {}
         }));
 
+        // Generate new random categories for the next round
+        const newCategories = getRandomCategories();
+
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'lobby',
+            categories: newCategories,
             gameHistory: [],
             votingState: null,  // Reset voting state in database
             scoresCalculated: false,  // Reset scores calculated flag for new round
@@ -1414,7 +1418,8 @@ document.addEventListener('DOMContentLoaded', () => {
         votingScreen.classList.remove('hidden');
         gameBoard.classList.add('hidden');
         resultsBoard.classList.add('hidden');
-        categoriesContainer.classList.add('hidden');
+        // Keep categories visible during voting so players can see what they're voting on
+        categoriesContainer.classList.remove('hidden');
 
         // Set category title - only if category is defined
         if (state.category) {
@@ -2143,6 +2148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         letterDisplay.textContent = '?';
         updateTimerDisplay();
         renderCategories();
+        categoriesContainer.classList.remove('hidden');
 
         // Hide sticky timer when returning to lobby
         const stickyTimerBar = document.getElementById('sticky-timer-bar');
