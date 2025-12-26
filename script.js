@@ -1,5 +1,5 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=101';
-import { translations } from './translations.js?v=101';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=102';
+import { translations } from './translations.js?v=102';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const deleteRoomBtn = document.getElementById('delete-room-game-btn');
         if (deleteRoomBtn) {
-            deleteRoomBtn.innerHTML = `<i class="fa-solid fa-trash"></i> ${t('deleteRoom')}`;
+            deleteRoomBtn.textContent = t('deleteRoom');
             deleteRoomBtn.title = t('deleteRoom');
         }
 
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const shuffleBtn = document.getElementById('shuffle-btn');
         if (shuffleBtn) {
-            shuffleBtn.innerHTML = `<i class="fa-solid fa-shuffle"></i> ${t('mixCategories')}`;
+            shuffleBtn.textContent = t('mixCategories');
             shuffleBtn.title = t('mixCategories');
         }
     }
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="room-card" data-room-id="${room.id}">
                     <div class="room-header">
                         <div class="room-code">${room.id}</div>
-                        ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="${t('deleteRoom')}"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="${t('deleteRoom')}">${t('deleteRoom')}</button>` : ''}
                     </div>
                     <div class="room-name">${roomName}</div>
                     <div class="room-info">
