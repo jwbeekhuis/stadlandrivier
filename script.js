@@ -1444,7 +1444,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function submitCategoryVotes() {
-        if (!roomData.votingState) return;
+        if (!roomData || !roomData.votingState) return;
         if (isSubmittingVotes) {
             console.log('Already submitting votes, skipping...');
             return;
@@ -2047,10 +2047,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update sticky timer bar only (circular timer removed)
         const stickyTimerText = document.getElementById('sticky-timer-text');
         const stickyTimerProgress = document.getElementById('sticky-timer-progress');
+        const stickyTimerLetter = document.getElementById('sticky-timer-letter');
         if (stickyTimerText && stickyTimerProgress) {
             stickyTimerText.textContent = Math.max(0, timeLeft);
             const percentage = (timeLeft / gameDuration) * 100;
             stickyTimerProgress.style.width = percentage + '%';
+
+            // Update letter display
+            if (stickyTimerLetter) {
+                stickyTimerLetter.textContent = currentLetter;
+            }
 
             // Change color when time is running out
             if (timeLeft <= 10) {
