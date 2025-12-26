@@ -1703,17 +1703,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!players[pIdx].verifiedResults) players[pIdx].verifiedResults = {};
         players[pIdx].verifiedResults[cat] = { isValid: isValid, answer: answer, points: 0 };
 
-        // Track history for infographic
-        history.push({
-            playerName: players[pIdx].name,
-            category: cat,
-            answer: answer,
-            isValid: isValid,
-            isAuto: isAuto,
-            votes: isAuto ? null : (freshSnap.data().votingState?.votes || {})
-        });
+        // Track history for infographic - only add for auto-approved items
+        // Normal voted items will get their entry in processCategoryResults
+        if (isAuto) {
+            history.push({
+                playerName: players[pIdx].name,
+                category: cat,
+                answer: answer,
+                isValid: isValid,
+                isAuto: true,
+                votes: null
+            });
+        }
 
-        if (isValid && !isAuto) addToLibrary(cat, answer);
+        if (isValid) addToLibrary(cat, answer);
 
         await updateDoc(roomRef, {
             players: players,
