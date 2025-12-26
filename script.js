@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function subscribeToActiveRooms() {
         const roomsQuery = query(
             collection(db, "rooms"),
-            where("status", "in", ["lobby", "playing"]),  // Excludes dormant and deleted rooms
+            where("status", "in", ["lobby", "playing", "voting", "finished"]),  // Excludes only dormant and deleted rooms
             orderBy("createdAt", "desc"),
             limit(10)
         );
@@ -653,15 +653,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.status === 'finished') {
             isGameActive = false;
             stopGameLocal();
-            if (!resultsShown) {
-                console.log('Showing results for the first time');
-                resultsShown = true;
-                showResults(data);
-            } else {
-                console.log('Results already shown, skipping duplicate call');
-            }
+            // Show results screen (idempotent - just updates the UI)
+            showResults(data);
         } else if (data.status === 'lobby') {
-            resultsShown = false; // Reset when returning to lobby
             resetBoard();
         }
 
