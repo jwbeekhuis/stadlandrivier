@@ -1160,6 +1160,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if this is the first call by seeing if any player has verifiedResults
         const isFirstCall = !data.players.some(p => p.verifiedResults && Object.keys(p.verifiedResults).length > 0);
 
+        // Track if we did auto-approvals
+        let didAutoApprove = false;
+
         if (isFirstCall) {
             console.log('First processNextCategory call - auto-approving library answers');
             for (let pIndex = 0; pIndex < data.players.length; pIndex++) {
@@ -1173,14 +1176,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const isKnown = await checkLibrary(cat, answer);
                     if (isKnown) {
                         await markAnswerVerified(pIndex, cat, answer, true, true);
+                        didAutoApprove = true;
                     }
                 }
             }
 
-            // IMPORTANT: Get fresh data after auto-approvals to pick up verifiedResults
-            const afterAutoApproveSnap = await getDoc(roomRef);
-            const afterAutoApproveData = afterAutoApproveSnap.data();
-            console.log('Auto-approve complete, refreshing data for voting phase');
+            if (didAutoApprove) {
+                console.log('Auto-approve complete, refreshing data for voting phase');
+            }
         }
 
         // Now process categories one at a time for batch voting
@@ -1606,6 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (!alreadyInHistory) {
+                console.log(`Adding voted history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
                 history.push({
                     playerName: answerData.playerName,
                     category: state.category,
@@ -1614,6 +1618,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     isAuto: false,
                     votes: votesForAnswer
                 });
+            } else {
+                console.log(`Skipping duplicate history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
             }
 
             // Add to library if approved
@@ -1712,6 +1718,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Track history for infographic - only add for auto-approved items
         // Normal voted items will get their entry in processCategoryResults
         if (isAuto) {
+            console.log(`Adding auto-approve history entry for ${players[pIdx].name} - ${cat}: ${answer}`);
             history.push({
                 playerName: players[pIdx].name,
                 category: cat,
