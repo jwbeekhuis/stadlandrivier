@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <h3>${t('tutorialLibraryTitle')}</h3>
             <p>${t('tutorialLibrary')}</p>
+            <p><strong>${t('tutorialDormant')}</strong></p>
 
             <h3>${t('tutorialRulesTitle')}</h3>
             <p>${t('tutorialRules')}</p>

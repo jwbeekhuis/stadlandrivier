@@ -30,6 +30,7 @@ export const translations = {
 
         tutorialLibraryTitle: "📚 Bibliotheek (Per Kamer)",
         tutorialLibrary: "Elke kamer heeft zijn eigen woordenbibliotheek. Goedgekeurde antwoorden worden opgeslagen en bij latere rondes automatisch goedgekeurd - maar alleen binnen dezelfde kamer!",
+        tutorialDormant: "Kamer leeg? Als alle spelers inactief worden, wordt je kamer niet verwijderd! De kamer gaat in slaapstand en behoudt de volledige woordenbibliotheek. Als originele maker kun je altijd terugkeren en de kamer opnieuw openen - alle goedgekeurde woorden blijven bewaard!",
 
         tutorialRulesTitle: "🎮 Spelregels",
         tutorialRules: "De host draait een letter en iedereen heeft de ingestelde tijd (standaard 30 seconden) om antwoorden in te vullen voor elke categorie die met die letter beginnen.",
@@ -172,6 +173,7 @@ export const translations = {
 
         tutorialLibraryTitle: "📚 Library (Per Room)",
         tutorialLibrary: "Each room has its own word library. Approved answers are saved and automatically approved in future rounds - but only within the same room!",
+        tutorialDormant: "Room empty? If all players become inactive, your room is not deleted! The room goes into sleep mode and keeps the complete word library. As the original creator, you can always return and reopen the room - all approved words remain saved!",
 
         tutorialRulesTitle: "🎮 Game Rules",
         tutorialRules: "The host rolls a letter and everyone has the set time (default 30 seconds) to fill in answers for each category that start with that letter.",
