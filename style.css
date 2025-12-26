@@ -960,13 +960,9 @@ h1 {
     padding-top: 70px; /* 50px timer height + 20px spacing */
 }
 
-/* Sticky timer is controlled by JS, not by game-board visibility */
-.sticky-timer-bar {
-    display: none;
-}
-
-.sticky-timer-bar.active {
-    display: flex !important;
+/* Sticky timer visibility is controlled by JS via 'active' class */
+.sticky-timer-bar:not(.active) {
+    display: none !important;
 }
 
 /* Buttons */

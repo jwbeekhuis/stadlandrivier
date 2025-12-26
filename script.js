@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=82';
+import { translations } from './translations.js?v=86';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -724,15 +724,17 @@ document.addEventListener('DOMContentLoaded', () => {
         gameBoard.classList.remove('hidden');
         roomCodeDisplay.textContent = code;
 
-        // Initially hide host-only buttons until we know if user is host
-        // These will be shown by updateGameState if user is host
-        rollBtn.classList.add('hidden');
-        stopBtn.classList.add('hidden');
-        if (shuffleBtn) shuffleBtn.classList.add('hidden');
-        if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
+        // Only hide host buttons for non-host players
+        // Host will see buttons immediately
+        if (!isHost) {
+            rollBtn.classList.add('hidden');
+            stopBtn.classList.add('hidden');
+            if (shuffleBtn) shuffleBtn.classList.add('hidden');
+            if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
 
-        const waitingForHostLobbyMsg = document.getElementById('waiting-for-host-lobby');
-        if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.remove('hidden');
+            const waitingForHostLobbyMsg = document.getElementById('waiting-for-host-lobby');
+            if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.remove('hidden');
+        }
     }
 
     function returnToLobby(message) {
@@ -782,6 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'playing',
             currentLetter: newLetter,
             timerEnd: Date.now() + (gameDuration * 1000),
+            // Keep existing scores, only reset answers and verifiedResults
             players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} })),
             lastActivity: Date.now()
         });
@@ -809,9 +812,18 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLetter = '?';
         document.getElementById('current-letter').textContent = '?';
 
+        // Reset player scores for new round
+        const resetPlayers = roomData.players.map(p => ({
+            ...p,
+            score: 0,
+            answers: {},
+            verifiedResults: {}
+        }));
+
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'lobby',
             gameHistory: [],
+            players: resetPlayers,
             lastActivity: Date.now()
         });
     }
@@ -1834,9 +1846,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Add round scores to total scores
+        // Set scores to round scores (overwrite, don't add)
+        // This prevents double-counting if calculateFinalScores is called multiple times
         players.forEach(p => {
-            p.score += roundScores[p.uid];
+            p.score = roundScores[p.uid];
         });
 
         console.log("Round Scores:", players.map(p => `${p.name}: +${roundScores[p.uid]}`));
@@ -1969,7 +1982,6 @@ document.addEventListener('DOMContentLoaded', () => {
         votingScreen.classList.add('hidden');
         enterGameUI(roomId);
         letterDisplay.textContent = '?';
-        timerCircle.style.strokeDashoffset = 0;
         updateTimerDisplay();
         renderCategories();
 
