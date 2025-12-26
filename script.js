@@ -1165,6 +1165,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isFirstCall) {
             console.log('First processNextCategory call - auto-approving library answers');
+            const currentHistory = data.gameHistory || [];
+
             for (let pIndex = 0; pIndex < data.players.length; pIndex++) {
                 const player = data.players[pIndex];
                 for (const cat of activeCategories) {
@@ -1172,6 +1174,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!answer) continue;
 
                     if (player.verifiedResults && player.verifiedResults[cat]) continue;
+
+                    // Check if already in history (e.g., from previous voting)
+                    const alreadyProcessed = currentHistory.some(entry =>
+                        entry.playerName === player.name &&
+                        entry.category === cat &&
+                        normalizeAnswer(entry.answer) === normalizeAnswer(answer)
+                    );
+
+                    if (alreadyProcessed) {
+                        console.log(`Skipping auto-approve for ${player.name} - ${cat}: ${answer} (already in history)`);
+                        continue;
+                    }
 
                     const isKnown = await checkLibrary(cat, answer);
                     if (isKnown) {
