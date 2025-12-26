@@ -1,5 +1,5 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=98';
-import { translations } from './translations.js?v=98';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=99';
+import { translations } from './translations.js?v=99';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -22,7 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setLanguage(lang) {
         currentLanguage = lang;
+        // Save to localStorage as fallback
         localStorage.setItem('language', lang);
+        // Save to Firestore if user is logged in
+        if (currentUser) {
+            UserService.savePreference(currentUser.uid, 'language', lang);
+        }
         updateAllTranslations();
         updateDynamicContent();
     }
@@ -262,10 +267,34 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = userCred.user;
             console.log("Logged in as", currentUser.uid);
 
-            // Load saved name from localStorage
-            const savedName = localStorage.getItem('playerName');
-            if (savedName) {
-                playerNameInput.value = savedName;
+            // Load user data from Firestore (preferences + profile)
+            const userData = await UserService.loadUserData(currentUser.uid);
+
+            // Load language preference (Firestore → localStorage fallback)
+            if (userData?.preferences?.language) {
+                currentLanguage = userData.preferences.language;
+            } else {
+                currentLanguage = localStorage.getItem('language') || 'nl';
+            }
+
+            // Load theme preference (Firestore → localStorage fallback → default dark)
+            if (userData?.preferences?.theme) {
+                applyTheme(userData.preferences.theme);
+            } else {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    applyTheme(savedTheme);
+                }
+            }
+
+            // Load player name (Firestore → localStorage fallback)
+            if (userData?.profile?.name) {
+                playerNameInput.value = userData.profile.name;
+            } else {
+                const savedName = localStorage.getItem('playerName');
+                if (savedName) {
+                    playerNameInput.value = savedName;
+                }
             }
         } catch (e) {
             console.error("Auth error:", e);
@@ -381,8 +410,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = playerNameInput.value.trim();
         if (!name) return alert(t('enterName'));
 
-        // Save name to localStorage
+        // Save name to localStorage as fallback
         localStorage.setItem('playerName', name);
+        // Save name to Firestore user profile
+        if (currentUser) {
+            await UserService.saveProfile(currentUser.uid, { name: name });
+        }
 
         roomId = code;
 
@@ -489,8 +522,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = playerNameInput.value.trim();
         if (!name) return alert(t('enterName'));
 
-        // Save name to localStorage
+        // Save name to localStorage as fallback
         localStorage.setItem('playerName', name);
+        // Save name to Firestore user profile
+        if (currentUser) {
+            await UserService.saveProfile(currentUser.uid, { name: name });
+        }
 
         const roomName = roomNameInput.value.trim() || `${name}'s Kamer`;
         const selectedDuration = parseInt(gameDurationSlider.value) || 30;
@@ -527,8 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!name) return alert("Vul eerst je naam in!");
         if (code.length !== 4) return alert("Ongeldige code");
 
-        // Save name to localStorage
+        // Save name to localStorage as fallback
         localStorage.setItem('playerName', name);
+        // Save name to Firestore user profile
+        if (currentUser) {
+            await UserService.saveProfile(currentUser.uid, { name: name });
+        }
 
         roomId = code;
 
@@ -626,9 +667,12 @@ document.addEventListener('DOMContentLoaded', () => {
             gameDuration = data.gameDuration;
         }
 
+        // Always update categories to ensure non-host players see changes
+        // This fixes the issue where categories don't update after shuffle or new round
         if (JSON.stringify(activeCategories) !== JSON.stringify(data.categories)) {
             activeCategories = data.categories;
             renderCategories();
+            updateInputPlaceholders();
         }
 
         if (data.currentLetter !== currentLetter) {
@@ -648,8 +692,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (data.status === 'finished') {
             isGameActive = false;
             stopGameLocal();
-            // Show results screen (idempotent - just updates the UI)
-            showResults(data);
+            // Only show results once when transitioning to finished state
+            if (!resultsShown) {
+                resultsShown = true;
+                showResults(data);
+            }
         } else if (data.status === 'lobby') {
             resetBoard();
         }
@@ -2117,15 +2164,44 @@ document.addEventListener('DOMContentLoaded', () => {
         return alphabet[Math.floor(Math.random() * alphabet.length)];
     }
 
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            document.body.classList.add('light-mode');
+            const icon = themeToggleBtn?.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+        } else {
+            document.body.classList.remove('light-mode');
+            const icon = themeToggleBtn?.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+    }
+
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
+        const isLight = document.body.classList.contains('light-mode');
+        const theme = isLight ? 'light' : 'dark';
+
+        // Update icon
         const icon = themeToggleBtn.querySelector('i');
-        if (document.body.classList.contains('light-mode')) {
+        if (isLight) {
             icon.classList.remove('fa-moon');
             icon.classList.add('fa-sun');
         } else {
             icon.classList.remove('fa-sun');
             icon.classList.add('fa-moon');
+        }
+
+        // Save to localStorage as fallback
+        localStorage.setItem('theme', theme);
+        // Save to Firestore if user is logged in
+        if (currentUser) {
+            UserService.savePreference(currentUser.uid, 'theme', theme);
         }
     }
 
