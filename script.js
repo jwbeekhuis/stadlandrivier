@@ -1166,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isFirstCall) {
             console.log('First processNextCategory call - auto-approving library answers');
             const currentHistory = data.gameHistory || [];
+            let hasUpdatedPlayers = false;
 
             for (let pIndex = 0; pIndex < data.players.length; pIndex++) {
                 const player = data.players[pIndex];
@@ -1176,14 +1177,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (player.verifiedResults && player.verifiedResults[cat]) continue;
 
                     // Check if already in history (e.g., from previous voting)
-                    const alreadyProcessed = currentHistory.some(entry =>
+                    const existingHistoryEntry = currentHistory.find(entry =>
                         entry.playerName === player.name &&
                         entry.category === cat &&
                         normalizeAnswer(entry.answer) === normalizeAnswer(answer)
                     );
 
-                    if (alreadyProcessed) {
+                    if (existingHistoryEntry) {
                         console.log(`Skipping auto-approve for ${player.name} - ${cat}: ${answer} (already in history)`);
+                        // Mark as verified using the existing history entry's result
+                        // This prevents it from being voted on again
+                        if (!player.verifiedResults) player.verifiedResults = {};
+                        player.verifiedResults[cat] = {
+                            isValid: existingHistoryEntry.isValid,
+                            answer: answer,
+                            points: 0
+                        };
+                        hasUpdatedPlayers = true;
                         continue;
                     }
 
@@ -1193,6 +1203,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         didAutoApprove = true;
                     }
                 }
+            }
+
+            // Save updated players if we marked any as verified from history
+            if (hasUpdatedPlayers) {
+                console.log('Updating players with verified results from history');
+                await updateDoc(roomRef, {
+                    players: data.players
+                });
             }
 
             if (didAutoApprove) {
