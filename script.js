@@ -786,6 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'playing',
             currentLetter: newLetter,
             timerEnd: Date.now() + (gameDuration * 1000),
+            scoresCalculated: false,  // Reset for new round
             // Keep existing scores, only reset answers and verifiedResults
             players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} })),
             lastActivity: Date.now()
@@ -834,6 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'lobby',
             gameHistory: [],
             votingState: null,  // Reset voting state in database
+            scoresCalculated: false,  // Reset scores calculated flag for new round
             players: resetPlayers,
             lastActivity: Date.now()
         });
@@ -1822,6 +1824,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function calculateFinalScores(data) {
+        // Check if scores were already calculated for this round
+        if (data.scoresCalculated) {
+            console.log("Scores already calculated for this round, skipping");
+            return;
+        }
+
         if (isCalculatingScores) {
             console.log("Already calculating scores, skipping duplicate call");
             return;
@@ -1914,6 +1922,7 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'finished',
             votingState: null,
             gameHistory: history,
+            scoresCalculated: true,  // Mark that scores have been calculated for this round
             lastActivity: Date.now()
         });
 
