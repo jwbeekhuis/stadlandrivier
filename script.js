@@ -1176,9 +1176,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+
+            // IMPORTANT: Get fresh data after auto-approvals to pick up verifiedResults
+            const afterAutoApproveSnap = await getDoc(roomRef);
+            const afterAutoApproveData = afterAutoApproveSnap.data();
+            console.log('Auto-approve complete, refreshing data for voting phase');
         }
 
         // Now process categories one at a time for batch voting
+        // Always get fresh data to ensure we have latest verifiedResults
         const freshSnap = await getDoc(roomRef);
         const freshData = freshSnap.data();
 
