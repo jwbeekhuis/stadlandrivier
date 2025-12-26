@@ -1,5 +1,5 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=103';
-import { translations } from './translations.js?v=103';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=104';
+import { translations } from './translations.js?v=104';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="room-card" data-room-id="${room.id}">
                     <div class="room-header">
                         <div class="room-code">${room.id}</div>
-                        ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="${t('deleteRoom')}">${t('deleteRoom')}</button>` : ''}
+                        ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="${t('deleteRoom')}">🗑️</button>` : ''}
                     </div>
                     <div class="room-name">${roomName}</div>
                     <div class="room-info">

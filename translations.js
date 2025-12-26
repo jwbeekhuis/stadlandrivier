@@ -5,7 +5,7 @@ export const translations = {
         by: "by JW",
 
         // Lobby
-        welcome: "🎉 Welkom!",
+        welcome: "Welkom!",
         yourName: "👤 Jouw Naam",
         namePlaceholder: "Typ je naam...",
         roomName: "🏠 Spel Naam (optioneel)",
@@ -60,11 +60,11 @@ export const translations = {
         tutorialLog: "🔍 Aan het eind zie je een volledig overzicht van alle antwoorden, stemmen en punten - zo kan je precies controleren hoe de scores tot stand zijn gekomen! Transparantie FTW! 🎯",
 
         // Game Controls
-        room: "🏠 Spel:",
+        room: "Spel:",
         leaveRoom: "👋 Verlaat Spel",
         deleteRoom: "🗑️ Verwijder Spel",
         rollLetter: "🎲 DRAAI DIE LETTER!",
-        stopRound: "⏹️ STOP DE RONDE",
+        stopRound: "STOP DE RONDE",
         mixCategories: "🔀 Mix Categorieën",
         waitingForHostLobby: "🕐 Wacht even... de host is aan het nadenken! ☕",
 
@@ -94,7 +94,7 @@ export const translations = {
         // Results
         results: "🏆 EN DE WINNAAR IS...",
         name: "👤 Naam",
-        points: "⭐ Punten",
+        points: "Punten",
         nextRound: "🔄 VOLGENDE RONDE!",
         waitingForHost: "🕐 Chillen tot de host de volgende ronde start... ☕",
         roundLog: "📜 Ronde Logboek",
@@ -151,7 +151,7 @@ export const translations = {
         by: "by JW",
 
         // Lobby
-        welcome: "🎉 Welcome!",
+        welcome: "Welcome!",
         yourName: "👤 Your Name",
         namePlaceholder: "Enter your name...",
         roomName: "🏠 Room Name (optional)",
@@ -206,11 +206,11 @@ export const translations = {
         tutorialLog: "🔍 At the end you see a complete overview of all answers, votes and points - so you can check exactly how the scores were calculated! Transparency FTW! 🎯",
 
         // Game Controls
-        room: "🏠 Room:",
+        room: "Room:",
         leaveRoom: "👋 Leave Room",
         deleteRoom: "🗑️ Delete Room",
         rollLetter: "🎲 ROLL THAT LETTER!",
-        stopRound: "⏹️ STOP THE ROUND",
+        stopRound: "STOP THE ROUND",
         mixCategories: "🔀 Mix Categories",
         waitingForHostLobby: "🕐 Hold on... the host is thinking! ☕",
 
@@ -240,7 +240,7 @@ export const translations = {
         // Results
         results: "🏆 AND THE WINNER IS...",
         name: "👤 Name",
-        points: "⭐ Points",
+        points: "Points",
         nextRound: "🔄 NEXT ROUND!",
         waitingForHost: "🕐 Chilling until the host starts the next round... ☕",
         roundLog: "📜 Round Log",
