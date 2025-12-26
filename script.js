@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=80';
+import { translations } from './translations.js?v=81';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -661,7 +661,14 @@ document.addEventListener('DOMContentLoaded', () => {
             rollBtn.disabled = data.status === 'playing';
             rollBtn.classList.remove('hidden');
             if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.add('hidden');
-            stopBtn.classList.remove('hidden');
+
+            // Stop button only visible during 'playing' state
+            if (data.status === 'playing') {
+                stopBtn.classList.remove('hidden');
+            } else {
+                stopBtn.classList.add('hidden');
+            }
+
             if (shuffleBtn) shuffleBtn.classList.remove('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.remove('hidden');
 
@@ -704,6 +711,16 @@ document.addEventListener('DOMContentLoaded', () => {
         controlsPanel.classList.remove('hidden');
         gameBoard.classList.remove('hidden');
         roomCodeDisplay.textContent = code;
+
+        // Initially hide host-only buttons until we know if user is host
+        // These will be shown by updateGameState if user is host
+        rollBtn.classList.add('hidden');
+        stopBtn.classList.add('hidden');
+        if (shuffleBtn) shuffleBtn.classList.add('hidden');
+        if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
+
+        const waitingForHostLobbyMsg = document.getElementById('waiting-for-host-lobby');
+        if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.remove('hidden');
     }
 
     function returnToLobby(message) {
