@@ -59,6 +59,11 @@ body {
     position: relative;
 }
 
+/* Add padding when sticky timer is active */
+body:has(.sticky-timer-bar.active) .app-container {
+    padding-top: 60px;
+}
+
 /* Background Effects */
 .background-blobs {
     position: fixed;
@@ -930,6 +935,7 @@ h1 {
     border-radius: 0;
     overflow: hidden;
     z-index: 10000;
+    display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -953,11 +959,6 @@ h1 {
     font-weight: 700;
     color: white;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-/* Add top padding to game board when sticky timer is visible */
-#game-board:not(.hidden) {
-    padding-top: 70px; /* 50px timer height + 20px spacing */
 }
 
 /* Sticky timer visibility is controlled by JS via 'active' class */
