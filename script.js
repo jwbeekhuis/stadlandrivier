@@ -226,9 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollBtn = document.getElementById('roll-btn');
     const stopBtn = document.getElementById('stop-btn');
     const deleteRoomGameBtn = document.getElementById('delete-room-game-btn');
+    const leaveRoomBtn = document.getElementById('leave-room-btn');
     const letterDisplay = document.getElementById('current-letter');
-    const timerDisplay = document.getElementById('timer-display');
-    const timerCircle = document.querySelector('.progress-ring__circle');
     const categoriesContainer = document.getElementById('categories-container');
     const nextRoundBtn = document.getElementById('next-round-btn');
     const shuffleBtn = document.getElementById('shuffle-btn');
@@ -252,14 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSubmittingVotes = false; // Prevent double submission
 
 
-    // Circle Config
-    let circumference = 0;
-    if (timerCircle) {
-        const radius = timerCircle.r.baseVal.value;
-        circumference = radius * 2 * Math.PI;
-        timerCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-        timerCircle.style.strokeDashoffset = 0;
-    }
+    // Circular timer removed - using sticky timer bar only
 
     // --- Initialization ---
     async function init() {
@@ -282,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rollBtn.addEventListener('click', handleRollClick);
         stopBtn.addEventListener('click', handleStopClick);
         if (deleteRoomGameBtn) deleteRoomGameBtn.addEventListener('click', handleDeleteRoomClick);
+        if (leaveRoomBtn) leaveRoomBtn.addEventListener('click', handleLeaveRoomClick);
 
         if (shuffleBtn) shuffleBtn.addEventListener('click', handleShuffleClick);
         if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
@@ -747,6 +740,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleRollClick() {
         if (!isHost) return;
         const newLetter = getRandomLetter();
+
+        // Update local state immediately to prevent showing '?'
+        currentLetter = newLetter;
+        letterDisplay.textContent = currentLetter;
+
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'playing',
             currentLetter: newLetter,
@@ -823,6 +821,47 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(t('roomDeleted'));
         } catch (e) {
             console.error("Error deleting room:", e);
+            alert("Error: " + e.message);
+        }
+    }
+
+    async function handleLeaveRoomClick() {
+        if (!roomId) return;
+
+        try {
+            // Stop heartbeat first so we don't get marked inactive
+            stopHeartbeat();
+
+            // Remove player from room
+            const updatedPlayers = roomData.players.filter(p => p.uid !== currentUser.uid);
+            await updateDoc(doc(db, "rooms", roomId), {
+                players: updatedPlayers,
+                lastActivity: Date.now()
+            });
+
+            // Unsubscribe and return to lobby
+            if (roomUnsubscribe) {
+                roomUnsubscribe();
+                roomUnsubscribe = null;
+            }
+
+            // Reset local state
+            roomId = null;
+            isHost = false;
+            roomData = null;
+            isGameActive = false;
+
+            // Return to lobby
+            controlsPanel.classList.add('hidden');
+            gameBoard.classList.add('hidden');
+            resultsBoard.classList.add('hidden');
+            votingScreen.classList.add('hidden');
+            lobbyScreen.classList.remove('hidden');
+
+            // Refresh room list
+            subscribeToActiveRooms();
+        } catch (e) {
+            console.error("Error leaving room:", e);
             alert("Error: " + e.message);
         }
     }
@@ -1814,6 +1853,17 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
+        // Show next round button only for host
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        const waitingForHostMsg = document.getElementById('waiting-for-host');
+        if (isHost) {
+            nextRoundBtn.classList.remove('hidden');
+            waitingForHostMsg.classList.add('hidden');
+        } else {
+            nextRoundBtn.classList.add('hidden');
+            waitingForHostMsg.classList.remove('hidden');
+        }
+
         // Render game history infographic
         renderGameLog(data);
     }
@@ -1931,14 +1981,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTimerDisplay() {
-        timerDisplay.textContent = Math.max(0, timeLeft);
-        if (timerCircle) {
-            const offset = circumference - (timeLeft / gameDuration) * circumference;
-            timerCircle.style.strokeDashoffset = offset;
-            timerCircle.style.stroke = timeLeft <= 10 ? 'var(--danger-color)' : 'var(--accent-color)';
-        }
-
-        // Update sticky timer bar
+        // Update sticky timer bar only (circular timer removed)
         const stickyTimerText = document.getElementById('sticky-timer-text');
         const stickyTimerProgress = document.getElementById('sticky-timer-progress');
         if (stickyTimerText && stickyTimerProgress) {

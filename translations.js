@@ -61,6 +61,7 @@ export const translations = {
 
         // Game Controls
         room: "Kamer:",
+        leaveRoom: "Verlaat Kamer",
         deleteRoom: "Verwijder Kamer",
         rollLetter: "DRAAI LETTER",
         stopRound: "STOP DE RONDE",
@@ -94,6 +95,7 @@ export const translations = {
         name: "Naam",
         points: "Punten",
         nextRound: "VOLGENDE RONDE",
+        waitingForHost: "Wachten tot de host de volgende ronde start...",
         roundLog: "Ronde Logboek",
         uniqueAnswer: "Uniek antwoord",
         onlyInCategory: "Enige in categorie",
@@ -204,6 +206,7 @@ export const translations = {
 
         // Game Controls
         room: "Room:",
+        leaveRoom: "Leave Room",
         deleteRoom: "Delete Room",
         rollLetter: "ROLL LETTER",
         stopRound: "STOP THE ROUND",
@@ -237,6 +240,7 @@ export const translations = {
         name: "Name",
         points: "Points",
         nextRound: "NEXT ROUND",
+        waitingForHost: "Waiting for the host to start the next round...",
         roundLog: "Round Log",
         uniqueAnswer: "Unique answer",
         onlyInCategory: "Only in category",

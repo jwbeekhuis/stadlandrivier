@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Stad, Land, Rivier</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=77">
+    <link rel="stylesheet" href="style.css?v=78">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -140,6 +140,9 @@
             <div class="room-info">
                 <span><span data-i18n="room">Kamer:</span> <strong id="room-code-display">---</strong></span>
                 <span id="player-count">👤 1</span>
+                <button id="leave-room-btn" class="leave-room-btn" data-i18n="leaveRoom" title="Verlaat kamer">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Verlaat Kamer
+                </button>
                 <button id="delete-room-game-btn" class="delete-room-game-btn hidden" data-i18n="deleteRoom" title="Verwijder kamer">
                     <i class="fa-solid fa-trash"></i> Verwijder Kamer
                 </button>
@@ -150,14 +153,6 @@
                 </div>
                 <!-- Only Host sees this initially, but we handle visibility in JS -->
                 <button id="roll-btn" class="primary-btn pulse" data-i18n="rollLetter">DRAAI LETTER</button>
-            </div>
-
-            <div class="timer-container">
-                <svg class="progress-ring" width="120" height="120">
-                    <circle class="progress-ring__circle" stroke="white" stroke-width="4" fill="transparent" r="52"
-                        cx="60" cy="60" />
-                </svg>
-                <div class="timer-text" id="timer-display">60</div>
             </div>
         </section>
 
@@ -242,10 +237,11 @@
             </div>
 
             <button id="next-round-btn" class="primary-btn pulse" data-i18n="nextRound">VOLGENDE RONDE</button>
+            <p id="waiting-for-host" class="waiting-message hidden" data-i18n="waitingForHost">Wachten tot de host de volgende ronde start...</p>
         </section>
     </main>
 
-    <script type="module" src="script.js?v=77"></script>
+    <script type="module" src="script.js?v=78"></script>
 </body>
 
 </html>

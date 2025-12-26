@@ -243,6 +243,17 @@ body {
     font-size: 1.2rem;
 }
 
+.waiting-message {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1rem;
+    margin: 20px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Game History Log (Infographic) */
 .history-log {
     margin-top: 40px;
@@ -724,6 +735,29 @@ body.light-mode .lobby-panel input:focus {
     display: none;
 }
 
+.leave-room-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: var(--font-main);
+}
+
+.leave-room-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: white;
+    transform: scale(1.05);
+}
+
 .players-list {
     display: flex;
     flex-wrap: wrap;
@@ -885,13 +919,12 @@ h1 {
 
 /* Sticky Timer Progress Bar */
 .sticky-timer-bar {
-    position: -webkit-sticky; /* For Safari */
-    position: sticky;
-    top: -20px; /* Stick to top of scrollable area */
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
     height: 50px;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 0;
@@ -900,8 +933,9 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: -20px -20px 20px -20px; /* Extend to edges of parent padding */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    /* Ensure it stays visible even when keyboard is open */
+    position: -webkit-fixed;
 }
 
 .sticky-timer-progress {
@@ -922,6 +956,19 @@ h1 {
     font-weight: 700;
     color: white;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Add top padding to game board when sticky timer is visible */
+#game-board:not(.hidden) {
+    padding-top: 70px; /* 50px timer height + 20px spacing */
+}
+
+#game-board:not(.hidden) .sticky-timer-bar {
+    display: flex;
+}
+
+#game-board.hidden .sticky-timer-bar {
+    display: none;
 }
 
 /* Buttons */
