@@ -1,5 +1,5 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=87';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=93';
+import { translations } from './translations.js?v=93';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -699,7 +699,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             isHost = false;
             rollBtn.classList.add('hidden');
-            if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.remove('hidden');
+            // Only show waiting message in lobby state
+            if (waitingForHostLobbyMsg) {
+                if (data.status === 'lobby') {
+                    waitingForHostLobbyMsg.classList.remove('hidden');
+                } else {
+                    waitingForHostLobbyMsg.classList.add('hidden');
+                }
+            }
             stopBtn.classList.add('hidden');
             if (shuffleBtn) shuffleBtn.classList.add('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
