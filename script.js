@@ -846,17 +846,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const roomRef = doc(db, "rooms", roomId);
+            // Unsubscribe first to prevent the listener from firing for the host
+            if (roomUnsubscribe) roomUnsubscribe();
+            stopHeartbeat();
+
+            const deletedRoomId = roomId;
+            const roomRef = doc(db, "rooms", deletedRoomId);
+
+            // Now update the room status (other players will get the alert via their listeners)
             await updateDoc(roomRef, {
                 status: 'deleted'
             });
 
-            // Unsubscribe and return to lobby
-            if (roomUnsubscribe) roomUnsubscribe();
-            stopHeartbeat();
-
             // Reset local state
-            const deletedRoomId = roomId;
             roomId = null;
             isHost = false;
             roomData = null;
