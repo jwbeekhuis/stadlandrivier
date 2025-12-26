@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=81';
+import { translations } from './translations.js?v=82';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -658,8 +658,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (shouldBeHost) {
             isHost = true;
-            rollBtn.disabled = data.status === 'playing';
-            rollBtn.classList.remove('hidden');
+
+            // Enable/disable roll button based on status
+            // Only enable in lobby state
+            if (data.status === 'lobby') {
+                rollBtn.disabled = false;
+                rollBtn.classList.remove('hidden');
+            } else if (data.status === 'playing') {
+                rollBtn.disabled = true;
+                rollBtn.classList.remove('hidden');
+            } else {
+                // voting, finished states
+                rollBtn.classList.add('hidden');
+            }
+
             if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.add('hidden');
 
             // Stop button only visible during 'playing' state
