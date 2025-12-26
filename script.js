@@ -1,5 +1,5 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=95';
-import { translations } from './translations.js?v=95';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=96';
+import { translations } from './translations.js?v=96';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
