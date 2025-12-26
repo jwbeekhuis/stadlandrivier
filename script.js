@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function subscribeToActiveRooms() {
         const roomsQuery = query(
             collection(db, "rooms"),
-            where("status", "in", ["lobby", "playing"]),
+            where("status", "in", ["lobby", "playing"]),  // Excludes dormant and deleted rooms
             orderBy("createdAt", "desc"),
             limit(10)
         );
@@ -357,6 +357,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
+    // --- Dormant Room Reactivation ---
+    async function reopenDormantRoom(roomRef, roomData, playerName, playerUid) {
+        console.log(`Reopening dormant room by creator ${roomData.creatorName}`);
+
+        // Reactivate the room with the creator as the first player (host)
+        await updateDoc(roomRef, {
+            status: 'lobby',
+            hostId: playerUid,
+            players: [{
+                uid: playerUid,
+                name: playerName,
+                score: 0,
+                answers: {},
+                isVerified: false,
+                lastSeen: Date.now()
+            }],
+            currentLetter: '?',  // Reset game state
+            votingState: null,
+            lastActivity: Date.now()
+        });
+
+        return true;
+    }
+
     window.quickJoinRoom = async function (code) {
         const name = playerNameInput.value.trim();
         if (!name) return alert(t('enterName'));
@@ -365,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('playerName', name);
 
         roomId = code;
-        isHost = false;
 
         const roomRef = doc(db, "rooms", code);
         const roomSnap = await getDoc(roomRef);
@@ -375,6 +398,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const roomData = roomSnap.data();
+
+        // Handle dormant room reactivation
+        if (roomData.status === 'dormant') {
+            // Only the original creator can reopen a dormant room
+            if (roomData.creatorUid === currentUser.uid) {
+                await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
+                isHost = true;  // Creator becomes host when reopening
+                enterGameUI(code);
+                subscribeToRoom(code);
+                startHeartbeat();
+                return;
+            } else {
+                return alert(t('roomNotExist'));  // Non-creators see it as non-existent
+            }
+        }
+
+        // Normal join flow for active rooms
+        isHost = false;
         const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
 
         if (existingPlayer) {
@@ -384,11 +425,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? { ...p, name: name, lastSeen: Date.now() }
                     : p
             );
-            await updateDoc(roomRef, { players: updatedPlayers });
+            await updateDoc(roomRef, {
+                players: updatedPlayers,
+                lastActivity: Date.now()
+            });
         } else {
             // New player, add them
             await updateDoc(roomRef, {
-                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() })
+                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }),
+                lastActivity: Date.now()
             });
         }
 
@@ -462,6 +507,8 @@ document.addEventListener('DOMContentLoaded', () => {
             roomId: code,
             roomName: roomName,
             hostId: currentUser.uid,
+            creatorUid: currentUser.uid,  // Track original creator for dormant room access
+            creatorName: name,             // Track creator name for display
             status: 'lobby',
             currentLetter: '?',
             categories: getRandomCategories(),
@@ -469,7 +516,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gameDuration: selectedDuration,
             players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }],
             votingState: null,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            lastActivity: Date.now()      // Track last activity for cleanup
         });
 
         enterGameUI(code);
@@ -487,7 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('playerName', name);
 
         roomId = code;
-        isHost = false;
 
         const roomRef = doc(db, "rooms", code);
         const roomSnap = await getDoc(roomRef);
@@ -497,6 +544,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const roomData = roomSnap.data();
+
+        // Handle dormant room reactivation
+        if (roomData.status === 'dormant') {
+            // Only the original creator can reopen a dormant room
+            if (roomData.creatorUid === currentUser.uid) {
+                await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
+                isHost = true;  // Creator becomes host when reopening
+                enterGameUI(code);
+                subscribeToRoom(code);
+                startHeartbeat();
+                return;
+            } else {
+                return alert("Kamer niet gevonden!");  // Non-creators see it as non-existent
+            }
+        }
+
+        // Normal join flow for active rooms
+        isHost = false;
         const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
 
         if (existingPlayer) {
@@ -506,11 +571,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? { ...p, name: name, lastSeen: Date.now() }
                     : p
             );
-            await updateDoc(roomRef, { players: updatedPlayers });
+            await updateDoc(roomRef, {
+                players: updatedPlayers,
+                lastActivity: Date.now()
+            });
         } else {
             // New player, add them
             await updateDoc(roomRef, {
-                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() })
+                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }),
+                lastActivity: Date.now()
             });
         }
 
@@ -687,7 +756,8 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'playing',
             currentLetter: newLetter,
             timerEnd: Date.now() + (gameDuration * 1000),
-            players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} }))
+            players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} })),
+            lastActivity: Date.now()
         });
     }
 
@@ -699,14 +769,18 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleShuffleClick() {
         if (!isHost) return;
         const newCats = getRandomCategories();
-        await updateDoc(doc(db, "rooms", roomId), { categories: newCats });
+        await updateDoc(doc(db, "rooms", roomId), {
+            categories: newCats,
+            lastActivity: Date.now()
+        });
     }
 
     async function handleNextRound() {
         if (!isHost) return;
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'lobby',
-            gameHistory: []
+            gameHistory: [],
+            lastActivity: Date.now()
         });
     }
 
@@ -867,7 +941,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newHostUid = activePlayers[0]?.uid;
 
                 if (activePlayers.length > 0) {
-                    await updateDoc(roomRef, { players: activePlayers });
+                    await updateDoc(roomRef, {
+                        players: activePlayers,
+                        lastActivity: Date.now()
+                    });
 
                     // Log host change if it happened
                     if (oldHostUid !== newHostUid) {
@@ -877,9 +954,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         await updateDoc(roomRef, { hostId: newHostUid });
                     }
                 } else {
-                    // No players left, delete the room
-                    console.log("No active players left, deleting room");
-                    await updateDoc(roomRef, { status: 'deleted' });
+                    // No players left, set room to dormant to preserve word library
+                    console.log("No active players left, setting room to dormant (preserving library)");
+                    await updateDoc(roomRef, {
+                        status: 'dormant',
+                        players: [],
+                        lastActivity: Date.now()
+                    });
                 }
             }
         } catch (e) {
@@ -946,7 +1027,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function initiateVotingPhase() {
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'voting',
-            votingState: null
+            votingState: null,
+            lastActivity: Date.now()
         });
         setTimeout(processNextCategory, 2000);
     }
@@ -1694,7 +1776,8 @@ document.addEventListener('DOMContentLoaded', () => {
             players: players,
             status: 'finished',
             votingState: null,
-            gameHistory: history
+            gameHistory: history,
+            lastActivity: Date.now()
         });
     }
 
