@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=78';
+import { translations } from './translations.js?v=80';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -654,10 +654,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const wasHost = isHost;
         const shouldBeHost = currentUser.uid === data.players[0]?.uid;
+        const waitingForHostLobbyMsg = document.getElementById('waiting-for-host-lobby');
 
         if (shouldBeHost) {
             isHost = true;
             rollBtn.disabled = data.status === 'playing';
+            rollBtn.classList.remove('hidden');
+            if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.add('hidden');
             stopBtn.classList.remove('hidden');
             if (shuffleBtn) shuffleBtn.classList.remove('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.remove('hidden');
@@ -675,6 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             isHost = false;
             rollBtn.classList.add('hidden');
+            if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.remove('hidden');
             stopBtn.classList.add('hidden');
             if (shuffleBtn) shuffleBtn.classList.add('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
@@ -770,6 +774,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleNextRound() {
         if (!isHost) return;
+
+        // Reset timer and letter
+        timeLeft = gameDuration;
+        currentLetter = '?';
+        document.getElementById('current-letter').textContent = '?';
+
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'lobby',
             gameHistory: [],
@@ -1010,6 +1020,10 @@ document.addEventListener('DOMContentLoaded', () => {
         votingScreen.classList.add('hidden');
         categoriesContainer.classList.remove('hidden');
 
+        // Show sticky timer
+        const stickyTimerBar = document.getElementById('sticky-timer-bar');
+        if (stickyTimerBar) stickyTimerBar.classList.add('active');
+
         enableInputs();
         startTimerLocal();
     }
@@ -1018,6 +1032,10 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(timerInterval);
         disableInputs();
         saveMyAnswers();
+
+        // Hide sticky timer
+        const stickyTimerBar = document.getElementById('sticky-timer-bar');
+        if (stickyTimerBar) stickyTimerBar.classList.remove('active');
     }
 
     function startTimerLocal() {
@@ -1925,6 +1943,10 @@ document.addEventListener('DOMContentLoaded', () => {
         timerCircle.style.strokeDashoffset = 0;
         updateTimerDisplay();
         renderCategories();
+
+        // Hide sticky timer when returning to lobby
+        const stickyTimerBar = document.getElementById('sticky-timer-bar');
+        if (stickyTimerBar) stickyTimerBar.classList.remove('active');
     }
 
     // --- Utilities ---

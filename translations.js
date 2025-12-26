@@ -66,6 +66,7 @@ export const translations = {
         rollLetter: "DRAAI LETTER",
         stopRound: "STOP DE RONDE",
         mixCategories: "Mix Categorieën",
+        waitingForHostLobby: "Wachten tot de host de letter draait...",
 
         // Voting
         checkAnswer: "Controleer Antwoord",
@@ -211,6 +212,7 @@ export const translations = {
         rollLetter: "ROLL LETTER",
         stopRound: "STOP THE ROUND",
         mixCategories: "Mix Categories",
+        waitingForHostLobby: "Waiting for the host to roll the letter...",
 
         // Voting
         checkAnswer: "Check Answer",
