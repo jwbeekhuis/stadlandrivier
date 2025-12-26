@@ -33,7 +33,7 @@ export const translations = {
         tutorialDormant: "😴 Spel leeg? Geen paniek! Als alle spelers inactief worden, wordt je spel niet verwijderd! Het spel gaat in slaapstand en behoudt de volledige woordenbibliotheek. Als originele maker kun je altijd terugkeren en het spel opnieuw openen - alle goedgekeurde woorden blijven veilig bewaard! 🛌💤",
 
         tutorialRulesTitle: "🎮 Spelregels",
-        tutorialRules: "🎲 De host draait een letter en BAM! Iedereen heeft de ingestelde tijd (standaard 30 seconden) om antwoorden in te vullen voor elke categorie die met die letter beginnen. Snelheid en creativiteit = winnen! 💪",
+        tutorialRules: "🎲 De host draait een letter en BAM! Iedereen heeft de ingestelde tijd (standaard 60 seconden) om antwoorden in te vullen voor elke categorie die met die letter beginnen. Snelheid en creativiteit = winnen! 💪",
 
         tutorialPointsTitle: "🏆 Punten Verdienen",
         tutorialPoints20: "🌟 20 punten - WOW! Jij bent de enige met een geldig antwoord (superstar!)",
@@ -179,7 +179,7 @@ export const translations = {
         tutorialDormant: "😴 Room empty? No panic! If all players become inactive, your room is not deleted! The room goes into sleep mode and keeps the complete word library. As the original creator, you can always return and reopen the room - all approved words remain safely saved! 🛌💤",
 
         tutorialRulesTitle: "🎮 Game Rules",
-        tutorialRules: "🎲 The host rolls a letter and BAM! Everyone has the set time (default 30 seconds) to fill in answers for each category that start with that letter. Speed and creativity = winning! 💪",
+        tutorialRules: "🎲 The host rolls a letter and BAM! Everyone has the set time (default 60 seconds) to fill in answers for each category that start with that letter. Speed and creativity = winning! 💪",
 
         tutorialPointsTitle: "🏆 Earning Points",
         tutorialPoints20: "🌟 20 points - WOW! You're the only one with a valid answer (superstar!)",

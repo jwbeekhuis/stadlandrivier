@@ -1,5 +1,5 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=104';
-import { translations } from './translations.js?v=104';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth, UserService } from './firebase-config.js?v=105';
+import { translations } from './translations.js?v=105';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     let activeCategories = [];
-    let gameDuration = 30; // Default: 30 seconds, can be changed by room creator
+    let gameDuration = 60; // Default: 60 seconds, can be changed by room creator
     let timerInterval;
     let timeLeft = gameDuration;
     let isGameActive = false;
