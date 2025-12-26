@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=66';
+import { translations } from './translations.js?v=76';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -1183,6 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentCategoryVotes = {}; // Clear votes from previous category
             currentVotingCategory = state.category;
             isRenderingVotes = false; // Allow fresh render
+            isSubmittingVotes = false; // Reset submission flag for new category
         }
 
         // If already showing this category, just update vote stats instead of full re-render
@@ -1313,10 +1314,8 @@ document.addEventListener('DOMContentLoaded', () => {
         totalVotesCountDisplay.textContent = answers.length;
         updateVotingProgress(answers.length);
 
-        // Start timer if not running
-        if (!voteTimerInterval) {
-            startVoteTimer();
-        }
+        // Always restart timer for new category render
+        startVoteTimer();
     }
 
     function updateVotingProgress(totalCount) {
@@ -1350,7 +1349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         isSubmittingVotes = true;
-        stopVoteTimer();
+        // Don't stop timer yet - let it keep running until next category loads
 
         // Auto-approve any unanswered votes
         const state = roomData.votingState;
@@ -1490,6 +1489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startVoteTimer() {
+        console.log('Starting vote timer');
         stopVoteTimer();
         voteTimeLeft = 30; // 30 seconds for batch voting
         voteMaxTime = 30; // Track max time for percentage calculation
@@ -1503,10 +1503,11 @@ document.addEventListener('DOMContentLoaded', () => {
             updateVoteTimerDisplay();
 
             if (voteTimeLeft === 0) {
-                stopVoteTimer();
+                console.log("Vote timeout - auto-submitting with current votes");
+                clearInterval(voteTimerInterval);
+                voteTimerInterval = null;
                 // Auto-submit with current votes (unanswered = auto-approve)
                 submitCategoryVotes();
-                console.log("Vote timeout - auto-submitting with current votes");
             } else if (voteTimeLeft <= 5 && moreTimeBtn.classList.contains('hidden')) {
                 // Show "More Time" button in last 5 seconds
                 moreTimeBtn.classList.remove('hidden');
@@ -1931,6 +1932,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const offset = circumference - (timeLeft / gameDuration) * circumference;
             timerCircle.style.strokeDashoffset = offset;
             timerCircle.style.stroke = timeLeft <= 10 ? 'var(--danger-color)' : 'var(--accent-color)';
+        }
+
+        // Update sticky timer bar
+        const stickyTimerText = document.getElementById('sticky-timer-text');
+        const stickyTimerProgress = document.getElementById('sticky-timer-progress');
+        if (stickyTimerText && stickyTimerProgress) {
+            stickyTimerText.textContent = Math.max(0, timeLeft);
+            const percentage = (timeLeft / gameDuration) * 100;
+            stickyTimerProgress.style.width = percentage + '%';
+
+            // Change color when time is running out
+            if (timeLeft <= 10) {
+                stickyTimerProgress.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+                stickyTimerProgress.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.5)';
+            } else {
+                stickyTimerProgress.style.background = 'linear-gradient(90deg, var(--accent-color), var(--secondary-color))';
+                stickyTimerProgress.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.5)';
+            }
         }
     }
 

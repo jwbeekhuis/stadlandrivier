@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=75">
+    <link rel="stylesheet" href="style.css?v=76">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -162,6 +162,12 @@
         </section>
 
         <section id="game-board" class="glass-panel game-board hidden">
+            <!-- Sticky Timer Progress Bar -->
+            <div class="sticky-timer-bar" id="sticky-timer-bar">
+                <div class="sticky-timer-progress" id="sticky-timer-progress"></div>
+                <div class="sticky-timer-text" id="sticky-timer-text">30</div>
+            </div>
+
             <div class="controls-bar">
                 <button id="shuffle-btn" class="sm-btn" title="Nieuwe Categorieën" data-i18n="mixCategories"><i class="fa-solid fa-shuffle"></i>
                     Mix Categorieën</button>
@@ -239,7 +245,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=75"></script>
+    <script type="module" src="script.js?v=76"></script>
 </body>
 
 </html>

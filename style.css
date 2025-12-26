@@ -883,6 +883,44 @@ h1 {
     font-weight: 700;
 }
 
+/* Sticky Timer Progress Bar */
+.sticky-timer-bar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.sticky-timer-progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+    transition: width 0.3s ease, background 0.3s ease;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+}
+
+.sticky-timer-text {
+    position: relative;
+    z-index: 1;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
 /* Buttons */
 .primary-btn,
 .danger-btn {
