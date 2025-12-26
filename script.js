@@ -249,6 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentVotingCategory = null; // Track which category we're voting on
     let isRenderingVotes = false; // Prevent re-rendering while voting
     let isSubmittingVotes = false; // Prevent double submission
+    let isProcessingCategory = false; // Prevent processing category results multiple times
+    let isCalculatingScores = false; // Prevent calculating final scores multiple times
 
 
     // Circular timer removed - using sticky timer bar only
@@ -812,6 +814,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLetter = '?';
         document.getElementById('current-letter').textContent = '?';
 
+        // Reset voting state variables
+        currentCategoryVotes = {};
+        currentVotingCategory = null;
+        isRenderingVotes = false;
+        isSubmittingVotes = false;
+        isProcessingCategory = false;
+        isCalculatingScores = false;
+
         // Keep scores, only reset answers and verifiedResults
         const resetPlayers = roomData.players.map(p => ({
             ...p,
@@ -823,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'lobby',
             gameHistory: [],
+            votingState: null,  // Reset voting state in database
             players: resetPlayers,
             lastActivity: Date.now()
         });
@@ -1136,18 +1147,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const snap = await getDoc(roomRef);
         const data = snap.data();
 
-        // Auto-approve library answers for ALL players first
-        for (let pIndex = 0; pIndex < data.players.length; pIndex++) {
-            const player = data.players[pIndex];
-            for (const cat of activeCategories) {
-                const answer = player.answers[cat];
-                if (!answer) continue;
+        // Auto-approve library answers for ALL players first (only once at the start)
+        // Check if this is the first call by seeing if any player has verifiedResults
+        const isFirstCall = !data.players.some(p => p.verifiedResults && Object.keys(p.verifiedResults).length > 0);
 
-                if (player.verifiedResults && player.verifiedResults[cat]) continue;
+        if (isFirstCall) {
+            console.log('First processNextCategory call - auto-approving library answers');
+            for (let pIndex = 0; pIndex < data.players.length; pIndex++) {
+                const player = data.players[pIndex];
+                for (const cat of activeCategories) {
+                    const answer = player.answers[cat];
+                    if (!answer) continue;
 
-                const isKnown = await checkLibrary(cat, answer);
-                if (isKnown) {
-                    await markAnswerVerified(pIndex, cat, answer, true, true);
+                    if (player.verifiedResults && player.verifiedResults[cat]) continue;
+
+                    const isKnown = await checkLibrary(cat, answer);
+                    if (isKnown) {
+                        await markAnswerVerified(pIndex, cat, answer, true, true);
+                    }
                 }
             }
         }
@@ -1178,6 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // If there are answers to vote on for this category, set voting state
             if (answersToVote.length > 0) {
+                console.log(`Setting up voting for category ${cat} with ${answersToVote.length} answers`);
                 await updateDoc(roomRef, {
                     votingState: {
                         category: cat,
@@ -1193,6 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // All categories processed - calculate final scores
+        console.log('All categories processed, calculating final scores');
         const finalSnap = await getDoc(roomRef);
         calculateFinalScores(finalSnap.data());
     }
@@ -1494,7 +1513,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
 
         // If all players voted and we're the host, process results
-        if (isHost && votedCount >= playerCount) {
+        // Only trigger if not already processing
+        if (isHost && votedCount >= playerCount && !isProcessingCategory) {
             console.log('All players voted, processing category results...');
             processCategoryResults(state);
         }
@@ -1510,7 +1530,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
 
-        if (votedCount >= playerCount) {
+        if (votedCount >= playerCount && !isProcessingCategory) {
             // Everyone voted - process results
             console.log('All players voted, processing category results...');
             await processCategoryResults(state);
@@ -1519,6 +1539,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function processCategoryResults(state) {
         if (!isHost) return;
+        if (isProcessingCategory) {
+            console.log('Already processing category, skipping duplicate call');
+            return;
+        }
+
+        isProcessingCategory = true;
+        console.log('Processing category results for:', state.category);
 
         const roomRef = doc(db, "rooms", roomId);
         const freshSnap = await getDoc(roomRef);
@@ -1586,6 +1613,9 @@ document.addEventListener('DOMContentLoaded', () => {
             votingState: null,
             gameHistory: history
         });
+
+        // Reset flag before moving to next category
+        isProcessingCategory = false;
 
         // Continue to next category
         setTimeout(() => processNextCategory(), 1000);
@@ -1792,6 +1822,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function calculateFinalScores(data) {
+        if (isCalculatingScores) {
+            console.log("Already calculating scores, skipping duplicate call");
+            return;
+        }
+
+        isCalculatingScores = true;
         console.log("Starting Score Calculation...");
         const players = data.players;
 
@@ -1880,6 +1916,10 @@ document.addEventListener('DOMContentLoaded', () => {
             gameHistory: history,
             lastActivity: Date.now()
         });
+
+        // Reset flag after database update completes
+        isCalculatingScores = false;
+        console.log("Score calculation complete");
     }
 
     function showResults(data) {
