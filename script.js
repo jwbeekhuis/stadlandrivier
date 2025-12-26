@@ -812,10 +812,10 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLetter = '?';
         document.getElementById('current-letter').textContent = '?';
 
-        // Reset player scores for new round
+        // Keep scores, only reset answers and verifiedResults
         const resetPlayers = roomData.players.map(p => ({
             ...p,
-            score: 0,
+            // Keep score intact - accumulate across rounds
             answers: {},
             verifiedResults: {}
         }));
@@ -1302,7 +1302,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.category) {
             const translationKey = 'categories.' + state.category;
             const translatedCategory = t(translationKey);
-            console.log(`Setting category title: category="${state.category}", key="${translationKey}", translated="${translatedCategory}"`);
             votingCategoryTitle.textContent = translatedCategory;
         } else {
             votingCategoryTitle.textContent = '...';
@@ -1846,10 +1845,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Set scores to round scores (overwrite, don't add)
-        // This prevents double-counting if calculateFinalScores is called multiple times
+        // Add round scores to existing total scores (accumulate across rounds)
         players.forEach(p => {
-            p.score = roundScores[p.uid];
+            const currentScore = p.score || 0;
+            const roundScore = roundScores[p.uid];
+            p.score = currentScore + roundScore;
         });
 
         console.log("Round Scores:", players.map(p => `${p.name}: +${roundScores[p.uid]}`));
@@ -2023,7 +2023,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
             const translationKey = 'categories.' + cat;
             const translatedCat = t(translationKey);
-            console.log(`Translation Debug: cat="${cat}", key="${translationKey}", translated="${translatedCat}"`);
             const div = document.createElement('div');
             div.className = 'category-input-group';
             div.innerHTML = `
