@@ -885,19 +885,22 @@ h1 {
 
 /* Sticky Timer Progress Bar */
 .sticky-timer-bar {
+    position: -webkit-sticky; /* For Safari */
     position: sticky;
-    top: 0;
+    top: -20px; /* Stick to top of scrollable area */
     left: 0;
     right: 0;
     height: 50px;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 12px 12px 0 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 0;
     overflow: hidden;
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
+    margin: -20px -20px 20px -20px; /* Extend to edges of parent padding */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 

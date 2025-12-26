@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=76';
+import { translations } from './translations.js?v=77';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -1200,11 +1200,15 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsBoard.classList.add('hidden');
         categoriesContainer.classList.add('hidden');
 
-        // Set category title
-        const translationKey = 'categories.' + state.category;
-        const translatedCategory = t(translationKey);
-        console.log(`Setting category title: category="${state.category}", key="${translationKey}", translated="${translatedCategory}"`);
-        votingCategoryTitle.textContent = translatedCategory;
+        // Set category title - only if category is defined
+        if (state.category) {
+            const translationKey = 'categories.' + state.category;
+            const translatedCategory = t(translationKey);
+            console.log(`Setting category title: category="${state.category}", key="${translationKey}", translated="${translatedCategory}"`);
+            votingCategoryTitle.textContent = translatedCategory;
+        } else {
+            votingCategoryTitle.textContent = '...';
+        }
 
         // Clear and render all answer cards
         votingItemsContainer.innerHTML = '';
