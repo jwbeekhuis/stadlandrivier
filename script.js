@@ -1,5 +1,5 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, signInAnonymously, auth } from './firebase-config.js?v=3';
-import { translations } from './translations.js?v=62';
+import { translations } from './translations.js?v=77';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <h3>${t('tutorialLibraryTitle')}</h3>
             <p>${t('tutorialLibrary')}</p>
+            <p><strong>${t('tutorialDormant')}</strong></p>
 
             <h3>${t('tutorialRulesTitle')}</h3>
             <p>${t('tutorialRules')}</p>
@@ -129,15 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const leaveRoomBtn = document.getElementById('leave-room-btn');
-        if (leaveRoomBtn) {
-            leaveRoomBtn.innerHTML = `<i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="leaveRoom">${t('leaveRoom')}</span>`;
-            leaveRoomBtn.title = t('leaveRoom');
-        }
-
         const deleteRoomBtn = document.getElementById('delete-room-game-btn');
         if (deleteRoomBtn) {
-            deleteRoomBtn.innerHTML = `<i class="fa-solid fa-trash"></i> <span data-i18n="deleteRoom">${t('deleteRoom')}</span>`;
+            deleteRoomBtn.innerHTML = `<i class="fa-solid fa-trash"></i> ${t('deleteRoom')}`;
             deleteRoomBtn.title = t('deleteRoom');
         }
 
@@ -230,11 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerCountDisplay = document.getElementById('player-count');
     const rollBtn = document.getElementById('roll-btn');
     const stopBtn = document.getElementById('stop-btn');
-    const leaveRoomBtn = document.getElementById('leave-room-btn');
     const deleteRoomGameBtn = document.getElementById('delete-room-game-btn');
+    const leaveRoomBtn = document.getElementById('leave-room-btn');
     const letterDisplay = document.getElementById('current-letter');
-    const timerDisplay = document.getElementById('timer-display');
-    const timerCircle = document.querySelector('.progress-ring__circle');
     const categoriesContainer = document.getElementById('categories-container');
     const nextRoundBtn = document.getElementById('next-round-btn');
     const shuffleBtn = document.getElementById('shuffle-btn');
@@ -242,10 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const languageToggleBtn = document.getElementById('language-toggle');
     const playersList = document.getElementById('players-list');
 
-    // Voting Elements
+    // Voting Elements (NEW BATCH VOTING)
     const votingCategoryTitle = document.getElementById('voting-category-title');
     const votingItemsContainer = document.getElementById('voting-items-container');
-    const submitVotesBtn = document.getElementById('submit-votes-btn');
     const votedCountDisplay = document.getElementById('voted-count');
     const totalVotesCountDisplay = document.getElementById('total-votes-count');
     const voteTimer = document.getElementById('vote-timer');
@@ -254,32 +246,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const moreTimeBtn = document.getElementById('more-time-btn');
 
     let currentCategoryVotes = {}; // Store votes for current category
+    let currentVotingCategory = null; // Track which category we're voting on
+    let isRenderingVotes = false; // Prevent re-rendering while voting
+    let isSubmittingVotes = false; // Prevent double submission
 
 
-    // Circle Config
-    let circumference = 0;
-    if (timerCircle) {
-        const radius = timerCircle.r.baseVal.value;
-        circumference = radius * 2 * Math.PI;
-        timerCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-        timerCircle.style.strokeDashoffset = 0;
-    }
+    // Circular timer removed - using sticky timer bar only
 
     // --- Initialization ---
     async function init() {
-        // Initialize translations first
-        updateAllTranslations();
-
-        // Load saved name from localStorage AFTER translations
-        const savedName = localStorage.getItem('playerName');
-        if (savedName) {
-            playerNameInput.value = savedName;
-        }
-
         try {
             const userCred = await signInAnonymously(auth);
             currentUser = userCred.user;
             console.log("Logged in as", currentUser.uid);
+
+            // Load saved name from localStorage
+            const savedName = localStorage.getItem('playerName');
+            if (savedName) {
+                playerNameInput.value = savedName;
+            }
         } catch (e) {
             console.error("Auth error:", e);
             alert("Er ging iets mis met inloggen. Controleer je internetverbinding en Firebase config.");
@@ -288,8 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
         createRoomBtn.addEventListener('click', createRoom);
         rollBtn.addEventListener('click', handleRollClick);
         stopBtn.addEventListener('click', handleStopClick);
-        if (leaveRoomBtn) leaveRoomBtn.addEventListener('click', handleLeaveRoomClick);
         if (deleteRoomGameBtn) deleteRoomGameBtn.addEventListener('click', handleDeleteRoomClick);
+        if (leaveRoomBtn) leaveRoomBtn.addEventListener('click', handleLeaveRoomClick);
 
         if (shuffleBtn) shuffleBtn.addEventListener('click', handleShuffleClick);
         if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
@@ -298,22 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (nextRoundBtn) nextRoundBtn.addEventListener('click', handleNextRound);
 
-        // Tutorial collapse state
-        const tutorialDetails = document.getElementById('tutorial-details');
-        if (tutorialDetails) {
-            // Load saved state
-            const tutorialOpen = localStorage.getItem('tutorialOpen');
-            if (tutorialOpen !== null) {
-                tutorialDetails.open = tutorialOpen === 'true';
-            }
+        // Initialize translations
+        updateAllTranslations();
 
-            // Save state on toggle
-            tutorialDetails.addEventListener('toggle', () => {
-                localStorage.setItem('tutorialOpen', tutorialDetails.open);
-            });
-        }
-
-        if (submitVotesBtn) submitVotesBtn.addEventListener('click', submitCategoryVotes);
+        // Voting event listeners removed - now using inline buttons in vote cards
         if (moreTimeBtn) moreTimeBtn.addEventListener('click', requestMoreVoteTime);
 
         // Duration slider
@@ -330,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function subscribeToActiveRooms() {
         const roomsQuery = query(
             collection(db, "rooms"),
-            where("status", "in", ["lobby", "playing"]),
+            where("status", "in", ["lobby", "playing", "voting", "finished"]),  // Excludes only dormant and deleted rooms
             orderBy("createdAt", "desc"),
             limit(10)
         );
@@ -342,12 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 rooms.push({ id: doc.id, ...data });
             });
             renderRoomsList(rooms);
-        }, (error) => {
-            console.error("Error loading active rooms:", error);
-            const list = document.getElementById("active-rooms-list");
-            if (list) {
-                list.innerHTML = `<p class="no-rooms">${t('noRooms')}</p>`;
-            }
         });
     }
 
@@ -384,6 +351,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
+    // --- Dormant Room Reactivation ---
+    async function reopenDormantRoom(roomRef, roomData, playerName, playerUid) {
+        console.log(`Reopening dormant room by creator ${roomData.creatorName}`);
+
+        // Reactivate the room with the creator as the first player (host)
+        await updateDoc(roomRef, {
+            status: 'lobby',
+            hostId: playerUid,
+            players: [{
+                uid: playerUid,
+                name: playerName,
+                score: 0,
+                answers: {},
+                isVerified: false,
+                lastSeen: Date.now()
+            }],
+            currentLetter: '?',  // Reset game state
+            votingState: null,
+            lastActivity: Date.now()
+        });
+
+        return true;
+    }
+
     window.quickJoinRoom = async function (code) {
         const name = playerNameInput.value.trim();
         if (!name) return alert(t('enterName'));
@@ -392,7 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('playerName', name);
 
         roomId = code;
-        isHost = false;
 
         const roomRef = doc(db, "rooms", code);
         const roomSnap = await getDoc(roomRef);
@@ -402,6 +392,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const roomData = roomSnap.data();
+
+        // Handle dormant room reactivation
+        if (roomData.status === 'dormant') {
+            // Only the original creator can reopen a dormant room
+            if (roomData.creatorUid === currentUser.uid) {
+                await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
+                isHost = true;  // Creator becomes host when reopening
+                enterGameUI(code);
+                subscribeToRoom(code);
+                startHeartbeat();
+                return;
+            } else {
+                return alert(t('roomNotExist'));  // Non-creators see it as non-existent
+            }
+        }
+
+        // Normal join flow for active rooms
+        isHost = false;
         const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
 
         if (existingPlayer) {
@@ -411,11 +419,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? { ...p, name: name, lastSeen: Date.now() }
                     : p
             );
-            await updateDoc(roomRef, { players: updatedPlayers });
+            await updateDoc(roomRef, {
+                players: updatedPlayers,
+                lastActivity: Date.now()
+            });
         } else {
             // New player, add them
             await updateDoc(roomRef, {
-                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() })
+                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }),
+                lastActivity: Date.now()
             });
         }
 
@@ -489,6 +501,8 @@ document.addEventListener('DOMContentLoaded', () => {
             roomId: code,
             roomName: roomName,
             hostId: currentUser.uid,
+            creatorUid: currentUser.uid,  // Track original creator for dormant room access
+            creatorName: name,             // Track creator name for display
             status: 'lobby',
             currentLetter: '?',
             categories: getRandomCategories(),
@@ -496,7 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gameDuration: selectedDuration,
             players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }],
             votingState: null,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            lastActivity: Date.now()      // Track last activity for cleanup
         });
 
         enterGameUI(code);
@@ -514,7 +529,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('playerName', name);
 
         roomId = code;
-        isHost = false;
 
         const roomRef = doc(db, "rooms", code);
         const roomSnap = await getDoc(roomRef);
@@ -524,6 +538,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const roomData = roomSnap.data();
+
+        // Handle dormant room reactivation
+        if (roomData.status === 'dormant') {
+            // Only the original creator can reopen a dormant room
+            if (roomData.creatorUid === currentUser.uid) {
+                await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
+                isHost = true;  // Creator becomes host when reopening
+                enterGameUI(code);
+                subscribeToRoom(code);
+                startHeartbeat();
+                return;
+            } else {
+                return alert("Kamer niet gevonden!");  // Non-creators see it as non-existent
+            }
+        }
+
+        // Normal join flow for active rooms
+        isHost = false;
         const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
 
         if (existingPlayer) {
@@ -533,11 +565,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? { ...p, name: name, lastSeen: Date.now() }
                     : p
             );
-            await updateDoc(roomRef, { players: updatedPlayers });
+            await updateDoc(roomRef, {
+                players: updatedPlayers,
+                lastActivity: Date.now()
+            });
         } else {
             // New player, add them
             await updateDoc(roomRef, {
-                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() })
+                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }),
+                lastActivity: Date.now()
             });
         }
 
@@ -600,22 +636,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (data.status === 'playing' && !isGameActive) {
-            resultsShown = false; // Reset when starting new game
+            resultsShown = false; // Reset flag when new game starts
             startGameLocal();
         } else if (data.status === 'voting') {
             isGameActive = false;
             stopGameLocal();
+            // Always call showVotingUI to update vote stats in real-time
             showVotingUI(data.votingState);
         } else if (data.status === 'finished') {
             isGameActive = false;
             stopGameLocal();
-            if (!resultsShown) {
-                resultsShown = true;
-                showResults(data);
-            }
+            // Show results screen (idempotent - just updates the UI)
+            showResults(data);
         } else if (data.status === 'lobby') {
             resetBoard();
-            resultsShown = false; // Reset for next round
         }
 
         const wasHost = isHost;
@@ -706,11 +740,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleRollClick() {
         if (!isHost) return;
         const newLetter = getRandomLetter();
+
+        // Update local state immediately to prevent showing '?'
+        currentLetter = newLetter;
+        letterDisplay.textContent = currentLetter;
+
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'playing',
             currentLetter: newLetter,
             timerEnd: Date.now() + (gameDuration * 1000),
-            players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} }))
+            players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} })),
+            lastActivity: Date.now()
         });
     }
 
@@ -722,41 +762,19 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleShuffleClick() {
         if (!isHost) return;
         const newCats = getRandomCategories();
-        await updateDoc(doc(db, "rooms", roomId), { categories: newCats });
+        await updateDoc(doc(db, "rooms", roomId), {
+            categories: newCats,
+            lastActivity: Date.now()
+        });
     }
 
     async function handleNextRound() {
         if (!isHost) return;
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'lobby',
-            gameHistory: []
+            gameHistory: [],
+            lastActivity: Date.now()
         });
-    }
-
-    async function handleLeaveRoomClick() {
-        if (!confirm(t('confirmLeaveRoom'))) {
-            return;
-        }
-
-        try {
-            if (roomId && currentUser) {
-                const roomRef = doc(db, "rooms", roomId);
-                const roomSnap = await getDoc(roomRef);
-
-                if (roomSnap.exists()) {
-                    const players = roomSnap.data().players;
-                    // Remove current player from the room
-                    const updatedPlayers = players.filter(p => p.uid !== currentUser.uid);
-                    await updateDoc(roomRef, { players: updatedPlayers });
-                }
-            }
-
-            // Return to lobby
-            returnToLobby(null);
-        } catch (e) {
-            console.error("Error leaving room:", e);
-            alert("Error: " + e.message);
-        }
     }
 
     async function handleDeleteRoomClick() {
@@ -807,6 +825,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function handleLeaveRoomClick() {
+        if (!roomId) return;
+
+        try {
+            // Stop heartbeat first so we don't get marked inactive
+            stopHeartbeat();
+
+            // Remove player from room
+            const updatedPlayers = roomData.players.filter(p => p.uid !== currentUser.uid);
+            await updateDoc(doc(db, "rooms", roomId), {
+                players: updatedPlayers,
+                lastActivity: Date.now()
+            });
+
+            // Unsubscribe and return to lobby
+            if (roomUnsubscribe) {
+                roomUnsubscribe();
+                roomUnsubscribe = null;
+            }
+
+            // Reset local state
+            roomId = null;
+            isHost = false;
+            roomData = null;
+            isGameActive = false;
+
+            // Return to lobby
+            controlsPanel.classList.add('hidden');
+            gameBoard.classList.add('hidden');
+            resultsBoard.classList.add('hidden');
+            votingScreen.classList.add('hidden');
+            lobbyScreen.classList.remove('hidden');
+
+            // Refresh room list
+            subscribeToActiveRooms();
+        } catch (e) {
+            console.error("Error leaving room:", e);
+            alert("Error: " + e.message);
+        }
+    }
+
     // --- Heartbeat & Activity Tracking ---
     function startHeartbeat() {
         stopHeartbeat(); // Clear any existing interval
@@ -814,11 +873,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update immediately
         updatePlayerHeartbeat();
 
-        // Then update every 10 seconds
+        // Then update every 5 seconds (increased frequency to prevent false positives)
         heartbeatInterval = setInterval(() => {
             updatePlayerHeartbeat();
-            // Automatic cleanup disabled - host can manually kick players
-        }, 10000);
+            if (isHost) {
+                cleanupInactivePlayers();
+            }
+        }, 5000);
     }
 
     function stopHeartbeat() {
@@ -828,16 +889,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function updatePlayerHeartbeat() {
+    async function updatePlayerHeartbeat(retryCount = 0) {
         if (!roomId || !currentUser) return;
 
         try {
             const roomRef = doc(db, "rooms", roomId);
             const roomSnap = await getDoc(roomRef);
 
-            if (!roomSnap.exists()) return;
+            if (!roomSnap.exists()) {
+                console.log("Room no longer exists, stopping heartbeat");
+                stopHeartbeat();
+                return;
+            }
 
             const players = roomSnap.data().players;
+            const playerExists = players.find(p => p.uid === currentUser.uid);
+
+            if (!playerExists) {
+                console.log("Player no longer in room, stopping heartbeat");
+                stopHeartbeat();
+                return;
+            }
+
             const updatedPlayers = players.map(p =>
                 p.uid === currentUser.uid
                     ? { ...p, lastSeen: Date.now() }
@@ -845,8 +918,19 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             await updateDoc(roomRef, { players: updatedPlayers });
+            console.log("Heartbeat updated successfully");
         } catch (e) {
             console.error("Heartbeat error:", e);
+
+            // Retry up to 3 times with exponential backoff
+            if (retryCount < 3) {
+                const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Max 5s delay
+                console.log(`Retrying heartbeat in ${retryDelay}ms (attempt ${retryCount + 1}/3)`);
+                setTimeout(() => updatePlayerHeartbeat(retryCount + 1), retryDelay);
+            } else {
+                console.error("Heartbeat failed after 3 retries, but keeping connection alive");
+                // Don't stop heartbeat - next interval will try again
+            }
         }
     }
 
@@ -862,24 +946,39 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = roomSnap.data();
             const players = data.players;
             const now = Date.now();
-            const inactiveThreshold = 30000; // 30 seconds
+
+            // Increased threshold to 2 minutes to be more forgiving
+            // Also add grace period during voting (3 minutes)
+            const isVoting = data.status === 'voting';
+            const inactiveThreshold = isVoting ? 180000 : 120000; // 3min during voting, 2min otherwise
 
             const activePlayers = players.filter(p => {
-                // Keep players who have been seen recently
-                return (now - (p.lastSeen || 0)) < inactiveThreshold;
+                const timeSinceLastSeen = now - (p.lastSeen || 0);
+                const isActive = timeSinceLastSeen < inactiveThreshold;
+
+                // Log inactivity status for debugging
+                if (!isActive) {
+                    console.log(`Player ${p.name} (${p.uid}) inactive for ${Math.round(timeSinceLastSeen / 1000)}s (threshold: ${inactiveThreshold/1000}s)`);
+                }
+
+                return isActive;
             });
 
             // Only update if players were removed
             if (activePlayers.length < players.length) {
                 const removedCount = players.length - activePlayers.length;
-                console.log(`Removing ${removedCount} inactive player(s)`);
+                const removedPlayers = players.filter(p => !activePlayers.find(ap => ap.uid === p.uid));
+                console.log(`Removing ${removedCount} inactive player(s):`, removedPlayers.map(p => p.name).join(', '));
 
                 // Check if the first player (host) was removed
                 const oldHostUid = players[0]?.uid;
                 const newHostUid = activePlayers[0]?.uid;
 
                 if (activePlayers.length > 0) {
-                    await updateDoc(roomRef, { players: activePlayers });
+                    await updateDoc(roomRef, {
+                        players: activePlayers,
+                        lastActivity: Date.now()
+                    });
 
                     // Log host change if it happened
                     if (oldHostUid !== newHostUid) {
@@ -889,9 +988,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         await updateDoc(roomRef, { hostId: newHostUid });
                     }
                 } else {
-                    // No players left, delete the room
-                    console.log("No active players left, deleting room");
-                    await updateDoc(roomRef, { status: 'deleted' });
+                    // No players left, set room to dormant to preserve word library
+                    console.log("No active players left, setting room to dormant (preserving library)");
+                    await updateDoc(roomRef, {
+                        status: 'dormant',
+                        players: [],
+                        lastActivity: Date.now()
+                    });
                 }
             }
         } catch (e) {
@@ -959,12 +1062,12 @@ document.addEventListener('DOMContentLoaded', () => {
         await updateDoc(doc(db, "rooms", roomId), {
             status: 'voting',
             votingState: null,
-            currentVotingCategory: null,
-            categoryVotingIndex: 0
+            lastActivity: Date.now()
         });
         setTimeout(processNextCategory, 2000);
     }
 
+    // NEW BATCH VOTING SYSTEM - Process entire category at once
     async function processNextCategory() {
         if (!isHost) return;
 
@@ -972,14 +1075,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const snap = await getDoc(roomRef);
         const data = snap.data();
 
-        const currentIndex = data.categoryVotingIndex || 0;
-
-        // First, auto-approve all known answers from library
+        // Auto-approve library answers for ALL players first
         for (let pIndex = 0; pIndex < data.players.length; pIndex++) {
             const player = data.players[pIndex];
             for (const cat of activeCategories) {
                 const answer = player.answers[cat];
                 if (!answer) continue;
+
                 if (player.verifiedResults && player.verifiedResults[cat]) continue;
 
                 const isKnown = await checkLibrary(cat, answer);
@@ -989,21 +1091,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Refresh data after auto-approvals
+        // Now process categories one at a time for batch voting
         const freshSnap = await getDoc(roomRef);
         const freshData = freshSnap.data();
 
-        // Process categories one by one
-        for (let catIndex = currentIndex; catIndex < activeCategories.length; catIndex++) {
+        for (let catIndex = 0; catIndex < activeCategories.length; catIndex++) {
             const cat = activeCategories[catIndex];
 
-            // Collect all answers for this category that need voting
+            // Collect all unverified answers for this category
             const answersToVote = [];
             for (let pIndex = 0; pIndex < freshData.players.length; pIndex++) {
                 const player = freshData.players[pIndex];
                 const answer = player.answers[cat];
-                if (!answer) continue;
-                if (player.verifiedResults && player.verifiedResults[cat]) continue;
+                if (!answer) continue; // Skip empty answers
+
+                if (player.verifiedResults && player.verifiedResults[cat]) continue; // Already verified
 
                 answersToVote.push({
                     playerIndex: pIndex,
@@ -1013,46 +1115,123 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // If there are answers to vote on in this category
+            // If there are answers to vote on for this category, set voting state
             if (answersToVote.length > 0) {
                 await updateDoc(roomRef, {
                     votingState: {
                         category: cat,
+                        categoryIndex: catIndex,
                         answers: answersToVote,
-                        votes: {}, // votes will be stored as {playerUid_answerIndex: {vote: true/false, voters: {uid: true/false}}}
-                        allPlayersVoted: {}
+                        votes: {}, // votes[voterUid][targetUid] = true/false
+                        allPlayersVoted: {} // allPlayersVoted[uid] = true when done
                     },
-                    currentVotingCategory: cat,
-                    categoryVotingIndex: catIndex
+                    currentVotingCategory: cat
                 });
-                return;
+                return; // Stop here, wait for votes
             }
         }
 
-        // All categories processed
+        // All categories processed - calculate final scores
         const finalSnap = await getDoc(roomRef);
         calculateFinalScores(finalSnap.data());
     }
 
-    let currentVotingCategory = null; // Track which category we're currently voting on
-    let isRenderingVotes = false; // Prevent re-rendering while voting
+    // Update only vote stats without re-rendering entire UI
+    function updateVoteStats(state) {
+        if (!state || !state.answers) {
+            console.log('updateVoteStats: no state or answers');
+            return;
+        }
 
+        console.log('updateVoteStats: Updating vote stats for', state.answers.length, 'answers');
+
+        const answers = state.answers || [];
+        const sortedAnswers = answers.sort((a, b) => a.playerIndex - b.playerIndex);
+
+        sortedAnswers.forEach((answerData, index) => {
+            const voteKey = `${answerData.playerUid}_${index}`;
+
+            // Calculate vote stats for this answer (from both live votes and submitted votes)
+            const votesForThisAnswer = {};
+
+            // First get live votes from state.votes
+            Object.entries(state.votes || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            // Then get submitted votes from state.allPlayersVoted (these are finalized)
+            Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            const yesCount = Object.values(votesForThisAnswer).filter(v => v === true).length;
+            const noCount = Object.values(votesForThisAnswer).filter(v => v === false).length;
+
+            console.log(`Vote stats for ${answerData.answer}: ${yesCount}✅ ${noCount}❌`);
+
+            // Create voter names list - sort by player name for stable order
+            const voterNamesList = Object.entries(votesForThisAnswer)
+                .map(([uid, vote]) => {
+                    const p = roomData.players.find(pl => pl.uid === uid);
+                    const name = p ? p.name : 'Unknown';
+                    return { name, vote };
+                })
+                .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+                .map(({ name, vote }) => vote ? `${name}✅` : `${name}❌`)
+                .join(', ');
+
+            // Find the vote-stats div for this answer and update it
+            const votingItems = document.querySelectorAll('.voting-item');
+            if (votingItems[index]) {
+                const voteStatsDiv = votingItems[index].querySelector('.vote-stats');
+                if (voteStatsDiv) {
+                    voteStatsDiv.innerHTML = `
+                        <span class="vote-count">${yesCount}✅ ${noCount}❌</span>
+                        ${voterNamesList ? '<div class="voter-names">' + voterNamesList + '</div>' : ''}
+                    `;
+                    console.log(`Updated vote stats for item ${index}`);
+                } else {
+                    console.log(`No vote-stats div found for item ${index}`);
+                }
+            } else {
+                console.log(`No voting item found at index ${index}`);
+            }
+        });
+
+        // Check if all players voted (for non-host players to auto-advance)
+        checkIfAllPlayersVoted(state);
+    }
+
+    // NEW BATCH VOTING UI - Show all answers for category at once
     function showVotingUI(state) {
         if (!state) {
             votingScreen.classList.remove('hidden');
             gameBoard.classList.add('hidden');
-            votingItemsContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">Laden...</p>';
+            votingItemsContainer.innerHTML = '<p style="text-align: center; opacity: 0.7;">' + t('loading') + '</p>';
             isRenderingVotes = false;
             return;
         }
 
-        // Don't re-render if we're already voting on this category
+        // Reset votes when switching to a new category
+        if (currentVotingCategory !== state.category) {
+            console.log(`Switching to new category: ${state.category}`);
+            currentCategoryVotes = {}; // Clear votes from previous category
+            currentVotingCategory = state.category;
+            isRenderingVotes = false; // Allow fresh render
+            isSubmittingVotes = false; // Reset submission flag for new category
+        }
+
+        // If already showing this category, just update vote stats instead of full re-render
         if (currentVotingCategory === state.category && isRenderingVotes) {
-            console.log('Already rendering this category, skipping update');
+            console.log('Already rendering this category, updating vote stats only');
+            updateVoteStats(state);
             return;
         }
 
-        currentVotingCategory = state.category;
         isRenderingVotes = true;
 
         votingScreen.classList.remove('hidden');
@@ -1060,36 +1239,79 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsBoard.classList.add('hidden');
         categoriesContainer.classList.add('hidden');
 
-        // Set category title
-        votingCategoryTitle.textContent = t('categories.' + state.category);
+        // Set category title - only if category is defined
+        if (state.category) {
+            const translationKey = 'categories.' + state.category;
+            const translatedCategory = t(translationKey);
+            console.log(`Setting category title: category="${state.category}", key="${translationKey}", translated="${translatedCategory}"`);
+            votingCategoryTitle.textContent = translatedCategory;
+        } else {
+            votingCategoryTitle.textContent = '...';
+        }
 
-        // Initialize current votes from state - preserve existing votes
-        const previousVotes = {...currentCategoryVotes};
-        currentCategoryVotes = {};
-
-        // Render all answers for this category
+        // Clear and render all answer cards
         votingItemsContainer.innerHTML = '';
+
         const answers = state.answers || [];
+        // Sort by playerIndex to maintain stable order (prevents jumping)
+        const sortedAnswers = answers.sort((a, b) => a.playerIndex - b.playerIndex);
 
-        answers.forEach((answerData, index) => {
-            const voteKey = `${answerData.playerUid}_${index}`;
+        sortedAnswers.forEach((answerData, index) => {
             const isMyAnswer = answerData.playerUid === currentUser.uid;
+            const voteKey = `${answerData.playerUid}_${index}`;
 
-            // Check if I already voted on this answer (from DB or local state)
+            // Check if we already voted on this answer (only from finalized votes, not previousVotes)
             let myVote = state.allPlayersVoted?.[currentUser.uid]?.[voteKey];
-            if (myVote === undefined && previousVotes[voteKey] !== undefined) {
-                myVote = previousVotes[voteKey];
-            }
             if (myVote !== undefined) {
                 currentCategoryVotes[voteKey] = myVote;
             }
 
+            // Check for duplicates (fuzzy matching)
+            const normalizedAnswer = normalizeAnswer(answerData.answer);
+            const duplicates = sortedAnswers.filter((other, otherIndex) =>
+                otherIndex < index && areWordsFuzzyMatching(normalizeAnswer(other.answer), normalizedAnswer)
+            );
+            const isDuplicate = duplicates.length > 0;
+
+            // Calculate vote stats for this answer (from both live votes and submitted votes)
+            const votesForThisAnswer = {};
+
+            // First get live votes from state.votes
+            Object.entries(state.votes || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            // Then get submitted votes from state.allPlayersVoted (these are finalized)
+            Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForThisAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            const yesCount = Object.values(votesForThisAnswer).filter(v => v === true).length;
+            const noCount = Object.values(votesForThisAnswer).filter(v => v === false).length;
+
+            // Create voter names list - sort by player name for stable order
+            const voterNamesList = Object.entries(votesForThisAnswer)
+                .map(([uid, vote]) => {
+                    const p = roomData.players.find(pl => pl.uid === uid);
+                    const name = p ? p.name : 'Unknown';
+                    return { name, vote };
+                })
+                .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+                .map(({ name, vote }) => vote ? `${name}✅` : `${name}❌`)
+                .join(', ');
+
+            // Create answer card
             const itemDiv = document.createElement('div');
             itemDiv.className = 'voting-item';
             itemDiv.innerHTML = `
                 <div class="voting-item-header">
                     <span class="voting-player-name">${answerData.playerName}</span>
                     ${isMyAnswer ? '<span class="own-answer-badge">' + t('yourAnswer') + '</span>' : ''}
+                    ${isDuplicate ? '<span class="duplicate-badge">' + t('duplicate') + ' ' + duplicates[0].playerName + '</span>' : ''}
                 </div>
                 <div class="voting-answer-text">${answerData.answer}</div>
                 <div class="voting-item-actions">
@@ -1100,37 +1322,43 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="fa-solid fa-check"></i>
                     </button>
                 </div>
+                <div class="vote-stats">
+                    <span class="vote-count">${yesCount}✅ ${noCount}❌</span>
+                    ${voterNamesList ? '<div class="voter-names">' + voterNamesList + '</div>' : ''}
+                </div>
             `;
+
             votingItemsContainer.appendChild(itemDiv);
         });
 
-        // Add event listeners to vote buttons
+        // Add click listeners to all vote buttons
         document.querySelectorAll('.vote-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const voteKey = e.currentTarget.dataset.voteKey;
-                const vote = e.currentTarget.dataset.vote === 'true';
+                const voteKey = e.currentTarget.getAttribute('data-vote-key');
+                const voteValue = e.currentTarget.getAttribute('data-vote') === 'true';
 
-                // Update local vote state
-                currentCategoryVotes[voteKey] = vote;
+                // Store vote locally
+                currentCategoryVotes[voteKey] = voteValue;
 
-                // Update UI - remove selected from siblings, add to clicked
-                const parent = e.currentTarget.parentElement;
-                parent.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
+                // Update button states
+                const container = e.currentTarget.closest('.voting-item');
+                container.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
                 e.currentTarget.classList.add('selected');
 
-                // Update progress counter
+                // Update progress
                 updateVotingProgress(answers.length);
+
+                // Sync to Firebase
+                syncVoteToFirebase(voteKey, voteValue);
             });
         });
 
-        // Update counters
+        // Update vote counter
         totalVotesCountDisplay.textContent = answers.length;
         updateVotingProgress(answers.length);
 
-        // Start vote timer
-        if (!voteTimerInterval) {
-            startVoteTimer();
-        }
+        // Always restart timer for new category render
+        startVoteTimer();
     }
 
     function updateVotingProgress(totalCount) {
@@ -1144,10 +1372,170 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function syncVoteToFirebase(voteKey, voteValue) {
+        if (!roomId || !currentUser) return;
+
+        try {
+            const roomRef = doc(db, "rooms", roomId);
+            const key = `votingState.votes.${currentUser.uid}.${voteKey}`;
+            await updateDoc(roomRef, { [key]: voteValue });
+        } catch (e) {
+            console.error("Error syncing vote:", e);
+        }
+    }
+
+    async function submitCategoryVotes() {
+        if (!roomData.votingState) return;
+        if (isSubmittingVotes) {
+            console.log('Already submitting votes, skipping...');
+            return;
+        }
+
+        isSubmittingVotes = true;
+        // Don't stop timer yet - let it keep running until next category loads
+
+        // Auto-approve any unanswered votes
+        const state = roomData.votingState;
+        const answers = state.answers || [];
+
+        answers.forEach((answerData, index) => {
+            const voteKey = `${answerData.playerUid}_${index}`;
+            if (currentCategoryVotes[voteKey] === undefined) {
+                currentCategoryVotes[voteKey] = true; // Auto-approve
+            }
+        });
+
+        // Submit all votes to Firebase
+        const roomRef = doc(db, "rooms", roomId);
+        const updates = {};
+        updates[`votingState.allPlayersVoted.${currentUser.uid}`] = currentCategoryVotes;
+
+        await updateDoc(roomRef, updates);
+
+        // Host checks if all players voted
+        if (isHost) {
+            setTimeout(() => checkAllPlayersVoted(), 500);
+        }
+
+        // Reset flag after 2 seconds
+        setTimeout(() => {
+            isSubmittingVotes = false;
+        }, 2000);
+    }
+
+    // Check if all players voted (for non-host players, to know when voting is complete)
+    function checkIfAllPlayersVoted(state) {
+        if (!state || !roomData) return;
+
+        const allPlayersVoted = state.allPlayersVoted || {};
+        const playerCount = roomData.players.length;
+        const votedCount = Object.keys(allPlayersVoted).length;
+
+        console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
+
+        // If all players voted and we're the host, process results
+        if (isHost && votedCount >= playerCount) {
+            console.log('All players voted, processing category results...');
+            processCategoryResults(state);
+        }
+    }
+
+    async function checkAllPlayersVoted() {
+        if (!isHost || !roomData.votingState) return;
+
+        const state = roomData.votingState;
+        const allPlayersVoted = state.allPlayersVoted || {};
+        const playerCount = roomData.players.length;
+        const votedCount = Object.keys(allPlayersVoted).length;
+
+        console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
+
+        if (votedCount >= playerCount) {
+            // Everyone voted - process results
+            console.log('All players voted, processing category results...');
+            await processCategoryResults(state);
+        }
+    }
+
+    async function processCategoryResults(state) {
+        if (!isHost) return;
+
+        const roomRef = doc(db, "rooms", roomId);
+        const freshSnap = await getDoc(roomRef);
+        const freshData = freshSnap.data();
+        const players = freshData.players;
+        const history = freshData.gameHistory || [];
+
+        const answers = state.answers || [];
+
+        // Tally votes for each answer
+        for (let i = 0; i < answers.length; i++) {
+            const answerData = answers[i];
+            const voteKey = `${answerData.playerUid}_${i}`;
+
+            // Collect all votes for this answer
+            const votesForAnswer = {};
+            Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
+                if (voterVotes[voteKey] !== undefined) {
+                    votesForAnswer[voterUid] = voterVotes[voteKey];
+                }
+            });
+
+            // Calculate verdict (majority wins, ties approve)
+            const yesVotes = Object.values(votesForAnswer).filter(v => v === true).length;
+            const noVotes = Object.values(votesForAnswer).filter(v => v === false).length;
+            const isApproved = yesVotes >= noVotes;
+
+            // Mark answer as verified
+            if (!players[answerData.playerIndex].verifiedResults) {
+                players[answerData.playerIndex].verifiedResults = {};
+            }
+            players[answerData.playerIndex].verifiedResults[state.category] = {
+                isValid: isApproved,
+                answer: answerData.answer,
+                points: 0
+            };
+
+            // Add to history (only if not already in history from auto-approval)
+            const alreadyInHistory = history.some(entry =>
+                entry.playerName === answerData.playerName &&
+                entry.category === state.category &&
+                normalizeAnswer(entry.answer) === normalizeAnswer(answerData.answer)
+            );
+
+            if (!alreadyInHistory) {
+                history.push({
+                    playerName: answerData.playerName,
+                    category: state.category,
+                    answer: answerData.answer,
+                    isValid: isApproved,
+                    isAuto: false,
+                    votes: votesForAnswer
+                });
+            }
+
+            // Add to library if approved
+            if (isApproved) {
+                addToLibrary(state.category, answerData.answer);
+            }
+        }
+
+        // Update database and move to next category
+        await updateDoc(roomRef, {
+            players: players,
+            votingState: null,
+            gameHistory: history
+        });
+
+        // Continue to next category
+        setTimeout(() => processNextCategory(), 1000);
+    }
+
     function startVoteTimer() {
+        console.log('Starting vote timer');
         stopVoteTimer();
-        voteTimeLeft = 30; // 30 seconds for all answers in category
-        voteMaxTime = 30;
+        voteTimeLeft = 30; // 30 seconds for batch voting
+        voteMaxTime = 30; // Track max time for percentage calculation
         voteTimer.classList.remove('hidden');
         moreTimeBtn.classList.add('hidden');
 
@@ -1158,11 +1546,13 @@ document.addEventListener('DOMContentLoaded', () => {
             updateVoteTimerDisplay();
 
             if (voteTimeLeft === 0) {
-                stopVoteTimer();
-                // Auto-submit on timeout
+                console.log("Vote timeout - auto-submitting with current votes");
+                clearInterval(voteTimerInterval);
+                voteTimerInterval = null;
+                // Auto-submit with current votes (unanswered = auto-approve)
                 submitCategoryVotes();
-            } else if (voteTimeLeft <= 10 && moreTimeBtn.classList.contains('hidden')) {
-                // Show "More Time" button in last 10 seconds
+            } else if (voteTimeLeft <= 5 && moreTimeBtn.classList.contains('hidden')) {
+                // Show "More Time" button in last 5 seconds
                 moreTimeBtn.classList.remove('hidden');
             }
         }, 1000);
@@ -1201,118 +1591,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Added 10 seconds to vote timer");
     }
 
-    let isSubmittingVotes = false; // Prevent double submission
+    // OLD VOTING FUNCTIONS - Removed for batch voting system
+    // castVote() and checkVotingComplete() replaced by new system
 
-    async function submitCategoryVotes() {
-        if (!roomData.votingState) return;
-        if (isSubmittingVotes) {
-            console.log('Already submitting votes, skipping...');
-            return;
-        }
-
-        isSubmittingVotes = true;
-        stopVoteTimer();
-
-        // Auto-approve any answers that weren't voted on
-        const state = roomData.votingState;
-        const answers = state.answers || [];
-
-        answers.forEach((answerData, index) => {
-            const voteKey = `${answerData.playerUid}_${index}`;
-            if (currentCategoryVotes[voteKey] === undefined) {
-                // Not voted on - auto approve
-                currentCategoryVotes[voteKey] = true;
-            }
-        });
-
-        // Submit votes to database
-        const roomRef = doc(db, "rooms", roomId);
-        const updates = {};
-        updates[`votingState.allPlayersVoted.${currentUser.uid}`] = currentCategoryVotes;
-
-        await updateDoc(roomRef, updates);
-
-        // Check if all players have voted (host only)
-        if (isHost) {
-            setTimeout(() => checkAllPlayersVoted(), 500);
-        }
-
-        // Reset submission flag after a delay
-        setTimeout(() => {
-            isSubmittingVotes = false;
-        }, 2000);
-    }
-
-    async function checkAllPlayersVoted() {
-        if (!isHost) return;
-
-        const roomRef = doc(db, "rooms", roomId);
-        const snap = await getDoc(roomRef);
-        const data = snap.data();
-        const state = data.votingState;
-
-        if (!state) return;
-
-        const allPlayersVoted = state.allPlayersVoted || {};
-        const playerCount = data.players.length;
-        const votedCount = Object.keys(allPlayersVoted).length;
-
-        console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
-
-        if (votedCount >= playerCount) {
-            // All players have voted, process results
-            console.log('All players voted, processing category results');
-
-            const answers = state.answers || [];
-
-            // For each answer, tally the votes
-            for (let i = 0; i < answers.length; i++) {
-                const answerData = answers[i];
-                const voteKey = `${answerData.playerUid}_${i}`;
-
-                let yesVotes = 0;
-                let noVotes = 0;
-                const voterDetails = {};
-
-                // Count votes from all players
-                Object.entries(allPlayersVoted).forEach(([playerUid, votes]) => {
-                    const vote = votes[voteKey];
-                    if (vote !== undefined) {
-                        voterDetails[playerUid] = vote;
-                        if (vote === true) yesVotes++;
-                        else noVotes++;
-                    }
-                });
-
-                // Determine if approved (majority or tie goes to yes)
-                const isApproved = yesVotes >= noVotes;
-
-                // Mark answer as verified
-                await markAnswerVerified(
-                    answerData.playerIndex,
-                    state.category,
-                    answerData.answer,
-                    isApproved,
-                    false,
-                    voterDetails
-                );
-            }
-
-            // Move to next category
-            await updateDoc(roomRef, {
-                categoryVotingIndex: (data.categoryVotingIndex || 0) + 1
-            });
-
-            // Reset voting category tracker
-            currentVotingCategory = null;
-            isRenderingVotes = false;
-            isSubmittingVotes = false;
-
-            setTimeout(() => processNextCategory(), 1000);
-        }
-    }
-
-    async function markAnswerVerified(pIdx, cat, answer, isValid, isAuto, voterDetails = {}) {
+    async function markAnswerVerified(pIdx, cat, answer, isValid, isAuto) {
         const roomRef = doc(db, "rooms", roomId);
 
         const freshSnap = await getDoc(roomRef);
@@ -1329,15 +1611,18 @@ document.addEventListener('DOMContentLoaded', () => {
             answer: answer,
             isValid: isValid,
             isAuto: isAuto,
-            votes: isAuto ? null : voterDetails
+            votes: isAuto ? null : (freshSnap.data().votingState?.votes || {})
         });
 
         if (isValid && !isAuto) addToLibrary(cat, answer);
 
         await updateDoc(roomRef, {
             players: players,
+            votingState: null,
             gameHistory: history
         });
+
+        if (isHost && !isAuto) processNextVoteItem();
     }
 
     // --- Library & Scoring ---
@@ -1391,12 +1676,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (w1 === w2) return true; // Direct match
 
-        const dist = levenshteinDistance(w1, w2);
+        // Don't fuzzy match very short answers (≤ 2 chars) - they must be exact
+        // This prevents "1" matching with "3", "a" matching with "b", etc.
         const len = Math.max(w1.length, w2.length);
+        if (len <= 2) return false;
+
+        const dist = levenshteinDistance(w1, w2);
 
         // Rules:
-        // Length > 4: Allow 2 typos
-        // Length <= 4: Allow 1 typo
+        // Length > 4: Allow 2 typos (for "Amsterdam" vs "Amsterdm")
+        // Length 3-4: Allow 1 typo (for "Den" vs "Dan")
         if (len > 4) {
             return dist <= 2;
         } else {
@@ -1444,15 +1733,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function calculateFinalScores(data) {
         console.log("Starting Score Calculation...");
+        const players = data.players;
 
-        // Calculate round scores for each player
+        // Calculate round scores (don't reset total scores)
         const roundScores = {};
-        const updatedVerifiedResults = {};
-
-        // Initialize
-        data.players.forEach(p => {
+        players.forEach(p => {
             roundScores[p.uid] = 0;
-            updatedVerifiedResults[p.uid] = p.verifiedResults ? JSON.parse(JSON.stringify(p.verifiedResults)) : {};
         });
 
         for (const cat of activeCategories) {
@@ -1460,11 +1746,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const validAnswers = [];
 
             // 1. Collect Valid Answers
-            data.players.forEach(p => {
-                const res = updatedVerifiedResults[p.uid]?.[cat];
-                if (res) {
+            players.forEach(p => {
+                if (p.verifiedResults && p.verifiedResults[cat]) {
+                    const res = p.verifiedResults[cat];
                     console.log(`Player ${p.name} - ${cat}: ${res.answer} (Valid: ${res.isValid})`);
                     if (res.isValid) {
+                        // Store both normalized and distinct original for display if needed? 
+                        // No logic only cares about normalized matches
                         validAnswers.push({
                             uid: p.uid,
                             answer: normalizeAnswer(res.answer)
@@ -1476,8 +1764,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // 2. Assign Points
-            data.players.forEach(p => {
-                const res = updatedVerifiedResults[p.uid]?.[cat];
+            players.forEach(p => {
+                const res = p.verifiedResults ? p.verifiedResults[cat] : null;
                 if (res && res.isValid) {
                     const myAns = normalizeAnswer(res.answer);
 
@@ -1486,7 +1774,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const othersWithAny = validAnswers.filter(a => a.uid !== p.uid);
 
                     if (othersWithSame.length > 0) {
-                        res.points = 5;
+                        res.points = 5; // Shared (or close enough!)
                         console.log(` -> Match found for '${myAns}' with '${othersWithSame[0].answer}'`);
                     } else if (othersWithAny.length === 0) {
                         res.points = 20;
@@ -1499,24 +1787,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Build updated players array with new scores and verifiedResults
-        const updatedPlayers = data.players.map(p => ({
-            uid: p.uid,
-            name: p.name,
-            score: (p.score || 0) + roundScores[p.uid],
-            answers: p.answers || {},
-            verifiedResults: updatedVerifiedResults[p.uid] || {},
-            isVerified: p.isVerified,
-            lastSeen: p.lastSeen
-        }));
+        // Add round scores to total scores
+        players.forEach(p => {
+            p.score += roundScores[p.uid];
+        });
 
-        console.log("Round Scores:", updatedPlayers.map(p => `${p.name}: +${roundScores[p.uid]}`));
-        console.log("Total Scores:", updatedPlayers.map(p => `${p.name}: ${p.score}`));
+        console.log("Round Scores:", players.map(p => `${p.name}: +${roundScores[p.uid]}`));
+        console.log("Total Scores:", players.map(p => `${p.name}: ${p.score}`));
 
         // Update history with points information
-        const history = JSON.parse(JSON.stringify(data.gameHistory || []));
+        const history = data.gameHistory || [];
         history.forEach(entry => {
-            const player = updatedPlayers.find(p => p.name === entry.playerName);
+            const player = players.find(p => p.name === entry.playerName);
             if (player && player.verifiedResults && player.verifiedResults[entry.category]) {
                 const result = player.verifiedResults[entry.category];
                 entry.points = result.points || 0;
@@ -1530,10 +1812,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         await updateDoc(doc(db, "rooms", roomId), {
-            players: updatedPlayers,
+            players: players,
             status: 'finished',
             votingState: null,
-            gameHistory: history
+            gameHistory: history,
+            lastActivity: Date.now()
         });
     }
 
@@ -1570,6 +1853,17 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }).join('');
 
+        // Show next round button only for host
+        const nextRoundBtn = document.getElementById('next-round-btn');
+        const waitingForHostMsg = document.getElementById('waiting-for-host');
+        if (isHost) {
+            nextRoundBtn.classList.remove('hidden');
+            waitingForHostMsg.classList.add('hidden');
+        } else {
+            nextRoundBtn.classList.add('hidden');
+            waitingForHostMsg.classList.remove('hidden');
+        }
+
         // Render game history infographic
         renderGameLog(data);
     }
@@ -1579,11 +1873,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const logEntries = document.getElementById('log-entries');
         const history = data.gameHistory || [];
 
+        console.log('renderGameLog called', { historyLength: history.length, logBox, logEntries });
+
         if (history.length === 0) {
             logBox.classList.add('hidden');
+            console.log('No history, hiding log');
             return;
         }
 
+        console.log('Rendering game log with', history.length, 'entries');
         logBox.classList.remove('hidden');
         logEntries.innerHTML = history.map(entry => {
             const votes = entry.votes || {};
@@ -1662,6 +1960,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeId = cat.replace(/[&\s]/g, '-').toLowerCase();
             const translationKey = 'categories.' + cat;
             const translatedCat = t(translationKey);
+            console.log(`Translation Debug: cat="${cat}", key="${translationKey}", translated="${translatedCat}"`);
             const div = document.createElement('div');
             div.className = 'category-input-group';
             div.innerHTML = `
@@ -1682,11 +1981,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTimerDisplay() {
-        timerDisplay.textContent = Math.max(0, timeLeft);
-        if (timerCircle) {
-            const offset = circumference - (timeLeft / gameDuration) * circumference;
-            timerCircle.style.strokeDashoffset = offset;
-            timerCircle.style.stroke = timeLeft <= 10 ? 'var(--danger-color)' : 'var(--accent-color)';
+        // Update sticky timer bar only (circular timer removed)
+        const stickyTimerText = document.getElementById('sticky-timer-text');
+        const stickyTimerProgress = document.getElementById('sticky-timer-progress');
+        if (stickyTimerText && stickyTimerProgress) {
+            stickyTimerText.textContent = Math.max(0, timeLeft);
+            const percentage = (timeLeft / gameDuration) * 100;
+            stickyTimerProgress.style.width = percentage + '%';
+
+            // Change color when time is running out
+            if (timeLeft <= 10) {
+                stickyTimerProgress.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+                stickyTimerProgress.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.5)';
+            } else {
+                stickyTimerProgress.style.background = 'linear-gradient(90deg, var(--accent-color), var(--secondary-color))';
+                stickyTimerProgress.style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.5)';
+            }
         }
     }
 

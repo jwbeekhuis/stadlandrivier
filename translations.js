@@ -26,10 +26,11 @@ export const translations = {
         tutorialNewRoom: "Nieuwe kamer: Maak je eigen kamer met \"Nieuwe Kamer\". Je kunt de speeltijd instellen (30-300 seconden) met de slider. De code verschijnt automatisch bij anderen.",
         tutorialHost: "Host: De maker van de kamer kan de letter draaien, categorieën shuffelen, de volgende ronde starten, spelers verwijderen en de kamer verwijderen. Als de host de kamer verlaat, neemt de volgende speler automatisch over!",
         tutorialKicked: "Uit kamer verwijderd? Als de host de kamer verwijdert of je uit de kamer verwijdert, word je automatisch teruggestuurd naar het beginscherm.",
-        tutorialReconnect: "Verbinding verbroken? Je naam wordt automatisch onthouden. Herlaad de pagina en klik gewoon opnieuw op \"Meedoen\" - je komt terug in dezelfde kamer!",
+        tutorialReconnect: "Verbinding verbroken? Je naam wordt automatisch onthouden. Herlaad de pagina en klik gewoon opnieuw op \"Meedoen\" - je komt terug in dezelfde kamer! Inactieve spelers worden na 60 seconden automatisch verwijderd.",
 
         tutorialLibraryTitle: "📚 Bibliotheek (Per Kamer)",
         tutorialLibrary: "Elke kamer heeft zijn eigen woordenbibliotheek. Goedgekeurde antwoorden worden opgeslagen en bij latere rondes automatisch goedgekeurd - maar alleen binnen dezelfde kamer!",
+        tutorialDormant: "Kamer leeg? Als alle spelers inactief worden, wordt je kamer niet verwijderd! De kamer gaat in slaapstand en behoudt de volledige woordenbibliotheek. Als originele maker kun je altijd terugkeren en de kamer opnieuw openen - alle goedgekeurde woorden blijven bewaard!",
 
         tutorialRulesTitle: "🎮 Spelregels",
         tutorialRules: "De host draait een letter en iedereen heeft de ingestelde tijd (standaard 30 seconden) om antwoorden in te vullen voor elke categorie die met die letter beginnen.",
@@ -70,9 +71,9 @@ export const translations = {
         checkAnswer: "Controleer Antwoord",
         checkAllAnswers: "Controleer Alle Antwoorden",
         voteAllInstructions: "Stem op alle antwoorden hieronder. Je kunt je stem aanpassen tot de tijd om is.",
-        submitVotes: "Bevestig Stemmen",
-        voted: "gestemd",
         yourAnswer: "Jouw antwoord",
+        duplicate: "Dubbel met",
+        voted: "gestemd",
         autoSubmitInfo: "Stemmen worden automatisch ingediend wanneer je alles hebt beoordeeld",
         hasAnswered: "Heeft",
         at: "bij",
@@ -94,6 +95,7 @@ export const translations = {
         name: "Naam",
         points: "Punten",
         nextRound: "VOLGENDE RONDE",
+        waitingForHost: "Wachten tot de host de volgende ronde start...",
         roundLog: "Ronde Logboek",
         uniqueAnswer: "Uniek antwoord",
         onlyInCategory: "Enige in categorie",
@@ -110,7 +112,6 @@ export const translations = {
         kickedFromRoom: "Je bent uit de kamer verwijderd.",
         confirmKick: "Weet je zeker dat je {name} uit de kamer wilt verwijderen?",
         confirmDelete: "Weet je zeker dat je deze kamer wilt verwijderen?",
-        confirmLeaveRoom: "Weet je zeker dat je deze kamer wilt verlaten?",
         nowHost: "Je bent nu de host van deze kamer! Je kunt nu de letter draaien en de volgende ronde starten.",
 
         // Categories
@@ -170,10 +171,11 @@ export const translations = {
         tutorialNewRoom: "New room: Create your own room with \"New Room\". You can set the game time (30-300 seconds) with the slider. The code appears automatically for others.",
         tutorialHost: "Host: The room creator can roll the letter, shuffle categories, start the next round, remove players and delete the room. If the host leaves, the next player automatically takes over!",
         tutorialKicked: "Kicked from room? If the host deletes the room or removes you, you'll be automatically redirected to the home screen.",
-        tutorialReconnect: "Connection lost? Your name is automatically saved. Reload the page and simply click \"Join\" again - you'll return to the same room!",
+        tutorialReconnect: "Connection lost? Your name is automatically saved. Reload the page and simply click \"Join\" again - you'll return to the same room! Inactive players are automatically removed after 60 seconds.",
 
         tutorialLibraryTitle: "📚 Library (Per Room)",
         tutorialLibrary: "Each room has its own word library. Approved answers are saved and automatically approved in future rounds - but only within the same room!",
+        tutorialDormant: "Room empty? If all players become inactive, your room is not deleted! The room goes into sleep mode and keeps the complete word library. As the original creator, you can always return and reopen the room - all approved words remain saved!",
 
         tutorialRulesTitle: "🎮 Game Rules",
         tutorialRules: "The host rolls a letter and everyone has the set time (default 30 seconds) to fill in answers for each category that start with that letter.",
@@ -213,11 +215,11 @@ export const translations = {
         // Voting
         checkAnswer: "Check Answer",
         checkAllAnswers: "Check All Answers",
-        voteAllInstructions: "Vote on all answers below. You can change your vote until time runs out.",
-        submitVotes: "Submit Votes",
-        voted: "voted",
+        voteAllInstructions: "Vote on all answers below. You can change your votes until time runs out.",
         yourAnswer: "Your answer",
-        autoSubmitInfo: "Votes are automatically submitted when you've rated everything",
+        duplicate: "Duplicate with",
+        voted: "voted",
+        autoSubmitInfo: "Votes will be automatically submitted when you've reviewed everything",
         hasAnswered: "Has",
         at: "for",
         theFollowingAnswer: "the following answer:",
@@ -238,6 +240,7 @@ export const translations = {
         name: "Name",
         points: "Points",
         nextRound: "NEXT ROUND",
+        waitingForHost: "Waiting for the host to start the next round...",
         roundLog: "Round Log",
         uniqueAnswer: "Unique answer",
         onlyInCategory: "Only in category",
@@ -254,7 +257,6 @@ export const translations = {
         kickedFromRoom: "You have been removed from the room.",
         confirmKick: "Are you sure you want to remove {name} from the room?",
         confirmDelete: "Are you sure you want to delete this room?",
-        confirmLeaveRoom: "Are you sure you want to leave this room?",
         nowHost: "You are now the host of this room! You can now roll the letter and start the next round.",
 
         // Categories

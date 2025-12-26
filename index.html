@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Stad, Land, Rivier</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=62">
+    <link rel="stylesheet" href="style.css?v=78">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -83,13 +83,16 @@
                         (30-300 seconden) met de slider. De code verschijnt automatisch bij anderen.</p>
                     <p><strong>Host:</strong> De maker van de kamer kan de letter draaien, categorieën shuffelen, de
                         volgende ronde starten, spelers verwijderen en de kamer verwijderen. Als de host de kamer verlaat, neemt de volgende speler automatisch over!</p>
-                    <p><strong>Uit kamer verwijderd?</strong> Als de host de kamer verwijdert of je uit de kamer verwijderd, word je automatisch teruggestuurd naar het beginscherm.</p>
+                    <p><strong>Uit kamer verwijderd?</strong> Als de host de kamer verwijdert of je uit de kamer verwijdert, word je automatisch teruggestuurd naar het beginscherm.</p>
                     <p><strong>Verbinding verbroken?</strong> Je naam wordt automatisch onthouden. Herlaad de pagina en
-                        klik gewoon opnieuw op "Meedoen" - je komt terug in dezelfde kamer!</p>
+                        klik gewoon opnieuw op "Meedoen" - je komt terug in dezelfde kamer! Inactieve spelers worden na 2 minuten automatisch verwijderd (3 minuten tijdens stemmen).</p>
 
                     <h3>📚 Bibliotheek (Per Kamer)</h3>
                     <p>Elke kamer heeft zijn <strong>eigen woordenbibliotheek</strong>. Goedgekeurde antwoorden worden
                         opgeslagen en bij latere rondes automatisch goedgekeurd - maar alleen binnen dezelfde kamer!</p>
+                    <p><strong>Kamer leeg?</strong> Als alle spelers inactief worden, wordt je kamer niet verwijderd!
+                        De kamer gaat in slaapstand en behoudt de volledige woordenbibliotheek. Als originele maker kun je
+                        altijd terugkeren en de kamer opnieuw openen - alle goedgekeurde woorden blijven bewaard!</p>
 
                     <h3>🎮 Spelregels</h3>
                     <p>De host draait een letter en iedereen heeft de ingestelde tijd (standaard <strong>30 seconden</strong>) om antwoorden in te
@@ -111,14 +114,16 @@
                     <h3>✅ Stemproces</h3>
                     <p>Na de tijd stemt iedereen op alle antwoorden:</p>
                     <ul>
-                        <li>Je ziet elk antwoord één voor één</li>
-                        <li>Je hebt <strong>15 seconden</strong> per antwoord om te stemmen</li>
+                        <li>Je ziet alle antwoorden voor één categorie tegelijk</li>
+                        <li>Je hebt <strong>30 seconden</strong> per categorie om op alle antwoorden te stemmen</li>
                         <li>Bij de laatste 5 seconden verschijnt een "+10s Meer Tijd" knop</li>
-                        <li>Als je niet stemt binnen de tijd, wordt het antwoord automatisch goedgekeurd</li>
-                        <li><strong>Als iedereen gestemd heeft, wordt het resultaat direct getoond!</strong></li>
-                        <li>Stem ✅ (goed) of ❌ (fout)</li>
+                        <li>Als je niet op alle antwoorden stemt binnen de tijd, worden de overgebleven antwoorden automatisch goedgekeurd</li>
+                        <li><strong>Als je alle antwoorden beoordeeld hebt, worden je stemmen direct ingediend!</strong></li>
+                        <li><strong>Als iedereen gestemd heeft, gaat het spel automatisch naar de volgende categorie!</strong></li>
+                        <li>Stem ✅ (goed) of ❌ (fout) voor elk antwoord</li>
                         <li><strong>Je kunt je stem aanpassen</strong> zolang de stemtijd loopt - klik gewoon opnieuw op een knop!</li>
                         <li><strong>Je mag ook op je eigen antwoorden stemmen</strong> - dit maakt het eerlijker en je kunt meediscussiëren!</li>
+                        <li>Dubbele antwoorden worden automatisch gedetecteerd en gemarkeerd</li>
                         <li>Goedgekeurde antwoorden worden opgeslagen in de kamerbibliotheek</li>
                         <li>Meerderheid beslist of het antwoord geldig is</li>
                     </ul>
@@ -136,10 +141,10 @@
                 <span><span data-i18n="room">Kamer:</span> <strong id="room-code-display">---</strong></span>
                 <span id="player-count">👤 1</span>
                 <button id="leave-room-btn" class="leave-room-btn" data-i18n="leaveRoom" title="Verlaat kamer">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> <span data-i18n="leaveRoom">Verlaat Kamer</span>
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Verlaat Kamer
                 </button>
                 <button id="delete-room-game-btn" class="delete-room-game-btn hidden" data-i18n="deleteRoom" title="Verwijder kamer">
-                    <i class="fa-solid fa-trash"></i> <span data-i18n="deleteRoom">Verwijder Kamer</span>
+                    <i class="fa-solid fa-trash"></i> Verwijder Kamer
                 </button>
             </div>
             <div class="letter-display-container">
@@ -149,17 +154,15 @@
                 <!-- Only Host sees this initially, but we handle visibility in JS -->
                 <button id="roll-btn" class="primary-btn pulse" data-i18n="rollLetter">DRAAI LETTER</button>
             </div>
-
-            <div class="timer-container">
-                <svg class="progress-ring" width="120" height="120">
-                    <circle class="progress-ring__circle" stroke="white" stroke-width="4" fill="transparent" r="52"
-                        cx="60" cy="60" />
-                </svg>
-                <div class="timer-text" id="timer-display">60</div>
-            </div>
         </section>
 
         <section id="game-board" class="glass-panel game-board hidden">
+            <!-- Sticky Timer Progress Bar -->
+            <div class="sticky-timer-bar" id="sticky-timer-bar">
+                <div class="sticky-timer-progress" id="sticky-timer-progress"></div>
+                <div class="sticky-timer-text" id="sticky-timer-text">30</div>
+            </div>
+
             <div class="controls-bar">
                 <button id="shuffle-btn" class="sm-btn" title="Nieuwe Categorieën" data-i18n="mixCategories"><i class="fa-solid fa-shuffle"></i>
                     Mix Categorieën</button>
@@ -181,7 +184,11 @@
 
         <!-- Voting Screen -->
         <section id="voting-screen" class="glass-panel voting-panel hidden">
-            <h2><span data-i18n="checkAllAnswers">Controleer Alle Antwoorden</span> - <span id="voting-category-title">---</span></h2>
+            <h2 data-i18n="checkAllAnswers">Controleer Alle Antwoorden</h2>
+            <div class="voting-category-banner">
+                <span class="category-label">Categorie:</span>
+                <span id="voting-category-title" class="category-name">---</span>
+            </div>
 
             <div id="vote-timer" class="vote-timer">
                 <div class="vote-progress-container">
@@ -195,7 +202,7 @@
                 <p class="voting-instructions" data-i18n="voteAllInstructions">Stem op alle antwoorden hieronder. Je kunt je stem aanpassen tot de tijd om is.</p>
 
                 <div id="voting-items-container" class="voting-items-grid">
-                    <!-- Voting items will be injected here -->
+                    <!-- Voting items will be injected here via JS -->
                 </div>
 
                 <div class="voting-submit-container">
@@ -230,10 +237,11 @@
             </div>
 
             <button id="next-round-btn" class="primary-btn pulse" data-i18n="nextRound">VOLGENDE RONDE</button>
+            <p id="waiting-for-host" class="waiting-message hidden" data-i18n="waitingForHost">Wachten tot de host de volgende ronde start...</p>
         </section>
     </main>
 
-    <script type="module" src="script.js?v=62">
+    <script type="module" src="script.js?v=78"></script>
 </body>
 
 </html>
