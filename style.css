@@ -539,21 +539,24 @@ body.light-mode .room-card:hover {
     background: transparent;
     border: 1px solid var(--danger-color);
     color: var(--danger-color);
-    width: 32px;
+    min-width: fit-content;
+    padding: 6px 12px;
     height: 32px;
-    border-radius: 8px;
+    border-radius: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    font-size: 0.9rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .delete-room-btn:hover {
     background: var(--danger-color);
     color: white;
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .room-info {
