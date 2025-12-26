@@ -1947,10 +1947,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const votes = entry.votes || {};
             const yes = Object.values(votes).filter(v => v === true).length;
             const no = Object.values(votes).filter(v => v === false).length;
-            const voterNames = Object.entries(votes).map(([uid, v]) => {
-                const p = data.players.find(pl => pl.uid === uid);
-                return `${p ? p.name : 'Unknown'} (${v ? '✅' : '❌'})`;
-            }).join(', ');
+            // Sort voter names alphabetically for consistent display
+            const voterNames = Object.entries(votes)
+                .map(([uid, v]) => {
+                    const p = data.players.find(pl => pl.uid === uid);
+                    const name = p ? p.name : 'Unknown';
+                    return { name, vote: v };
+                })
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map(({ name, vote }) => `${name} (${vote ? '✅' : '❌'})`)
+                .join(', ');
 
             return `
                 <div class="log-entry ${entry.isAuto ? 'auto' : 'manual'}">
