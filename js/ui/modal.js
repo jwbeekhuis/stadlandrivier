@@ -4,6 +4,55 @@ import { getElements } from '../utils/dom.js';
 import { icon } from '../utils/string.js';
 import { state } from '../state/core.js';
 
+// Flag to track if modal listeners are initialized
+let modalListenersInitialized = false;
+
+/**
+ * Initialize modal event listeners (called once)
+ */
+function initModalListeners() {
+    if (modalListenersInitialized) return;
+
+    const { modalOverlay, modalCancelBtn, modalConfirmBtn, modalContainer } = getElements();
+
+    // Confirm button
+    modalConfirmBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeModal(true);
+    });
+
+    // Cancel button
+    modalCancelBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeModal(false);
+    });
+
+    // Click overlay to cancel (but not the modal itself)
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            closeModal(false);
+        }
+    });
+
+    // Prevent clicks on modal container from closing
+    modalContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+        if (!modalOverlay.classList.contains('hidden')) {
+            if (e.key === 'Escape') {
+                closeModal(false);
+            } else if (e.key === 'Enter') {
+                closeModal(true);
+            }
+        }
+    });
+
+    modalListenersInitialized = true;
+}
+
 /**
  * Show a modal dialog
  * @param {string} title - Modal title
@@ -17,6 +66,9 @@ import { state } from '../state/core.js';
  * @returns {Promise<boolean>} - Resolves to true if confirmed, false if cancelled
  */
 export function showModal(title, message, options = {}) {
+    // Initialize listeners on first use
+    initModalListeners();
+
     return new Promise((resolve) => {
         const { modalOverlay, modalTitle, modalMessage, modalCancelBtn, modalConfirmBtn, modalIcon, modalIconWrapper } = getElements();
 

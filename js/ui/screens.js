@@ -78,19 +78,20 @@ export function returnToLobby(message, cleanupAllIntervals, subscribeToActiveRoo
 }
 
 /**
- * Reset the game board to initial state
- * @param {Function} enterGameUI - Function to enter game UI
+ * Reset the game board to initial state (lobby)
+ * Just resets UI - doesn't call enterGameUI (that's handled by game flow)
  */
-export function resetBoard(enterGameUI) {
-    const { resultsBoard, votingScreen, letterDisplay, categoriesContainer } = getElements();
+export function resetBoard() {
+    const { resultsBoard, votingScreen, letterDisplay, categoriesContainer, gameBoard } = getElements();
 
     resultsBoard.classList.add('hidden');
     votingScreen.classList.add('hidden');
-    enterGameUI(state.room.roomId);
+    gameBoard.classList.remove('hidden');
+    categoriesContainer.classList.remove('hidden');
+
     letterDisplay.textContent = '?';
     updateTimerDisplay();
     renderCategories();
-    categoriesContainer.classList.remove('hidden');
 
     // Hide sticky timer when returning to lobby
     const stickyTimerBar = document.getElementById('sticky-timer-bar');

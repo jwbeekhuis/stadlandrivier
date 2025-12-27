@@ -88,10 +88,10 @@ async function init() {
     // Create updateGameState function with all dependencies
     const updateGameState = createUpdateGameState(
         () => startGameLocal(() => initiateVotingPhase()),  // startGameLocal with timer callback
-        saveMyAnswers =>stopGameLocal(saveMyAnswers),       // stopGameLocal
+        saveMyAnswers => stopGameLocal(saveMyAnswers),      // stopGameLocal
         (votingState) => showVotingUI(votingState, syncVoteToFirebase, () => startVoteTimer(() => {})),  // showVotingUI
         showResults,                                         // showResults
-        () => resetBoard(enterGameUI),                      // resetBoard
+        resetBoard,                                          // resetBoard (no params needed)
         () => handleResetGameClick(resetRoomToLobby),       // handleResetGameClick
         saveMyAnswers                                        // saveMyAnswers
     );
