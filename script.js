@@ -1778,11 +1778,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function checkAllPlayersVoted() {
-        if (!isHost || !roomData.votingState) return;
+        if (!isHost) return;
 
-        const state = roomData.votingState;
+        // Read fresh from Firebase to ensure we have the latest votes
+        const roomRef = doc(db, "rooms", roomId);
+        const freshSnap = await getDoc(roomRef);
+        const freshData = freshSnap.data();
+
+        if (!freshData.votingState) {
+            console.log('checkAllPlayersVoted: No voting state, skipping');
+            return;
+        }
+
+        const state = freshData.votingState;
         const allPlayersVoted = state.allPlayersVoted || {};
-        const playerCount = roomData.players.length;
+        const playerCount = freshData.players.length;
         const votedCount = Object.keys(allPlayersVoted).length;
 
         console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
@@ -1804,11 +1814,12 @@ document.addEventListener('DOMContentLoaded', () => {
         isProcessingCategory = true;
         console.log('Processing category results for:', state.category);
 
-        const roomRef = doc(db, "rooms", roomId);
-        const freshSnap = await getDoc(roomRef);
-        const freshData = freshSnap.data();
-        const players = freshData.players;
-        const history = freshData.gameHistory || [];
+        try {
+            const roomRef = doc(db, "rooms", roomId);
+            const freshSnap = await getDoc(roomRef);
+            const freshData = freshSnap.data();
+            const players = freshData.players;
+            const history = freshData.gameHistory || [];
 
         const answers = state.answers || [];
 
@@ -1867,20 +1878,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Update database and move to next category
-        // Store the categoryIndex before clearing votingState
-        await updateDoc(roomRef, {
-            players: players,
-            votingState: null,
-            gameHistory: history,
-            lastProcessedCategoryIndex: state.categoryIndex
-        });
+            // Update database and move to next category
+            // Store the categoryIndex before clearing votingState
+            await updateDoc(roomRef, {
+                players: players,
+                votingState: null,
+                gameHistory: history,
+                lastProcessedCategoryIndex: state.categoryIndex
+            });
 
-        // Reset flag before moving to next category
-        isProcessingCategory = false;
-
-        // Continue to next category
-        setTimeout(() => processNextCategory(), 1000);
+            // Continue to next category
+            setTimeout(() => processNextCategory(), 1000);
+        } catch (error) {
+            console.error('Error processing category results:', error);
+        } finally {
+            // Always reset flag
+            isProcessingCategory = false;
+        }
     }
 
     function startVoteTimer() {
