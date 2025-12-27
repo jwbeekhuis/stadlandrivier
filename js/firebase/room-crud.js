@@ -17,9 +17,10 @@ import { debugLog } from '../utils/string.js';
  * - enterGameUI (from game logic - Level 5-6)
  * - subscribeToRoom (from room-subscription - Level 5)
  * - startHeartbeat (from heartbeat - Level 4)
+ * - stopActiveRoomsListener (from room-discovery - Level 5)
  * These will be passed as dependencies to avoid circular imports
  */
-export async function createRoom(enterGameUI, subscribeToRoom, startHeartbeat) {
+export async function createRoom(enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener) {
     const { playerNameInput, roomNameInput, gameDurationSlider } = getElements();
     const currentUser = state.user.currentUser;
 
@@ -64,7 +65,7 @@ export async function createRoom(enterGameUI, subscribeToRoom, startHeartbeat) {
     // Update state
     state.game.gameDuration = selectedDuration;
 
-    enterGameUI(code);
+    enterGameUI(code, stopActiveRoomsListener);
     subscribeToRoom(code);
     startHeartbeat();
 }

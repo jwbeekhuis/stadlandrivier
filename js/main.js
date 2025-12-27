@@ -11,7 +11,7 @@ import { showToast } from './ui/toast.js';
 import { bindEventListeners } from './events.js';
 import { enterGameUI, returnToLobby } from './ui/screens.js';
 import { subscribeToRoom } from './firebase/room-subscription.js';
-import { subscribeToActiveRooms } from './firebase/room-discovery.js';
+import { subscribeToActiveRooms, stopActiveRoomsListener } from './firebase/room-discovery.js';
 import { startHeartbeat } from './firebase/heartbeat.js';
 import { resetRoomToLobby } from './firebase/room-crud.js';
 import { initiateVotingPhase } from './firebase/voting-operations.js';
@@ -81,6 +81,7 @@ async function init() {
         enterGameUI,
         subscribeToRoom,
         startHeartbeat,
+        stopActiveRoomsListener,
         resetRoomToLobby,
         initiateVotingPhase
     );
@@ -97,11 +98,25 @@ async function init() {
     subscribeToActiveRooms();
 }
 
-// Expose window functions for HTML onclick handlers
-window.quickJoinRoom = quickJoinRoom;
-window.reopenDormantRoom = reopenDormantRoom;
-window.deleteRoom = deleteRoom;
-window.kickPlayer = kickPlayer;
-
 // Start application when DOM is ready
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', async () => {
+    await init();
+
+    // Expose window functions for HTML onclick handlers
+    // These are wrappers that provide dependencies via closure
+    window.quickJoinRoom = async (code) => {
+        await quickJoinRoom(code, enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener);
+    };
+
+    window.reopenDormantRoom = async (code) => {
+        await reopenDormantRoom(code, enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener);
+    };
+
+    window.deleteRoom = async (code) => {
+        await deleteRoom(code);
+    };
+
+    window.kickPlayer = async (playerUid) => {
+        await kickPlayer(playerUid);
+    };
+});

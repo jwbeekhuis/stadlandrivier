@@ -19,6 +19,7 @@ import { t } from './i18n/translations.js';
  * - enterGameUI, returnToLobby (from screens.js)
  * - subscribeToRoom (from room-subscription.js)
  * - startHeartbeat (from heartbeat.js)
+ * - stopActiveRoomsListener (from room-discovery.js)
  * - resetRoomToLobby (from room-crud.js)
  * - initiateVotingPhase (from voting-operations.js)
  */
@@ -26,6 +27,7 @@ export function bindEventListeners(
     enterGameUI,
     subscribeToRoom,
     startHeartbeat,
+    stopActiveRoomsListener,
     resetRoomToLobby,
     initiateVotingPhase
 ) {
@@ -47,7 +49,7 @@ export function bindEventListeners(
 
     // Room creation
     createRoomBtn.addEventListener('click', () => {
-        createRoom(enterGameUI, subscribeToRoom, startHeartbeat);
+        createRoom(enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener);
     });
 
     // Game controls

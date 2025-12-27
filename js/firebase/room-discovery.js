@@ -84,8 +84,9 @@ export async function reopenDormantRoom(roomRef, roomData, playerName, playerUid
  * @param {Function} enterGameUI - Function to enter game UI
  * @param {Function} subscribeToRoom - Function to subscribe to room
  * @param {Function} startHeartbeat - Function to start heartbeat
+ * @param {Function} stopActiveRoomsListener - Function to stop active rooms listener
  */
-export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHeartbeat) {
+export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener) {
     const { playerNameInput } = getElements();
     const currentUser = state.user.currentUser;
 
@@ -121,7 +122,7 @@ export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHea
         if (roomData.creatorUid === currentUser.uid) {
             await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
             state.room.isHost = true;  // Creator becomes host when reopening
-            enterGameUI(code);
+            enterGameUI(code, stopActiveRoomsListener);
             subscribeToRoom(code);
             startHeartbeat();
             return;
@@ -154,7 +155,7 @@ export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHea
         });
     }
 
-    enterGameUI(code);
+    enterGameUI(code, stopActiveRoomsListener);
     subscribeToRoom(code);
     startHeartbeat();
 }
