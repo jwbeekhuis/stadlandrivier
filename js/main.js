@@ -18,6 +18,15 @@ import { initiateVotingPhase } from './firebase/voting-operations.js';
 import { quickJoinRoom, reopenDormantRoom } from './firebase/room-discovery.js';
 import { deleteRoom } from './firebase/room-crud.js';
 import { kickPlayer } from './firebase/player-management.js';
+import { createUpdateGameState } from './game/game-state-manager.js';
+import { startGameLocal, stopGameLocal } from './game/timer-logic.js';
+import { showVotingUI } from './game/voting-ui.js';
+import { showResults } from './ui/results.js';
+import { resetBoard } from './ui/screens.js';
+import { handleResetGameClick } from './game/round-flow.js';
+import { saveMyAnswers } from './game/game-logic.js';
+import { syncVoteToFirebase } from './firebase/voting-operations.js';
+import { startVoteTimer } from './game/voting-timer.js';
 
 /**
  * Initialize authentication and load user data
@@ -76,10 +85,26 @@ async function init() {
     // Initialize authentication and load user data
     await initAuth();
 
+    // Create updateGameState function with all dependencies
+    const updateGameState = createUpdateGameState(
+        () => startGameLocal(() => initiateVotingPhase()),  // startGameLocal with timer callback
+        saveMyAnswers =>stopGameLocal(saveMyAnswers),       // stopGameLocal
+        (votingState) => showVotingUI(votingState, syncVoteToFirebase, () => startVoteTimer(() => {})),  // showVotingUI
+        showResults,                                         // showResults
+        () => resetBoard(enterGameUI),                      // resetBoard
+        () => handleResetGameClick(resetRoomToLobby),       // handleResetGameClick
+        saveMyAnswers                                        // saveMyAnswers
+    );
+
+    // Create a wrapper for subscribeToRoom that includes dependencies
+    const subscribeToRoomWithDeps = (code) => {
+        subscribeToRoom(code, returnToLobby, updateGameState);
+    };
+
     // Bind all event listeners
     bindEventListeners(
         enterGameUI,
-        subscribeToRoom,
+        subscribeToRoomWithDeps,
         startHeartbeat,
         stopActiveRoomsListener,
         resetRoomToLobby,
@@ -96,20 +121,23 @@ async function init() {
 
     // Subscribe to active rooms list
     subscribeToActiveRooms();
+
+    // Store for window functions
+    return { updateGameState, subscribeToRoomWithDeps };
 }
 
 // Start application when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
-    await init();
+    const { updateGameState, subscribeToRoomWithDeps } = await init();
 
     // Expose window functions for HTML onclick handlers
     // These are wrappers that provide dependencies via closure
     window.quickJoinRoom = async (code) => {
-        await quickJoinRoom(code, enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener);
+        await quickJoinRoom(code, enterGameUI, subscribeToRoomWithDeps, startHeartbeat, stopActiveRoomsListener);
     };
 
     window.reopenDormantRoom = async (code) => {
-        await reopenDormantRoom(code, enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener);
+        await reopenDormantRoom(code, enterGameUI, subscribeToRoomWithDeps, startHeartbeat, stopActiveRoomsListener);
     };
 
     window.deleteRoom = async (code) => {
