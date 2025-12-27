@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=122">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome CDN verwijderd - nu inline SVG iconen (70KB besparing) -->
+    <!-- Confetti wordt nu lazy loaded via script.js voor betere performance -->
 </head>
 
 <body>
@@ -47,10 +47,12 @@
                     style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;" data-i18n="by">by
                     JW</small></h1>
             <div class="header-controls">
-                <button id="language-toggle" class="icon-btn" aria-label="Toggle Language" title="EN/NL"><i
-                        class="fa-solid fa-language"></i></button>
-                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme"><i
-                        class="fa-solid fa-moon"></i></button>
+                <button id="language-toggle" class="icon-btn" aria-label="Toggle Language" title="EN/NL">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>
+                </button>
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+                    <svg id="theme-icon" viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                </button>
             </div>
         </header>
 
@@ -108,13 +110,13 @@
                 <span><span data-i18n="room">Kamer:</span> <strong id="room-code-display">---</strong></span>
                 <span id="player-count">👤 1</span>
                 <button id="leave-room-btn" class="leave-room-btn" data-i18n="leaveRoom" title="Verlaat kamer">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Verlaat Kamer
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg> Verlaat Kamer
                 </button>
                 <button id="delete-room-game-btn" class="delete-room-game-btn hidden" data-i18n="deleteRoom" title="Verwijder kamer">
-                    <i class="fa-solid fa-trash"></i> Verwijder Kamer
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Verwijder Kamer
                 </button>
                 <button id="reset-game-btn" class="reset-game-btn hidden" data-i18n="resetGame" title="Reset spel naar lobby">
-                    <i class="fa-solid fa-rotate-left"></i> Reset Spel
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Reset Spel
                 </button>
             </div>
             <div class="letter-display-container">
@@ -136,7 +138,8 @@
 
         <section id="game-board" class="glass-panel game-board hidden">
             <div class="controls-bar">
-                <button id="shuffle-btn" class="sm-btn" title="Nieuwe Categorieën" data-i18n="mixCategories"><i class="fa-solid fa-shuffle"></i>
+                <button id="shuffle-btn" class="sm-btn" title="Nieuwe Categorieën" data-i18n="mixCategories">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
                     Mix Categorieën</button>
             </div>
 

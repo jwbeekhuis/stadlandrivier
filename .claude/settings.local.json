@@ -42,7 +42,12 @@
       "Bash(xargs -n 1 git update-ref -d)",
       "Bash(git reflog:*)",
       "Bash(git gc:*)",
-      "Bash(firebase --version:*)"
+      "Bash(firebase --version:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: extract foundational utilities and state modules\n\nCreated 7 foundation modules following 7-level dependency hierarchy:\n\nLevel 0 \\(No dependencies\\):\n- js/constants.js: Icons, allCategories, CONSTANTS, ROOM_STATUS, DEBUG\n- js/utils/string.js: escapeHtml, normalizeAnswer, pluralize, icon, debugLog\n- js/utils/fuzzy.js: levenshteinDistance, areWordsFuzzyMatching\n- js/utils/random.js: generateRoomCode, getRandomCategories, getRandomLetter\n\nLevel 1 \\(Imports Level 0\\):\n- js/utils/dom.js: DOM registry with initDOM, getElements \\(39+ cached elements\\)\n- js/state/core.js: Centralized state object \\(user, room, game, voting, ui, internals\\)\n- js/state/actions.js: State getters/setters \\(getState, updateState, setRoomData, clearTimers, etc.\\)\n\nAll modules extracted AS-IS from script.js with no behavioral changes.\nPerformance optimizations preserved: DOM caching, playerDOMCache, debouncing.\n\nPart of Fase 1 \\(Foundation\\) - 9-phase incremental refactoring.\nEOF\n\\)\")",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(echo \"Files created:\" ls js/game/voting-*.js js/firebase/voting-*.js)"
     ]
   },
   "preferences": {

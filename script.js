@@ -1,6 +1,54 @@
 import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, runTransaction, signInAnonymously, auth, UserService } from './firebase-config.js?v=122';
 import { translations } from './translations.js?v=105';
 
+// PERFORMANCE OPTIMALISATIE: Lazy load confetti library
+let confettiLoaded = false;
+let confettiLoadPromise = null;
+
+async function loadConfetti() {
+    if (confettiLoaded && window.confetti) {
+        return window.confetti;
+    }
+
+    if (confettiLoadPromise) {
+        return confettiLoadPromise;
+    }
+
+    confettiLoadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+        script.onload = () => {
+            confettiLoaded = true;
+            resolve(window.confetti);
+        };
+        script.onerror = () => reject(new Error('Failed to load confetti library'));
+        document.head.appendChild(script);
+    });
+
+    return confettiLoadPromise;
+}
+
+// PERFORMANCE OPTIMALISATIE: Inline SVG iconen i.p.v. Font Awesome CDN
+// Dit scheelt ~70KB en verbetert laadtijd aanzienlijk
+const icons = {
+    language: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>',
+    moon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a1.001 1.001 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a1.001 1.001 0 00-1.41 0 .996.996 0 000 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 000-1.41l-1.06-1.06zm1.06-10.96a1.001 1.001 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a1.001 1.001 0 000-1.41.996.996 0 00-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>',
+    logout: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>',
+    reset: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>',
+    shuffle: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>',
+    xmark: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'
+};
+
+// Helper function om icon HTML te genereren
+function icon(name) {
+    return icons[name] || '';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Language Management ---
     let currentLanguage = localStorage.getItem('language') || 'nl';
@@ -250,6 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let resultsShown = false; // Track if results have been shown for current round
     let lastPlayerListHash = ''; // Voor debounce - alleen updaten bij echte changes
     let playerListDebounceTimer = null; // Debounce timer voor player list
+    let playerDOMCache = new Map(); // Cache voor player DOM elementen (performance optimalisatie)
 
     // --- DOM Elements ---
     // Screens
@@ -438,14 +487,15 @@ document.addEventListener('DOMContentLoaded', () => {
             modalCancelBtn.textContent = cancelText;
             modalConfirmBtn.textContent = confirmText;
 
-            // Set icon based on type
+            // Set icon based on type (inline SVG i.p.v. Font Awesome)
             modalIconWrapper.className = 'modal-icon-wrapper ' + type;
             const iconMap = {
-                warning: 'fa-solid fa-triangle-exclamation',
-                danger: 'fa-solid fa-trash-can',
-                info: 'fa-solid fa-circle-info'
+                warning: icon('warning'),
+                danger: icon('trash'),
+                info: icon('info')
             };
-            modalIcon.className = 'modal-icon ' + (iconMap[type] || iconMap.warning);
+            modalIcon.className = 'modal-icon';
+            modalIcon.innerHTML = iconMap[type] || iconMap.warning;
 
             // Set confirm button style
             if (confirmDanger) {
@@ -1050,19 +1100,59 @@ document.addEventListener('DOMContentLoaded', () => {
         playerListDebounceTimer = setTimeout(() => {
             lastPlayerListHash = playerHash;
 
-            playersList.innerHTML = players.map(p => {
+            // PERFORMANCE OPTIMALISATIE: Diff-based rendering
+            // In plaats van volledige innerHTML replacement, updaten we alleen wat nodig is
+            const currentPlayerUIDs = new Set(players.map(p => p.uid));
+            const existingPlayerUIDs = new Set(playerDOMCache.keys());
+
+            // Verwijder spelers die niet meer in de lijst zitten
+            for (const uid of existingPlayerUIDs) {
+                if (!currentPlayerUIDs.has(uid)) {
+                    const element = playerDOMCache.get(uid);
+                    if (element && element.parentNode) {
+                        element.remove();
+                    }
+                    playerDOMCache.delete(uid);
+                }
+            }
+
+            // Update of creëer speler elementen
+            players.forEach((p, index) => {
                 const isMe = p.uid === currentUser.uid;
                 const canKick = isHost && !isMe && players.length > 1;
                 const escapedName = escapeHtml(p.name);
-
                 const pointsText = pluralize(p.score, t('point'), t('points')).toLowerCase();
-                return `
-                    <span class="player-tag ${isMe ? 'me' : ''}">
-                        ${escapedName} (${p.score} ${pointsText})
-                        ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="${t('confirmKick').replace('{name}', '')}"><i class="fa-solid fa-xmark"></i></button>` : ''}
-                    </span>
-                `;
-            }).join('');
+
+                let playerElement = playerDOMCache.get(p.uid);
+
+                if (!playerElement) {
+                    // Nieuw element maken
+                    playerElement = document.createElement('span');
+                    playerElement.className = `player-tag ${isMe ? 'me' : ''}`;
+                    playerElement.dataset.uid = p.uid;
+                    playerDOMCache.set(p.uid, playerElement);
+                    playersList.appendChild(playerElement);
+                } else {
+                    // Update className (kan veranderen als isMe of host status verandert)
+                    playerElement.className = `player-tag ${isMe ? 'me' : ''}`;
+                }
+
+                // Update innerHTML alleen als content is veranderd
+                const newContent = `${escapedName} (${p.score} ${pointsText})${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="${t('confirmKick').replace('{name}', '')}">${icon('xmark')}</button>` : ''}`;
+                if (playerElement.innerHTML !== newContent) {
+                    playerElement.innerHTML = newContent;
+                }
+
+                // Zorg voor juiste volgorde (indien nodig)
+                const currentPosition = Array.from(playersList.children).indexOf(playerElement);
+                if (currentPosition !== index) {
+                    if (index >= playersList.children.length) {
+                        playersList.appendChild(playerElement);
+                    } else {
+                        playersList.insertBefore(playerElement, playersList.children[index]);
+                    }
+                }
+            });
         }, CONSTANTS.PLAYER_LIST_DEBOUNCE_MS);
     }
 
@@ -1278,6 +1368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             roomId = null;
             isHost = false;
             roomData = null;
+            playerDOMCache.clear(); // Clear player DOM cache (performance)
 
             // Return to lobby
             controlsPanel.classList.add('hidden');
@@ -1319,6 +1410,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isHost = false;
             roomData = null;
             isGameActive = false;
+            playerDOMCache.clear(); // Clear player DOM cache (performance)
 
             // Return to lobby
             controlsPanel.classList.add('hidden');
@@ -1471,18 +1563,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newHostUid = activePlayers[0]?.uid;
 
                 if (activePlayers.length > 0) {
-                    await updateDoc(roomRef, {
+                    // PERFORMANCE: Combine multiple updates into single write
+                    const updateData = {
                         players: activePlayers,
                         lastActivity: Date.now()
-                    });
+                    };
 
                     // Log host change if it happened
                     if (oldHostUid !== newHostUid) {
                         debugLog(`Host changed from ${players[0]?.name} to ${activePlayers[0]?.name}`);
-
-                        // Update hostId in room data for consistency
-                        await updateDoc(roomRef, { hostId: newHostUid });
+                        updateData.hostId = newHostUid;
                     }
+
+                    await updateDoc(roomRef, updateData);
                 } else {
                     // No players left, set room to dormant to preserve word library
                     debugLog("No active players left, setting room to dormant (preserving library)");
@@ -1905,14 +1998,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             data-vote="false"
                             aria-label="${escapeHtml(rejectLabel)}"
                             aria-pressed="${myVote === false ? 'true' : 'false'}">
-                        <i class="fa-solid fa-xmark"></i>
+                        ${icon('xmark')}
                     </button>
                     <button class="vote-btn vote-yes ${myVote === true ? 'selected' : ''}"
                             data-vote-key="${voteKey}"
                             data-vote="true"
                             aria-label="${escapeHtml(approveLabel)}"
                             aria-pressed="${myVote === true ? 'true' : 'false'}">
-                        <i class="fa-solid fa-check"></i>
+                        ${icon('check')}
                     </button>
                 </div>
                 <div class="vote-stats">
@@ -2081,6 +2174,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isProcessingCategory = true;
 
+        // PERFORMANCE: Collect approved answers for batch library write (outside transaction)
+        let approvedAnswers = [];
+
         try {
             const roomRef = doc(db, "rooms", roomId);
 
@@ -2162,9 +2258,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         debugLog(`Skipping duplicate history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
                     }
 
-                    // Add to library if approved (outside transaction for performance)
+                    // Collect approved answers for batch write (outside transaction for performance)
                     if (isApproved) {
-                        addToLibrary(state.category, answerData.answer);
+                        approvedAnswers.push({ category: state.category, answer: answerData.answer });
                     }
                 }
 
@@ -2181,6 +2277,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 transaction.update(roomRef, updateData);
             });
+
+            // PERFORMANCE: Batch write approved answers to library (outside transaction)
+            if (approvedAnswers.length > 0) {
+                debugLog(`Batch writing ${approvedAnswers.length} approved answers to library`);
+                const batch = writeBatch(db);
+
+                approvedAnswers.forEach(({ category, answer }) => {
+                    const cleanWord = normalizeAnswer(answer);
+                    const letter = currentLetter;
+                    const docId = `${roomId}_${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');
+                    const libraryDocRef = doc(db, "library", docId);
+
+                    batch.set(libraryDocRef, {
+                        roomId: roomId,
+                        category: category,
+                        letter: letter,
+                        word: answer,
+                        cleanWord: cleanWord,
+                        approvedAt: Date.now()
+                    }, { merge: true });
+                });
+
+                await batch.commit();
+                debugLog(`Batch write complete for ${approvedAnswers.length} library entries`);
+            }
 
             // Continue to next category after transaction completes
             setTimeout(() => processNextCategory(), 1000);
@@ -2564,16 +2685,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const ranks = calculateRanks(sortedPlayers);
 
         // Winner Confetti! (For all players with the highest score)
+        // PERFORMANCE: Lazy load confetti library alleen wanneer nodig
         if (sortedPlayers.length > 0) {
             const topScore = sortedPlayers[0].score;
             const isWinner = topScore > 0 && sortedPlayers.some(p => p.score === topScore && p.uid === currentUser.uid);
 
             if (isWinner) {
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#22c55e', '#38bdf8', '#ffffff']
+                loadConfetti().then(confetti => {
+                    confetti({
+                        particleCount: 150,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#22c55e', '#38bdf8', '#ffffff']
+                    });
+                }).catch(err => {
+                    console.warn('Confetti could not be loaded:', err);
                 });
             }
         }
@@ -2686,17 +2812,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyTheme(theme) {
         if (theme === 'light') {
             document.body.classList.add('light-mode');
-            const icon = themeToggleBtn?.querySelector('i');
-            if (icon) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
+            const iconElement = themeToggleBtn?.querySelector('svg');
+            if (iconElement) {
+                iconElement.innerHTML = icon('sun').match(/<path[^>]*>/)[0];
             }
         } else {
             document.body.classList.remove('light-mode');
-            const icon = themeToggleBtn?.querySelector('i');
-            if (icon) {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
+            const iconElement = themeToggleBtn?.querySelector('svg');
+            if (iconElement) {
+                iconElement.innerHTML = icon('moon').match(/<path[^>]*>/)[0];
             }
         }
     }
@@ -2706,14 +2830,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const isLight = document.body.classList.contains('light-mode');
         const theme = isLight ? 'light' : 'dark';
 
-        // Update icon
-        const icon = themeToggleBtn.querySelector('i');
-        if (isLight) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
+        // Update icon (inline SVG)
+        const iconElement = themeToggleBtn.querySelector('svg');
+        if (iconElement) {
+            if (isLight) {
+                iconElement.innerHTML = icon('sun').match(/<path[^>]*>/)[0];
+            } else {
+                iconElement.innerHTML = icon('moon').match(/<path[^>]*>/)[0];
+            }
         }
 
         // Save to localStorage as fallback
