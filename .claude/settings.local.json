@@ -35,7 +35,14 @@
       "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" add index.html script.js firebase-config.js)",
       "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" commit -m \"$\\(cat <<''EOF''\nfix: Use Firebase transaction for atomic score calculation\n\nPrevents race condition where multiple clients calculate scores\nsimultaneously by using runTransaction to atomically check and\nset the scoresCalculated flag.\n\nThis ensures only one client can calculate scores, fixing the\nscore multiplication bug \\(e.g., x3 with 3 players\\).\n\nBumps version to v121.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" diff index.html)",
-      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" commit -m \"$\\(cat <<''EOF''\nfix: Use roomData.categories instead of local activeCategories in transaction\n\nThe transaction was using the local activeCategories variable which could\nbe empty or stale on the client that wins the transaction lock. Now uses\nroomData.categories from the database to ensure correct score calculation.\n\nBumps version to v122.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" commit -m \"$\\(cat <<''EOF''\nfix: Use roomData.categories instead of local activeCategories in transaction\n\nThe transaction was using the local activeCategories variable which could\nbe empty or stale on the client that wins the transaction lock. Now uses\nroomData.categories from the database to ensure correct score calculation.\n\nBumps version to v122.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(pip --version:*)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch:*)",
+      "Bash(git for-each-ref:*)",
+      "Bash(xargs -n 1 git update-ref -d)",
+      "Bash(git reflog:*)",
+      "Bash(git gc:*)",
+      "Bash(firebase --version:*)"
     ]
   },
   "preferences": {
