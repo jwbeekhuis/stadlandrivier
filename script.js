@@ -1607,6 +1607,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // All categories processed - calculate final scores
+        // IMPORTANT: Only host calculates scores to prevent race condition where all clients
+        // calculate simultaneously and multiply scores by number of players
+        if (!isHost) {
+            debugLog('Not host, skipping score calculation');
+            return;
+        }
+
         // Wait a moment to ensure all Firebase writes are propagated
         debugLog('All categories processed, waiting before calculating final scores...');
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -2273,6 +2280,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function calculateFinalScores(data) {
+        // IMPORTANT: Only host should calculate scores to prevent race condition
+        // where multiple clients calculate and multiply scores
+        if (!isHost) {
+            debugLog("Not host, skipping score calculation");
+            return;
+        }
+
         // Check if scores were already calculated for this round
         if (data.scoresCalculated) {
             debugLog("Scores already calculated for this round, skipping");
