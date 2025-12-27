@@ -436,6 +436,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const hostName = room.players?.[0]?.name || "Unknown";
             const roomName = room.roomName || `${hostName}'s Kamer`;
             const isMyRoom = room.players?.some(p => p.uid === currentUser?.uid);
+            const escapedRoomName = escapeHtml(roomName);
+            const escapedHostName = escapeHtml(hostName);
 
             return `
                 <div class="room-card" data-room-id="${room.id}">
@@ -443,9 +445,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="room-code">${room.id}</div>
                         ${isMyRoom ? `<button class="delete-room-btn" onclick="deleteRoom('${room.id}')" title="${t('deleteRoom')}">🗑️</button>` : ''}
                     </div>
-                    <div class="room-name">${roomName}</div>
+                    <div class="room-name">${escapedRoomName}</div>
                     <div class="room-info">
-                        <span class="room-host">${t('host')} ${hostName}</span>
+                        <span class="room-host">${t('host')} ${escapedHostName}</span>
                         <span class="room-players">👤 ${playerCount}</span>
                     </div>
                     <button class="join-room-quick-btn" onclick="quickJoinRoom('${room.id}')">
@@ -789,10 +791,11 @@ document.addEventListener('DOMContentLoaded', () => {
         playersList.innerHTML = players.map(p => {
             const isMe = p.uid === currentUser.uid;
             const canKick = isHost && !isMe && players.length > 1;
+            const escapedName = escapeHtml(p.name);
 
             return `
                 <span class="player-tag ${isMe ? 'me' : ''}">
-                    ${p.name} (${p.score} ${t('points').toLowerCase()})
+                    ${escapedName} (${p.score} ${t('points').toLowerCase()})
                     ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="${t('confirmKick').replace('{name}', '')}"><i class="fa-solid fa-xmark"></i></button>` : ''}
                 </span>
             `;
@@ -1578,15 +1581,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 .join(', ');
 
             // Create answer card
+            const escapedAnswer = escapeHtml(answerData.answer);
+            const escapedPlayerName = escapeHtml(answerData.playerName);
+            const escapedDuplicateName = isDuplicate ? escapeHtml(duplicates[0].playerName) : '';
+
             const itemDiv = document.createElement('div');
             itemDiv.className = 'voting-item';
             itemDiv.innerHTML = `
                 <div class="voting-item-header">
-                    <span class="voting-player-name">${answerData.playerName}</span>
+                    <span class="voting-player-name">${escapedPlayerName}</span>
                     ${isMyAnswer ? '<span class="own-answer-badge">' + t('yourAnswer') + '</span>' : ''}
-                    ${isDuplicate ? '<span class="duplicate-badge">' + t('duplicate') + ' ' + duplicates[0].playerName + '</span>' : ''}
+                    ${isDuplicate ? '<span class="duplicate-badge">' + t('duplicate') + ' ' + escapedDuplicateName + '</span>' : ''}
                 </div>
-                <div class="voting-answer-text">${answerData.answer}</div>
+                <div class="voting-answer-text">${escapedAnswer}</div>
                 <div class="voting-item-actions">
                     <button class="vote-btn vote-no ${myVote === false ? 'selected' : ''}" data-vote-key="${voteKey}" data-vote="false">
                         <i class="fa-solid fa-xmark"></i>
@@ -1945,6 +1952,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Library & Scoring ---
     // --- Utilities ---
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     function normalizeAnswer(str) {
         if (!str) return "";
         return str
@@ -2221,6 +2235,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Rendering game log with', history.length, 'entries');
         logBox.classList.remove('hidden');
         logEntries.innerHTML = history.map(entry => {
+            const escapedPlayerName = escapeHtml(entry.playerName);
+            const escapedAnswer = escapeHtml(entry.answer);
             const votes = entry.votes || {};
             const yes = Object.values(votes).filter(v => v === true).length;
             const no = Object.values(votes).filter(v => v === false).length;
@@ -2239,9 +2255,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="log-entry ${entry.isAuto ? 'auto' : 'manual'}">
                     <div class="log-main">
                         <div>
-                            <span class="log-player">${entry.playerName}</span>
+                            <span class="log-player">${escapedPlayerName}</span>
                             <span class="log-cat">${t('at')} ${t('categories.' + entry.category)}</span>
-                            <span class="log-word">"${entry.answer}"</span>
+                            <span class="log-word">"${escapedAnswer}"</span>
                         </div>
                         <div class="log-status">
                             ${entry.isValid ? '✅' : '❌'}
