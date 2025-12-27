@@ -88,6 +88,22 @@ export async function deleteRoom(code) {
         await updateDoc(roomRef, {
             status: ROOM_STATUS.DELETED
         });
+
+        // Remove room from UI immediately (don't wait for Firebase listener)
+        const roomCard = document.querySelector(`[data-room-id="${code}"]`);
+        if (roomCard) {
+            roomCard.style.transition = 'opacity 0.3s ease';
+            roomCard.style.opacity = '0';
+            setTimeout(() => {
+                roomCard.remove();
+                // Check if list is now empty
+                const list = document.getElementById("active-rooms-list");
+                if (list && list.children.length === 0) {
+                    list.innerHTML = `<p class="no-rooms">${t('noRooms')}</p>`;
+                }
+            }, 300);
+        }
+
         showToast(t('roomDeletedSuccess'), 'success', 3000);
     } catch (e) {
         console.error("Error deleting room:", e);

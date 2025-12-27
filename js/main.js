@@ -19,7 +19,7 @@ import { quickJoinRoom, reopenDormantRoom } from './firebase/room-discovery.js';
 import { deleteRoom } from './firebase/room-crud.js';
 import { kickPlayer } from './firebase/player-management.js';
 import { createUpdateGameState } from './game/game-state-manager.js';
-import { startGameLocal, stopGameLocal } from './game/timer-logic.js';
+import { startGameLocal, stopGameLocal, startTimerLocal } from './game/timer-logic.js';
 import { showVotingUI } from './game/voting-ui.js';
 import { showResults } from './ui/results.js';
 import { resetBoard } from './ui/screens.js';
@@ -87,13 +87,13 @@ async function init() {
 
     // Create updateGameState function with all dependencies
     const updateGameState = createUpdateGameState(
-        () => startGameLocal(() => initiateVotingPhase()),  // startGameLocal with timer callback
-        saveMyAnswers => stopGameLocal(saveMyAnswers),      // stopGameLocal
+        () => startGameLocal(() => startTimerLocal(initiateVotingPhase)),  // startGameLocal with startTimerLocal callback
+        saveMyAnswers => stopGameLocal(saveMyAnswers),                      // stopGameLocal
         (votingState) => showVotingUI(votingState, syncVoteToFirebase, () => startVoteTimer(() => {})),  // showVotingUI
-        showResults,                                         // showResults
-        resetBoard,                                          // resetBoard (no params needed)
-        () => handleResetGameClick(resetRoomToLobby),       // handleResetGameClick
-        saveMyAnswers                                        // saveMyAnswers
+        showResults,                                                         // showResults
+        resetBoard,                                                          // resetBoard (no params needed)
+        () => handleResetGameClick(resetRoomToLobby),                       // handleResetGameClick
+        saveMyAnswers                                                        // saveMyAnswers
     );
 
     // Create a wrapper for subscribeToRoom that includes dependencies

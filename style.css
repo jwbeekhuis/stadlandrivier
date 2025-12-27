@@ -354,16 +354,19 @@ body:has(.sticky-timer-bar.active) .app-container {
 
 .log-details {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.85rem;
-    padding-top: 10px;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 0.9rem;
+    padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .vote-tally {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    line-height: 1.6;
 }
 
 .log-points {
@@ -1201,6 +1204,19 @@ h1 {
     .controls-panel {
         gap: 10px;
     }
+
+    /* Log entries - stack vertically on mobile */
+    .log-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .log-points {
+        margin-top: 0;
+        width: 100%;
+        text-align: left;
+    }
 }
 
 /* Voting UI */
@@ -1510,13 +1526,15 @@ h1 {
 
 .vote-btn {
     flex: 1;
+    max-width: 200px; /* Prevent buttons from becoming too large on desktop */
+    min-height: 80px;
     padding: 15px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 1.5rem;
+    font-size: 2.5rem; /* Large icon size */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1903,6 +1921,13 @@ h1 {
 .modal-icon {
     font-size: 2.5rem;
     line-height: 1;
+    width: 48px;
+    height: 48px;
+}
+
+.modal-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
 .modal-icon-wrapper.warning {
@@ -2100,6 +2125,8 @@ h1 {
 
     .modal-icon {
         font-size: 2rem;
+        width: 40px;
+        height: 40px;
     }
 
     .modal-title {

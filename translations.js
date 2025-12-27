@@ -63,7 +63,7 @@ export const translations = {
         // Game Controls
         room: "Spel:",
         leaveRoom: "👋 Verlaat Spel",
-        deleteRoom: "🗑️ Verwijder Spel",
+        deleteRoom: "Verwijder Spel",
         resetGame: "🔄 Reset Spel",
         rollLetter: "🎲 DRAAI DIE LETTER!",
         stopRound: "STOP DE RONDE",
@@ -114,6 +114,7 @@ export const translations = {
         roomNotExist: "😢 Dit spel bestaat niet meer.",
         roomDeleted: "🗑️ Dit spel is verwijderd.",
         kickedFromRoom: "👢 Je bent uit het spel verwijderd. Tot de volgende keer!",
+        youLeftRoom: "👋 Je hebt het spel verlaten",
         confirmKick: "🤔 Weet je zeker dat je {name} uit het spel wilt verwijderen?",
         confirmDelete: "⚠️ Weet je zeker dat je dit spel wilt verwijderen?",
         confirmReset: "🔄 Weet je zeker dat je het spel wilt resetten naar de lobby? Alle huidige antwoorden en stemmen gaan verloren.",
@@ -230,7 +231,7 @@ export const translations = {
         // Game Controls
         room: "Room:",
         leaveRoom: "👋 Leave Room",
-        deleteRoom: "🗑️ Delete Room",
+        deleteRoom: "Delete Room",
         resetGame: "🔄 Reset Game",
         rollLetter: "🎲 ROLL THAT LETTER!",
         stopRound: "STOP THE ROUND",
@@ -281,6 +282,7 @@ export const translations = {
         roomNotExist: "😢 This room no longer exists.",
         roomDeleted: "🗑️ This room has been deleted.",
         kickedFromRoom: "👢 You have been removed from the room. See you next time!",
+        youLeftRoom: "👋 You left the room",
         confirmKick: "🤔 Are you sure you want to remove {name} from the room?",
         confirmDelete: "⚠️ Are you sure you want to delete this room?",
         confirmReset: "🔄 Are you sure you want to reset the game to lobby? All current answers and votes will be lost.",

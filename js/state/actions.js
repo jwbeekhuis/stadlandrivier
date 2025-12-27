@@ -141,4 +141,8 @@ export function resetRoomState() {
     resetGameState();
     clearTimers();
     clearListeners();
+
+    // Clear UI caches
+    state.ui.playerDOMCache.clear();
+    state.ui.lastPlayerListHash = '';
 }

@@ -2,10 +2,11 @@
 
 import { getElements } from '../utils/dom.js';
 import { state } from '../state/core.js';
-import { resetRoomState } from '../state/actions.js';
+import { resetRoomState, cleanupAll } from '../state/actions.js';
 import { showToast } from './toast.js';
 import { renderCategories } from './render.js';
 import { updateTimerDisplay } from './timer.js';
+import { subscribeToActiveRooms } from '../firebase/room-discovery.js';
 
 /**
  * Enter the game UI (hide lobby, show game controls and board)
@@ -41,14 +42,12 @@ export function enterGameUI(code, stopActiveRoomsListener) {
 /**
  * Return to lobby (clean up game state and show lobby screen)
  * @param {string} message - Optional message to show as toast
- * @param {Function} cleanupAllIntervals - Function to cleanup all intervals
- * @param {Function} subscribeToActiveRooms - Function to resubscribe to active rooms
  */
-export function returnToLobby(message, cleanupAllIntervals, subscribeToActiveRooms) {
-    const { lobbyScreen, controlsPanel, gameBoard, votingScreen, resultsBoard } = getElements();
+export function returnToLobby(message) {
+    const { lobbyScreen, controlsPanel, gameBoard, votingScreen, resultsBoard, playersList } = getElements();
 
     // Clean up all intervals to prevent memory leaks
-    cleanupAllIntervals();
+    cleanupAll();
 
     // Unsubscribe from room
     if (state.internals.roomUnsubscribe) {
@@ -56,8 +55,13 @@ export function returnToLobby(message, cleanupAllIntervals, subscribeToActiveRoo
         state.internals.roomUnsubscribe = null;
     }
 
-    // Reset state
+    // Reset state (includes clearing playerDOMCache)
     resetRoomState();
+
+    // Clear player list DOM
+    if (playersList) {
+        playersList.innerHTML = '';
+    }
 
     // Hide all game screens
     controlsPanel.classList.add('hidden');

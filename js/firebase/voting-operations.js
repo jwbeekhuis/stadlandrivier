@@ -176,6 +176,12 @@ export async function processNextCategory() {
 export async function syncVoteToFirebase(voteKey, voteValue) {
     if (!state.room.roomId || !state.user.currentUser) return;
 
+    // Validate that voteValue is a boolean (Firebase rejects undefined/null)
+    if (voteValue !== true && voteValue !== false) {
+        console.error("Invalid vote value:", voteValue);
+        return;
+    }
+
     try {
         const roomRef = doc(db, "rooms", state.room.roomId);
         const key = `votingState.votes.${state.user.currentUser.uid}.${voteKey}`;
@@ -214,8 +220,18 @@ export async function submitCategoryVotes() {
 
         // Submit all votes to Firebase
         const roomRef = doc(db, "rooms", state.room.roomId);
+
+        // Filter out undefined values (Firebase doesn't accept them)
+        const cleanedVotes = {};
+        Object.keys(state.voting.currentCategoryVotes).forEach(key => {
+            const value = state.voting.currentCategoryVotes[key];
+            if (value !== undefined && value !== null) {
+                cleanedVotes[key] = value;
+            }
+        });
+
         const updates = {};
-        updates[`votingState.allPlayersVoted.${state.user.currentUser.uid}`] = state.voting.currentCategoryVotes;
+        updates[`votingState.allPlayersVoted.${state.user.currentUser.uid}`] = cleanedVotes;
 
         await updateDoc(roomRef, updates);
 
