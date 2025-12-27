@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=122">
     <!-- Font Awesome CDN verwijderd - nu inline SVG iconen (70KB besparing) -->
-    <!-- Confetti wordt nu lazy loaded via script.js voor betere performance -->
+    <!-- Confetti wordt nu lazy loaded via js/ui/confetti.js voor betere performance -->
 </head>
 
 <body>
@@ -98,7 +98,7 @@
                     <span data-i18n="howItWorks">Hoe werkt het?</span>
                 </summary>
                 <div class="tutorial-content">
-                    <!-- Content dynamically loaded via updateTutorialContent() in script.js -->
+                    <!-- Content dynamically loaded via updateTutorialContent() in js/i18n/translations.js -->
                     <p data-i18n="loading">⏳ Even geduld...</p>
                 </div>
             </details>
@@ -216,7 +216,7 @@
         </section>
     </main>
 
-    <script type="module" src="script.js?v=122"></script>
+    <script type="module" src="js/main.js?v=123"></script>
 </body>
 
 </html>
