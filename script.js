@@ -632,73 +632,6 @@ document.addEventListener('DOMContentLoaded', () => {
         startHeartbeat();
     }
 
-    async function joinRoom() {
-        const name = playerNameInput.value.trim();
-        const code = roomCodeInput.value.trim().toUpperCase();
-        if (!name) return alert("Vul eerst je naam in!");
-        if (code.length !== 4) return alert("Ongeldige code");
-
-        // Save name to localStorage as fallback
-        localStorage.setItem('playerName', name);
-        // Save name to Firestore user profile
-        if (currentUser) {
-            await UserService.saveProfile(currentUser.uid, { name: name });
-        }
-
-        roomId = code;
-
-        const roomRef = doc(db, "rooms", code);
-        const roomSnap = await getDoc(roomRef);
-
-        if (!roomSnap.exists()) {
-            return alert("Kamer niet gevonden!");
-        }
-
-        const roomData = roomSnap.data();
-
-        // Handle dormant room reactivation
-        if (roomData.status === 'dormant') {
-            // Only the original creator can reopen a dormant room
-            if (roomData.creatorUid === currentUser.uid) {
-                await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
-                isHost = true;  // Creator becomes host when reopening
-                enterGameUI(code);
-                subscribeToRoom(code);
-                startHeartbeat();
-                return;
-            } else {
-                return alert("Kamer niet gevonden!");  // Non-creators see it as non-existent
-            }
-        }
-
-        // Normal join flow for active rooms
-        isHost = false;
-        const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
-
-        if (existingPlayer) {
-            // Player already exists, update their info
-            const updatedPlayers = roomData.players.map(p =>
-                p.uid === currentUser.uid
-                    ? { ...p, name: name, lastSeen: Date.now() }
-                    : p
-            );
-            await updateDoc(roomRef, {
-                players: updatedPlayers,
-                lastActivity: Date.now()
-            });
-        } else {
-            // New player, add them
-            await updateDoc(roomRef, {
-                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }),
-                lastActivity: Date.now()
-            });
-        }
-
-        enterGameUI(code);
-        subscribeToRoom(code);
-        startHeartbeat();
-    }
-
     function subscribeToRoom(code) {
         if (roomUnsubscribe) roomUnsubscribe();
 
@@ -2008,8 +1941,6 @@ document.addEventListener('DOMContentLoaded', () => {
             votingState: null,
             gameHistory: history
         });
-
-        if (isHost && !isAuto) processNextVoteItem();
     }
 
     // --- Library & Scoring ---
@@ -2085,7 +2016,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRandomCategories() {
-        return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 5);
+        return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 6);
     }
 
     function getRandomLetter() {
@@ -2344,19 +2275,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Utilities ---
-
-    function generateRoomCode() {
-        return Math.random().toString(36).substring(2, 6).toUpperCase();
-    }
-
-    function getRandomCategories() {
-        return [...allCategories].sort(() => 0.5 - Math.random()).slice(0, 6);
-    }
-
-    function getRandomLetter() {
-        const alphabet = "ABCDEFGHIJKLMNOPRSTUVWZ";
-        return alphabet[Math.floor(Math.random() * alphabet.length)];
-    }
 
     function applyTheme(theme) {
         if (theme === 'light') {
