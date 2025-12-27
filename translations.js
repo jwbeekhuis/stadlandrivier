@@ -115,9 +115,10 @@ export const translations = {
         confirmKick: "🤔 Weet je zeker dat je {name} uit het spel wilt verwijderen?",
         confirmDelete: "⚠️ Weet je zeker dat je dit spel wilt verwijderen?",
         confirmReset: "🔄 Weet je zeker dat je het spel wilt resetten naar de lobby? Alle huidige antwoorden en stemmen gaan verloren.",
-        onlyHostCanReset: "⚠️ Alleen de host kan het spel resetten.",
-        hostRejoinStuckState: "🔄 Het lijkt erop dat het spel in een onvoltooide staat is. Wil je het spel resetten naar de lobby zodat je opnieuw kunt beginnen?",
-        nowHost: "👑 Je bent nu de host van dit spel! Je kunt nu de letter draaien en de volgende ronde starten. Time to shine! ✨",
+        onlyHostCanReset: "Alleen de host kan het spel resetten",
+        hostRejoinStuckState: "Spel is in onvoltooide staat",
+        resetToLobby: "Reset naar Lobby",
+        nowHost: "Je bent nu de host! Je kunt de letter draaien en de volgende ronde starten",
 
         // Categories
         categories: {
@@ -265,9 +266,10 @@ export const translations = {
         confirmKick: "🤔 Are you sure you want to remove {name} from the room?",
         confirmDelete: "⚠️ Are you sure you want to delete this room?",
         confirmReset: "🔄 Are you sure you want to reset the game to lobby? All current answers and votes will be lost.",
-        onlyHostCanReset: "⚠️ Only the host can reset the game.",
-        hostRejoinStuckState: "🔄 It looks like the game is in an incomplete state. Would you like to reset the game to lobby so you can start fresh?",
-        nowHost: "👑 You are now the host of this room! You can now roll the letter and start the next round. Time to shine! ✨",
+        onlyHostCanReset: "Only the host can reset the game",
+        hostRejoinStuckState: "Game is in an incomplete state",
+        resetToLobby: "Reset to Lobby",
+        nowHost: "You are now the host! You can roll the letter and start the next round",
 
         // Categories
         categories: {

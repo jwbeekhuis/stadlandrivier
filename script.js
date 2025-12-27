@@ -261,6 +261,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Circular timer removed - using sticky timer bar only
 
+    // --- Toast Notification System ---
+    const toastContainer = document.getElementById('toast-container');
+
+    /**
+     * Show a toast notification
+     * @param {string} message - The message to display
+     * @param {string} type - Type: 'success', 'info', 'warning', 'error'
+     * @param {number} duration - Duration in milliseconds (default: 5000)
+     * @param {Object} action - Optional action: { text: string, callback: function, primary: boolean }
+     */
+    function showToast(message, type = 'info', duration = 5000, action = null) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        // Icon based on type
+        const icons = {
+            success: '✓',
+            info: 'ℹ',
+            warning: '⚠',
+            error: '✕'
+        };
+
+        toast.innerHTML = `
+            <span class="toast-icon">${icons[type] || icons.info}</span>
+            <div class="toast-content">
+                <p class="toast-message">${message}</p>
+                ${action ? `
+                    <div class="toast-actions">
+                        <button class="toast-action-btn ${action.primary ? 'primary' : ''}" data-action="true">
+                            ${action.text}
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+            <button class="toast-close" aria-label="Close">×</button>
+        `;
+
+        // Add to container
+        toastContainer.appendChild(toast);
+
+        // Close button handler
+        const closeBtn = toast.querySelector('.toast-close');
+        closeBtn.addEventListener('click', () => removeToast(toast));
+
+        // Action button handler
+        if (action) {
+            const actionBtn = toast.querySelector('[data-action="true"]');
+            actionBtn.addEventListener('click', () => {
+                action.callback();
+                removeToast(toast);
+            });
+        }
+
+        // Auto-remove after duration
+        if (duration > 0) {
+            setTimeout(() => removeToast(toast), duration);
+        }
+
+        return toast;
+    }
+
+    function removeToast(toast) {
+        if (!toast || !toast.parentElement) return;
+
+        toast.classList.add('toast-removing');
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.parentElement.removeChild(toast);
+            }
+        }, 300);
+    }
+
     // --- Initialization ---
     async function init() {
         try {
@@ -739,11 +811,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Notify if just became host
             if (!wasHost && roomData) {
                 console.log("You are now the host!");
-                // Show subtle notification
+                // Show toast notification instead of alert
                 setTimeout(() => {
-                    if (confirm(t('nowHost'))) {
-                        // User acknowledged
-                    }
+                    showToast(t('nowHost'), 'info', 5000);
                 }, 500);
             }
 
@@ -752,9 +822,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!wasHost && shouldBeHost && (data.status === 'voting' || data.status === 'finished')) {
                 console.log('Detected host rejoin in problematic state:', data.status);
                 setTimeout(() => {
-                    if (confirm(t('hostRejoinStuckState'))) {
-                        handleResetGameClick();
-                    }
+                    showToast(
+                        t('hostRejoinStuckState'),
+                        'warning',
+                        8000,
+                        {
+                            text: t('resetToLobby'),
+                            callback: () => handleResetGameClick(),
+                            primary: true
+                        }
+                    );
                 }, 1000);
             }
         } else {
@@ -919,7 +996,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleResetGameClick() {
         if (!isHost) {
-            alert(t('onlyHostCanReset'));
+            showToast(t('onlyHostCanReset'), 'warning', 5000);
             return;
         }
 
