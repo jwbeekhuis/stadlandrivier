@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             value = value?.[k];
         }
         if (!value && key.startsWith('categories.')) {
-            console.error(`Translation missing for key: "${key}"`, {
+            debugLog(`Translation missing for key: "${key}"`, {
                 currentLanguage,
                 availableCategories: Object.keys(translations[currentLanguage]?.categories || {})
             });
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEBUG = false; // Zet op true voor development
 
     function debugLog(...args) {
-        if (DEBUG) debugLog('[DEBUG]', ...args);
+        if (DEBUG) console.log('[DEBUG]', ...args);
     }
 
     // State
@@ -588,6 +588,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 durationValueDisplay.textContent = e.target.value;
             });
         }
+
+        // Cleanup intervals on page unload/refresh
+        window.addEventListener('beforeunload', () => {
+            cleanupAllIntervals();
+            if (activeRoomsUnsubscribe) activeRoomsUnsubscribe();
+            if (roomUnsubscribe) roomUnsubscribe();
+        });
 
         subscribeToActiveRooms();
     }
@@ -1066,8 +1073,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function returnToLobby(message) {
-        // Stop heartbeat
-        stopHeartbeat();
+        // Clean up all intervals to prevent memory leaks
+        cleanupAllIntervals();
 
         // Unsubscribe from room
         if (roomUnsubscribe) {
@@ -1239,7 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Unsubscribe first to prevent the listener from firing for the host
             if (roomUnsubscribe) roomUnsubscribe();
-            stopHeartbeat();
+            cleanupAllIntervals(); // Clean up all intervals to prevent memory leaks
 
             const deletedRoomId = roomId;
             const roomRef = doc(db, "rooms", deletedRoomId);
@@ -1273,8 +1280,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!roomId) return;
 
         try {
-            // Stop heartbeat first so we don't get marked inactive
-            stopHeartbeat();
+            // Clean up all intervals to prevent memory leaks
+            cleanupAllIntervals();
 
             // Remove player from room
             const updatedPlayers = roomData.players.filter(p => p.uid !== currentUser.uid);
@@ -1331,6 +1338,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (heartbeatInterval) {
             clearInterval(heartbeatInterval);
             heartbeatInterval = null;
+        }
+    }
+
+    /**
+     * Central cleanup function for all intervals
+     * Prevents memory leaks by ensuring all intervals are cleared
+     */
+    function cleanupAllIntervals() {
+        debugLog('Cleaning up all intervals');
+
+        // Stop heartbeat interval
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+            heartbeatInterval = null;
+        }
+
+        // Stop game timer interval
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+
+        // Stop vote timer interval
+        if (voteTimerInterval) {
+            clearInterval(voteTimerInterval);
+            voteTimerInterval = null;
         }
     }
 
@@ -2000,8 +2033,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function processCategoryResults(stateParam) {
         if (!isHost) return;
+
+        // Local guard to prevent multiple calls from same client
         if (isProcessingCategory) {
-            debugLog('Already processing category, skipping duplicate call');
+            debugLog('Already processing category locally, skipping duplicate call');
             return;
         }
 
@@ -2009,92 +2044,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const roomRef = doc(db, "rooms", roomId);
-            const freshSnap = await getDoc(roomRef);
-            const freshData = freshSnap.data();
 
-            // Use fresh votingState from Firebase, not the potentially stale parameter
-            const state = freshData.votingState;
-            if (!state) {
-                debugLog('No voting state found in Firebase, skipping');
-                return;
-            }
-
-            debugLog('Processing category results for:', state.category, 'categoryIndex:', state.categoryIndex);
-
-            const players = freshData.players;
-            const history = freshData.gameHistory || [];
-
-            const answers = state.answers || [];
-
-        // Tally votes for each answer
-        for (let i = 0; i < answers.length; i++) {
-            const answerData = answers[i];
-            const voteKey = `${answerData.playerUid}_${i}`;
-
-            // Collect all votes for this answer
-            const votesForAnswer = {};
-            Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
-                if (voterVotes[voteKey] !== undefined) {
-                    votesForAnswer[voterUid] = voterVotes[voteKey];
+            // Use transaction to atomically check and process category results
+            // This prevents race conditions when multiple clients try to process simultaneously
+            await runTransaction(db, async (transaction) => {
+                const roomDoc = await transaction.get(roomRef);
+                if (!roomDoc.exists()) {
+                    throw new Error("Room does not exist");
                 }
+
+                const freshData = roomDoc.data();
+                const state = freshData.votingState;
+
+                if (!state) {
+                    debugLog('No voting state found in Firebase, aborting transaction');
+                    return; // Transaction completes without writing
+                }
+
+                // Check if this category was already processed
+                const lastProcessedIndex = freshData.lastProcessedCategoryIndex ?? -1;
+                if (state.categoryIndex <= lastProcessedIndex) {
+                    debugLog(`Category ${state.categoryIndex} already processed (lastProcessed: ${lastProcessedIndex}), aborting`);
+                    return; // Transaction completes without writing
+                }
+
+                debugLog(`Transaction won, processing category results for: ${state.category}, index: ${state.categoryIndex}`);
+
+                const players = freshData.players;
+                const history = freshData.gameHistory || [];
+                const answers = state.answers || [];
+
+                // Tally votes for each answer
+                for (let i = 0; i < answers.length; i++) {
+                    const answerData = answers[i];
+                    const voteKey = `${answerData.playerUid}_${i}`;
+
+                    // Collect all votes for this answer
+                    const votesForAnswer = {};
+                    Object.entries(state.allPlayersVoted || {}).forEach(([voterUid, voterVotes]) => {
+                        if (voterVotes[voteKey] !== undefined) {
+                            votesForAnswer[voterUid] = voterVotes[voteKey];
+                        }
+                    });
+
+                    // Calculate verdict (majority wins, ties approve)
+                    const yesVotes = Object.values(votesForAnswer).filter(v => v === true).length;
+                    const noVotes = Object.values(votesForAnswer).filter(v => v === false).length;
+                    const isApproved = yesVotes >= noVotes;
+
+                    // Mark answer as verified
+                    if (!players[answerData.playerIndex].verifiedResults) {
+                        players[answerData.playerIndex].verifiedResults = {};
+                    }
+                    players[answerData.playerIndex].verifiedResults[state.category] = {
+                        isValid: isApproved,
+                        answer: answerData.answer,
+                        points: 0
+                    };
+
+                    // Add to history (only if not already in history from auto-approval)
+                    const alreadyInHistory = history.some(entry =>
+                        entry.playerName === answerData.playerName &&
+                        entry.category === state.category &&
+                        normalizeAnswer(entry.answer) === normalizeAnswer(answerData.answer)
+                    );
+
+                    if (!alreadyInHistory) {
+                        debugLog(`Adding voted history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
+                        history.push({
+                            playerName: answerData.playerName,
+                            category: state.category,
+                            answer: answerData.answer,
+                            isValid: isApproved,
+                            isAuto: false,
+                            votes: votesForAnswer
+                        });
+                    } else {
+                        debugLog(`Skipping duplicate history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
+                    }
+
+                    // Add to library if approved (outside transaction for performance)
+                    if (isApproved) {
+                        addToLibrary(state.category, answerData.answer);
+                    }
+                }
+
+                // Update database atomically within transaction
+                // Store the categoryIndex before clearing votingState
+                const updateData = {
+                    players: players,
+                    votingState: null,
+                    gameHistory: history
+                };
+                // Only set lastProcessedCategoryIndex if it's a valid number
+                if (typeof state.categoryIndex === 'number') {
+                    updateData.lastProcessedCategoryIndex = state.categoryIndex;
+                }
+                transaction.update(roomRef, updateData);
             });
 
-            // Calculate verdict (majority wins, ties approve)
-            const yesVotes = Object.values(votesForAnswer).filter(v => v === true).length;
-            const noVotes = Object.values(votesForAnswer).filter(v => v === false).length;
-            const isApproved = yesVotes >= noVotes;
-
-            // Mark answer as verified
-            if (!players[answerData.playerIndex].verifiedResults) {
-                players[answerData.playerIndex].verifiedResults = {};
-            }
-            players[answerData.playerIndex].verifiedResults[state.category] = {
-                isValid: isApproved,
-                answer: answerData.answer,
-                points: 0
-            };
-
-            // Add to history (only if not already in history from auto-approval)
-            const alreadyInHistory = history.some(entry =>
-                entry.playerName === answerData.playerName &&
-                entry.category === state.category &&
-                normalizeAnswer(entry.answer) === normalizeAnswer(answerData.answer)
-            );
-
-            if (!alreadyInHistory) {
-                debugLog(`Adding voted history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
-                history.push({
-                    playerName: answerData.playerName,
-                    category: state.category,
-                    answer: answerData.answer,
-                    isValid: isApproved,
-                    isAuto: false,
-                    votes: votesForAnswer
-                });
-            } else {
-                debugLog(`Skipping duplicate history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
-            }
-
-            // Add to library if approved
-            if (isApproved) {
-                addToLibrary(state.category, answerData.answer);
-            }
-        }
-
-            // Update database and move to next category
-            // Store the categoryIndex before clearing votingState
-            const updateData = {
-                players: players,
-                votingState: null,
-                gameHistory: history
-            };
-            // Only set lastProcessedCategoryIndex if it's a valid number
-            if (typeof state.categoryIndex === 'number') {
-                updateData.lastProcessedCategoryIndex = state.categoryIndex;
-            }
-            await updateDoc(roomRef, updateData);
-
-            // Continue to next category
+            // Continue to next category after transaction completes
             setTimeout(() => processNextCategory(), 1000);
         } catch (error) {
             console.error('Error processing category results:', error);
