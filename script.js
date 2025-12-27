@@ -1880,12 +1880,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Update database and move to next category
             // Store the categoryIndex before clearing votingState
-            await updateDoc(roomRef, {
+            const updateData = {
                 players: players,
                 votingState: null,
-                gameHistory: history,
-                lastProcessedCategoryIndex: state.categoryIndex
-            });
+                gameHistory: history
+            };
+            // Only set lastProcessedCategoryIndex if it's a valid number
+            if (typeof state.categoryIndex === 'number') {
+                updateData.lastProcessedCategoryIndex = state.categoryIndex;
+            }
+            await updateDoc(roomRef, updateData);
 
             // Continue to next category
             setTimeout(() => processNextCategory(), 1000);
