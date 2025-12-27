@@ -2,9 +2,8 @@
 
 import { state } from '../state/core.js';
 import { getElements } from '../utils/dom.js';
-import { escapeHtml, debugLog } from '../utils/string.js';
-import { normalizeAnswer, areWordsFuzzyMatching } from '../utils/fuzzy.js';
-import { icon } from '../utils/string.js';
+import { escapeHtml, debugLog, normalizeAnswer, icon } from '../utils/string.js';
+import { areWordsFuzzyMatching } from '../utils/fuzzy.js';
 import { t } from '../i18n/translations.js';
 
 /**

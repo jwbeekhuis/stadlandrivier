@@ -2,7 +2,8 @@
 
 import { db, doc, runTransaction } from '../../firebase-config.js';
 import { state } from '../state/core.js';
-import { normalizeAnswer, debugLog, areWordsFuzzyMatching } from '../utils/fuzzy.js';
+import { normalizeAnswer, debugLog } from '../utils/string.js';
+import { areWordsFuzzyMatching } from '../utils/fuzzy.js';
 import { t } from '../i18n/translations.js';
 import { ROOM_STATUS } from '../constants.js';
 
