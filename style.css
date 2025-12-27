@@ -752,6 +752,32 @@ body.light-mode .lobby-panel input:focus {
     display: none;
 }
 
+.reset-game-btn {
+    background: transparent;
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: var(--font-main);
+}
+
+.reset-game-btn:hover {
+    background: #3b82f6;
+    color: white;
+    transform: scale(1.05);
+}
+
+.reset-game-btn.hidden {
+    display: none;
+}
+
 .leave-room-btn {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.3);

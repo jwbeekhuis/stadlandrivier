@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rollBtn = document.getElementById('roll-btn');
     const stopBtn = document.getElementById('stop-btn');
     const deleteRoomGameBtn = document.getElementById('delete-room-game-btn');
+    const resetGameBtn = document.getElementById('reset-game-btn');
     const leaveRoomBtn = document.getElementById('leave-room-btn');
     const letterDisplay = document.getElementById('current-letter');
     const categoriesContainer = document.getElementById('categories-container');
@@ -305,6 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rollBtn.addEventListener('click', handleRollClick);
         stopBtn.addEventListener('click', handleStopClick);
         if (deleteRoomGameBtn) deleteRoomGameBtn.addEventListener('click', handleDeleteRoomClick);
+        if (resetGameBtn) resetGameBtn.addEventListener('click', handleResetGameClick);
         if (leaveRoomBtn) leaveRoomBtn.addEventListener('click', handleLeaveRoomClick);
 
         if (shuffleBtn) shuffleBtn.addEventListener('click', handleShuffleClick);
@@ -732,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (shuffleBtn) shuffleBtn.classList.remove('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.remove('hidden');
+            if (resetGameBtn) resetGameBtn.classList.remove('hidden');
 
             // Notify if just became host
             if (!wasHost && roomData) {
@@ -742,6 +745,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         // User acknowledged
                     }
                 }, 500);
+            }
+
+            // Auto-detect stuck states when host rejoins
+            // If host is in voting/finished state and rejoining, offer to reset
+            if (!wasHost && shouldBeHost && (data.status === 'voting' || data.status === 'finished')) {
+                console.log('Detected host rejoin in problematic state:', data.status);
+                setTimeout(() => {
+                    if (confirm(t('hostRejoinStuckState'))) {
+                        handleResetGameClick();
+                    }
+                }, 1000);
             }
         } else {
             isHost = false;
@@ -757,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stopBtn.classList.add('hidden');
             if (shuffleBtn) shuffleBtn.classList.add('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
+            if (resetGameBtn) resetGameBtn.classList.add('hidden');
         }
     }
 
@@ -787,6 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stopBtn.classList.add('hidden');
             if (shuffleBtn) shuffleBtn.classList.add('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
+            if (resetGameBtn) resetGameBtn.classList.add('hidden');
 
             const waitingForHostLobbyMsg = document.getElementById('waiting-for-host-lobby');
             if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.remove('hidden');
@@ -899,6 +915,56 @@ document.addEventListener('DOMContentLoaded', () => {
             players: resetPlayers,
             lastActivity: Date.now()
         });
+    }
+
+    async function handleResetGameClick() {
+        if (!isHost) {
+            alert(t('onlyHostCanReset'));
+            return;
+        }
+
+        if (!confirm(t('confirmReset'))) {
+            return;
+        }
+
+        console.log('Resetting game to lobby state');
+
+        // Reset timer and letter
+        timeLeft = gameDuration;
+        currentLetter = '?';
+        document.getElementById('current-letter').textContent = '?';
+
+        // Reset voting state variables
+        currentCategoryVotes = {};
+        currentVotingCategory = null;
+        isRenderingVotes = false;
+        isSubmittingVotes = false;
+        isProcessingCategory = false;
+        isCalculatingScores = false;
+
+        // Keep scores, only reset answers and verifiedResults
+        const resetPlayers = roomData.players.map(p => ({
+            ...p,
+            // Keep score intact - accumulate across rounds
+            answers: {},
+            verifiedResults: {}
+        }));
+
+        // Generate new random categories for the reset
+        const newCategories = getRandomCategories();
+
+        await updateDoc(doc(db, "rooms", roomId), {
+            status: 'lobby',
+            categories: newCategories,
+            gameHistory: [],
+            votingState: null,
+            scoresCalculated: false,
+            lastProcessedCategoryIndex: -1,
+            players: resetPlayers,
+            lastActivity: Date.now()
+        });
+
+        console.log('Game reset to lobby successfully');
     }
 
     async function handleDeleteRoomClick() {

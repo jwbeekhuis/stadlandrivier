@@ -63,6 +63,7 @@ export const translations = {
         room: "Spel:",
         leaveRoom: "👋 Verlaat Spel",
         deleteRoom: "🗑️ Verwijder Spel",
+        resetGame: "🔄 Reset Spel",
         rollLetter: "🎲 DRAAI DIE LETTER!",
         stopRound: "STOP DE RONDE",
         mixCategories: "🔀 Mix Categorieën",
@@ -113,6 +114,9 @@ export const translations = {
         kickedFromRoom: "👢 Je bent uit het spel verwijderd. Tot de volgende keer!",
         confirmKick: "🤔 Weet je zeker dat je {name} uit het spel wilt verwijderen?",
         confirmDelete: "⚠️ Weet je zeker dat je dit spel wilt verwijderen?",
+        confirmReset: "🔄 Weet je zeker dat je het spel wilt resetten naar de lobby? Alle huidige antwoorden en stemmen gaan verloren.",
+        onlyHostCanReset: "⚠️ Alleen de host kan het spel resetten.",
+        hostRejoinStuckState: "🔄 Het lijkt erop dat het spel in een onvoltooide staat is. Wil je het spel resetten naar de lobby zodat je opnieuw kunt beginnen?",
         nowHost: "👑 Je bent nu de host van dit spel! Je kunt nu de letter draaien en de volgende ronde starten. Time to shine! ✨",
 
         // Categories
@@ -209,6 +213,7 @@ export const translations = {
         room: "Room:",
         leaveRoom: "👋 Leave Room",
         deleteRoom: "🗑️ Delete Room",
+        resetGame: "🔄 Reset Game",
         rollLetter: "🎲 ROLL THAT LETTER!",
         stopRound: "STOP THE ROUND",
         mixCategories: "🔀 Mix Categories",
@@ -259,6 +264,9 @@ export const translations = {
         kickedFromRoom: "👢 You have been removed from the room. See you next time!",
         confirmKick: "🤔 Are you sure you want to remove {name} from the room?",
         confirmDelete: "⚠️ Are you sure you want to delete this room?",
+        confirmReset: "🔄 Are you sure you want to reset the game to lobby? All current answers and votes will be lost.",
+        onlyHostCanReset: "⚠️ Only the host can reset the game.",
+        hostRejoinStuckState: "🔄 It looks like the game is in an incomplete state. Would you like to reset the game to lobby so you can start fresh?",
         nowHost: "👑 You are now the host of this room! You can now roll the letter and start the next round. Time to shine! ✨",
 
         // Categories
