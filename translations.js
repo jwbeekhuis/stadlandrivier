@@ -119,6 +119,14 @@ export const translations = {
         hostRejoinStuckState: "Spel is in onvoltooide staat",
         resetToLobby: "Reset naar Lobby",
         nowHost: "Je bent nu de host! Je kunt de letter draaien en de volgende ronde starten",
+        confirmDeleteRoom: "Weet je zeker dat je deze kamer wilt verwijderen?",
+        roomDeletedSuccess: "Kamer verwijderd!",
+        defaultRoomName: "'s Kamer",
+        authError: "Er ging iets mis met inloggen. Controleer je internetverbinding.",
+        enterNameFirst: "Vul eerst je naam in!",
+        invalidCode: "Ongeldige code",
+        roomNotFound: "Kamer niet gevonden!",
+        errorGeneric: "Er ging iets mis",
 
         // Categories
         categories: {
@@ -270,6 +278,14 @@ export const translations = {
         hostRejoinStuckState: "Game is in an incomplete state",
         resetToLobby: "Reset to Lobby",
         nowHost: "You are now the host! You can roll the letter and start the next round",
+        confirmDeleteRoom: "Are you sure you want to delete this room?",
+        roomDeletedSuccess: "Room deleted!",
+        defaultRoomName: "'s Room",
+        authError: "Something went wrong with login. Check your internet connection.",
+        enterNameFirst: "Enter your name first!",
+        invalidCode: "Invalid code",
+        roomNotFound: "Room not found!",
+        errorGeneric: "Something went wrong",
 
         // Categories
         categories: {

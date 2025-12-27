@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error("Auth error:", e);
-            alert("Er ging iets mis met inloggen. Controleer je internetverbinding en Firebase config.");
+            alert(t('authError'));
         }
 
         createRoomBtn.addEventListener('click', createRoom);
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         list.innerHTML = rooms.map(room => {
             const playerCount = room.players?.length || 0;
             const hostName = room.players?.[0]?.name || "Unknown";
-            const roomName = room.roomName || `${hostName}'s Kamer`;
+            const roomName = room.roomName || `${hostName}${t('defaultRoomName')}`;
             const isMyRoom = room.players?.some(p => p.uid === currentUser?.uid);
             const escapedRoomName = escapeHtml(roomName);
             const escapedHostName = escapeHtml(hostName);
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteRoom = async function (code) {
-        if (!confirm("Weet je zeker dat je deze kamer wilt verwijderen?")) {
+        if (!confirm(t('confirmDeleteRoom'))) {
             return;
         }
 
@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await updateDoc(roomRef, {
                 status: 'deleted'
             });
-            alert("Kamer verwijderd!");
+            alert(t('roomDeletedSuccess'));
         } catch (e) {
             console.error("Error deleting room:", e);
             alert("Fout bij verwijderen: " + e.message);
@@ -605,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await UserService.saveProfile(currentUser.uid, { name: name });
         }
 
-        const roomName = roomNameInput.value.trim() || `${name}'s Kamer`;
+        const roomName = roomNameInput.value.trim() || `${name}${t('defaultRoomName')}`;
         const selectedDuration = parseInt(gameDurationSlider.value) || 30;
         const code = generateRoomCode();
         roomId = code;
