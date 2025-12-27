@@ -75,7 +75,6 @@ export function renderGameLog(data) {
                         <span class="log-word">"${escapedAnswer}"</span>
                     </div>
                     <div class="log-status">
-                        ${entry.isValid ? '✅' : '❌'}
                         <small>${entry.isAuto ? t('autoApproved') : ''}</small>
                         ${entry.points !== undefined ? `<div class="log-points"><strong>+${entry.points} ${t('points').toLowerCase()}</strong> <span class="log-reason">${entry.pointsReason || ''}</span></div>` : ''}
                     </div>

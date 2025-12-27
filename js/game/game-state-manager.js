@@ -8,18 +8,11 @@ import { showToast } from '../ui/toast.js';
 import { renderCategories } from '../ui/render.js';
 import { renderPlayersList } from '../ui/render-players.js';
 import { debugLog } from '../utils/string.js';
+import { showTransition } from '../ui/transitions.js';
 
 /**
  * Update game state based on Firebase room data changes
  * This is the main orchestrator that handles all game state transitions
- *
- * Dependencies passed as parameters to avoid circular imports:
- * - startGameLocal (from timer-logic.js)
- * - stopGameLocal (from timer-logic.js)
- * - showVotingUI (from voting-ui.js)
- * - showResults (from results.js)
- * - resetBoard (from screens.js)
- * - handleResetGameClick (from round-flow.js)
  */
 export function createUpdateGameState(
     startGameLocal,
@@ -30,6 +23,9 @@ export function createUpdateGameState(
     handleResetGameClick,
     saveMyAnswers
 ) {
+    let lastStatus = null;
+    let transitionInProgress = false;
+
     return function updateGameState(data) {
         const {
             roomCodeDisplay,
@@ -53,7 +49,6 @@ export function createUpdateGameState(
         }
 
         // Always update categories to ensure non-host players see changes
-        // This fixes the issue where categories don't update after shuffle or new round
         if (JSON.stringify(state.game.activeCategories) !== JSON.stringify(data.categories)) {
             state.game.activeCategories = data.categories;
             renderCategories();
@@ -67,25 +62,50 @@ export function createUpdateGameState(
         }
 
         // Handle game status transitions
-        if (data.status === ROOM_STATUS.PLAYING && !state.game.isGameActive) {
+        if (data.status === ROOM_STATUS.PLAYING && lastStatus !== ROOM_STATUS.PLAYING && !state.game.isGameActive) {
             state.ui.resultsShown = false; // Reset flag when new game starts
-            startGameLocal();
-        } else if (data.status === 'voting') {
+
+            // Show new Roll Letter transition
+            transitionInProgress = true;
+            showTransition('roll-letter', 1000, data.currentLetter).then(() => {
+                transitionInProgress = false;
+                startGameLocal();
+            });
+        } else if (data.status === ROOM_STATUS.VOTING) {
             state.game.isGameActive = false;
             stopGameLocal(saveMyAnswers);
-            // Always call showVotingUI to update vote stats in real-time
+
+            // Show "Pens Down" transition when moving from PLAYING to VOTING
+            if (lastStatus === ROOM_STATUS.PLAYING && !transitionInProgress) {
+                transitionInProgress = true;
+                showTransition('pens-down', 2800).then(() => {
+                    transitionInProgress = false;
+                });
+            }
+            // Always call showVotingUI immediately so UI is ready behind the transition
             showVotingUI(data.votingState);
         } else if (data.status === ROOM_STATUS.FINISHED) {
             state.game.isGameActive = false;
             stopGameLocal(saveMyAnswers);
+
             // Only show results once when transitioning to finished state
             if (!state.ui.resultsShown) {
                 state.ui.resultsShown = true;
+
+                // Show calculating transition before results
+                transitionInProgress = true;
+                showTransition('calculating', 3200).then(() => {
+                    transitionInProgress = false;
+                });
+
+                // Call showResults immediately so it's ready behind the transition
                 showResults(data);
             }
         } else if (data.status === ROOM_STATUS.LOBBY) {
             resetBoard();
         }
+
+        lastStatus = data.status;
 
         const wasHost = state.room.isHost;
         const shouldBeHost = state.user.currentUser.uid === data.players[0]?.uid;
@@ -94,8 +114,6 @@ export function createUpdateGameState(
         if (shouldBeHost) {
             state.room.isHost = true;
 
-            // Enable/disable roll button based on status
-            // Only enable in lobby state
             if (data.status === ROOM_STATUS.LOBBY) {
                 rollBtn.disabled = false;
                 rollBtn.classList.remove('hidden');
@@ -103,13 +121,11 @@ export function createUpdateGameState(
                 rollBtn.disabled = true;
                 rollBtn.classList.remove('hidden');
             } else {
-                // voting, finished states
                 rollBtn.classList.add('hidden');
             }
 
             if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.add('hidden');
 
-            // Stop button only visible during 'playing' state
             if (data.status === ROOM_STATUS.PLAYING) {
                 stopBtn.classList.remove('hidden');
             } else {
@@ -120,18 +136,14 @@ export function createUpdateGameState(
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.remove('hidden');
             if (resetGameBtn) resetGameBtn.classList.remove('hidden');
 
-            // Notify if just became host
             if (!wasHost && state.room.roomData) {
                 debugLog("You are now the host!");
-                // Show toast notification instead of alert
                 setTimeout(() => {
                     showToast(t('nowHost'), 'info', 5000);
                 }, 500);
             }
 
-            // Auto-detect stuck states when host rejoins
-            // If host is in voting/finished state and rejoining, offer to reset
-            if (!wasHost && shouldBeHost && (data.status === 'voting' || data.status === ROOM_STATUS.FINISHED)) {
+            if (!wasHost && shouldBeHost && (data.status === ROOM_STATUS.VOTING || data.status === ROOM_STATUS.FINISHED)) {
                 debugLog('Detected host rejoin in problematic state:', data.status);
                 setTimeout(() => {
                     showToast(
@@ -149,7 +161,6 @@ export function createUpdateGameState(
         } else {
             state.room.isHost = false;
             rollBtn.classList.add('hidden');
-            // Only show waiting message in lobby state
             if (waitingForHostLobbyMsg) {
                 if (data.status === ROOM_STATUS.LOBBY) {
                     waitingForHostLobbyMsg.classList.remove('hidden');
