@@ -1342,24 +1342,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const freshSnap = await getDoc(roomRef);
         const freshData = freshSnap.data();
 
-        // Start from the next category after the last processed one
-        // If lastProcessedCategoryIndex is set and >= 0, start from the next index
-        const lastProcessed = freshData.lastProcessedCategoryIndex;
-        const startIndex = (lastProcessed !== undefined && lastProcessed >= 0)
-            ? lastProcessed + 1
-            : 0;
+        // Process categories from the beginning - verifiedResults tells us which are already done
+        // We read fresh data from Firebase, so verifiedResults should be up-to-date
+        console.log('Processing categories, checking verifiedResults for each');
 
-        console.log(`Processing categories starting from index ${startIndex} (lastProcessed: ${lastProcessed})`);
-
-        // Reset the lastProcessedCategoryIndex now that we've read it
-        // This prevents it from interfering with the next iteration
-        if (lastProcessed !== undefined && lastProcessed >= 0) {
-            await updateDoc(roomRef, {
-                lastProcessedCategoryIndex: -1
-            });
-        }
-
-        for (let catIndex = startIndex; catIndex < activeCategories.length; catIndex++) {
+        for (let catIndex = 0; catIndex < activeCategories.length; catIndex++) {
             const cat = activeCategories[catIndex];
 
             // Collect all unverified answers for this category
