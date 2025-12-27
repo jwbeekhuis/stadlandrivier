@@ -1,17 +1,45 @@
 {
   "permissions": {
     "allow": [
-      "Bash(firebase deploy:*)",
-      "Bash(firebase projects:list:*)",
-      "Bash(firebase use:*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "MultiEdit(*)",
+      "Bash(firebase *)",
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(node *)",
+      "Bash(tree *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(rm *)",
       "Bash(git add:*)",
-      "Bash(git commit:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Replace all alerts with modern toast & modal system\n\nImplemented a complete toast and modal notification system to replace\nall 20 browser alerts with a modern, on-brand UI experience.\n\nModal System:\n- Glassmorphism design with backdrop blur\n- 3 types: warning, danger, info with themed icons\n- Promise-based API for async confirmations\n- Keyboard support \\(ESC/Enter\\)\n- Click outside to dismiss\n- Ripple effect on buttons\n- Shine animation effect\n- Icon pulse animation\n- Mobile haptic feedback \\(different patterns per action\\)\n- Full mobile responsive\n\nToast Improvements:\n- Added progress bar with smooth animation\n- Haptic feedback patterns per toast type\n  - Success: double tap pattern [10, 30, 10]\n  - Error: strong warning [20, 50, 20]\n  - Warning: medium tap [10, 20, 10]\n  - Info: single tap [10]\n- Auto-focus on inputs for validation errors\n\nReplaced Alerts:\n- 3 confirmations → modals \\(delete room, kick player, reset game\\)\n- 11 errors → error toasts\n- 5 validations → warning toasts with input focus\n- 5 success/info → success/info toasts\n\nTranslations:\n- Added modal button translations \\(confirm, cancel, delete, kick\\)\n- Both NL and EN supported\n\nAccessibility:\n- Keyboard navigation\n- Auto-focus on confirm buttons\n- ARIA labels\n- High contrast colors\n- Screen reader friendly\n\nUX Improvements:\n- Non-blocking notifications\n- Consistent visual language\n- Better error context\n- Mobile-optimized layouts\n- Touch-friendly buttons\n\n🤖 Generated with Claude Code \\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
-      "Bash(git checkout:*)",
-      "Bash(npm run build:*)",
-      "Bash(tree:*)",
-      "Bash(ls:*)",
-      "Bash(node --check:*)"
+      "Bash(git commit:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" log --oneline -5)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" status)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" diff --stat)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" add index.html script.js)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" commit -m \"$\\(cat <<''EOF''\nfix: Prevent score multiplication bug - only host calculates scores\n\nRace condition fix: all clients were calculating scores simultaneously,\ncausing scores to be multiplied by number of players \\(e.g., x3 with 3 players\\).\n\nNow only the host calculates and writes scores to prevent this.\n\nBumps version to v120.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" push)",
+      "Bash(node --check:*)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" diff HEAD~1 script.js)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" revert HEAD --no-commit)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" revert --continue --no-edit)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" add index.html script.js firebase-config.js)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" commit -m \"$\\(cat <<''EOF''\nfix: Use Firebase transaction for atomic score calculation\n\nPrevents race condition where multiple clients calculate scores\nsimultaneously by using runTransaction to atomically check and\nset the scoresCalculated flag.\n\nThis ensures only one client can calculate scores, fixing the\nscore multiplication bug \\(e.g., x3 with 3 players\\).\n\nBumps version to v121.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" diff index.html)",
+      "Bash(git -C \"c:\\\\Users\\\\jan-willem\\\\source\\\\repos\\\\StadLandRivier\" commit -m \"$\\(cat <<''EOF''\nfix: Use roomData.categories instead of local activeCategories in transaction\n\nThe transaction was using the local activeCategories variable which could\nbe empty or stale on the client that wins the transaction lock. Now uses\nroomData.categories from the database to ensure correct score calculation.\n\nBumps version to v122.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
+  },
+  "preferences": {
+    "always_update_version": true,
+    "auto_commit_version_changes": true
   }
 }
