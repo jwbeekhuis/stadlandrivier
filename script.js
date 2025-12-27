@@ -1277,11 +1277,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const freshData = freshSnap.data();
 
         // Start from the next category after the last processed one
-        const startIndex = (freshData.lastProcessedCategoryIndex !== undefined)
-            ? freshData.lastProcessedCategoryIndex + 1
+        // If lastProcessedCategoryIndex is set and >= 0, start from the next index
+        const lastProcessed = freshData.lastProcessedCategoryIndex;
+        const startIndex = (lastProcessed !== undefined && lastProcessed >= 0)
+            ? lastProcessed + 1
             : 0;
 
-        console.log(`Processing categories starting from index ${startIndex}`);
+        console.log(`Processing categories starting from index ${startIndex} (lastProcessed: ${lastProcessed})`);
+
+        // Reset the lastProcessedCategoryIndex now that we've read it
+        // This prevents it from interfering with the next iteration
+        if (lastProcessed !== undefined && lastProcessed >= 0) {
+            await updateDoc(roomRef, {
+                lastProcessedCategoryIndex: -1
+            });
+        }
 
         for (let catIndex = startIndex; catIndex < activeCategories.length; catIndex++) {
             const cat = activeCategories[catIndex];
@@ -1305,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // If there are answers to vote on for this category, set voting state
             if (answersToVote.length > 0) {
-                console.log(`Setting up voting for category ${cat} with ${answersToVote.length} answers`);
+                console.log(`Setting up voting for category ${cat} (index ${catIndex}) with ${answersToVote.length} answers`);
                 await updateDoc(roomRef, {
                     votingState: {
                         category: cat,
