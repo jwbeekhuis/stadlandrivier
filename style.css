@@ -47,6 +47,25 @@ body.light-mode .icon-btn:hover {
     padding: 0;
 }
 
+/* Skip Link for Accessibility */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 0 0 8px 0;
+    font-weight: 600;
+    z-index: 10000;
+    transition: top 0.3s;
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
 html {
     overflow-x: hidden;
     width: 100%;
@@ -2097,5 +2116,44 @@ h1 {
 
     .modal-btn {
         width: 100%;
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY: Reduced Motion
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    /* Disable all animations */
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Disable blob animations */
+    .blob {
+        animation: none !important;
+    }
+
+    /* Disable transform animations on hover */
+    .vote-btn:hover,
+    .primary-btn:hover,
+    .icon-btn:hover,
+    .toast:hover {
+        transform: none !important;
+    }
+
+    /* Disable pulse animation */
+    .pulse::before {
+        animation: none !important;
+    }
+
+    /* Keep essential transitions for usability but make them instant */
+    .skip-link {
+        transition: none;
     }
 }

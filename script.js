@@ -1883,6 +1883,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const itemDiv = document.createElement('div');
             itemDiv.className = 'voting-item';
+
+            // Create ARIA labels for accessibility
+            const rejectLabel = currentLanguage === 'nl'
+                ? `Keur af: ${answerData.answer} door ${answerData.playerName}`
+                : `Reject: ${answerData.answer} by ${answerData.playerName}`;
+            const approveLabel = currentLanguage === 'nl'
+                ? `Keur goed: ${answerData.answer} door ${answerData.playerName}`
+                : `Approve: ${answerData.answer} by ${answerData.playerName}`;
+
             itemDiv.innerHTML = `
                 <div class="voting-item-header">
                     <span class="voting-player-name">${escapedPlayerName}</span>
@@ -1891,10 +1900,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="voting-answer-text">${escapedAnswer}</div>
                 <div class="voting-item-actions">
-                    <button class="vote-btn vote-no ${myVote === false ? 'selected' : ''}" data-vote-key="${voteKey}" data-vote="false">
+                    <button class="vote-btn vote-no ${myVote === false ? 'selected' : ''}"
+                            data-vote-key="${voteKey}"
+                            data-vote="false"
+                            aria-label="${escapeHtml(rejectLabel)}"
+                            aria-pressed="${myVote === false ? 'true' : 'false'}">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
-                    <button class="vote-btn vote-yes ${myVote === true ? 'selected' : ''}" data-vote-key="${voteKey}" data-vote="true">
+                    <button class="vote-btn vote-yes ${myVote === true ? 'selected' : ''}"
+                            data-vote-key="${voteKey}"
+                            data-vote="true"
+                            aria-label="${escapeHtml(approveLabel)}"
+                            aria-pressed="${myVote === true ? 'true' : 'false'}">
                         <i class="fa-solid fa-check"></i>
                     </button>
                 </div>
@@ -1916,10 +1933,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Store vote locally
                 currentCategoryVotes[voteKey] = voteValue;
 
-                // Update button states
+                // Update button states and ARIA attributes
                 const container = e.currentTarget.closest('.voting-item');
-                container.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
+                container.querySelectorAll('.vote-btn').forEach(b => {
+                    b.classList.remove('selected');
+                    b.setAttribute('aria-pressed', 'false');
+                });
                 e.currentTarget.classList.add('selected');
+                e.currentTarget.setAttribute('aria-pressed', 'true');
 
                 // Update progress
                 updateVotingProgress(answers.length);

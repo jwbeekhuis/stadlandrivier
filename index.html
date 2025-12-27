@@ -14,8 +14,11 @@
 </head>
 
 <body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast-container"></div>
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="false"></div>
 
     <!-- Modal Container -->
     <div id="modal-overlay" class="modal-overlay hidden">
@@ -38,7 +41,7 @@
         <div class="blob blob-3"></div>
     </div>
 
-    <main class="app-container">
+    <main class="app-container" id="main-content">
         <header class="game-header">
             <h1 data-i18n="title">Stad <span class="highlight">Land</span> Rivier <small
                     style="font-size: 0.4em; opacity: 0.6; font-weight: 300; display: block; margin-top: -5px;" data-i18n="by">by
@@ -92,8 +95,7 @@
                 <summary class="tutorial-toggle">
                     <span data-i18n="howItWorks">Hoe werkt het?</span>
                 </summary>
-                <div class="tutorial-content"
-                    onclick="document.getElementById('tutorial-details').open = !document.getElementById('tutorial-details').open">
+                <div class="tutorial-content">
                     <!-- Content dynamically loaded via updateTutorialContent() in script.js -->
                     <p data-i18n="loading">⏳ Even geduld...</p>
                 </div>
@@ -126,7 +128,7 @@
         </section>
 
         <!-- Sticky Timer (Always on Top) -->
-        <div class="sticky-timer-bar" id="sticky-timer-bar">
+        <div class="sticky-timer-bar" id="sticky-timer-bar" role="timer" aria-live="assertive">
             <div class="sticky-timer-progress" id="sticky-timer-progress"></div>
             <div class="sticky-timer-text" id="sticky-timer-text">30</div>
             <div class="sticky-timer-letter" id="sticky-timer-letter">?</div>
@@ -139,7 +141,7 @@
             </div>
 
             <!-- Player List -->
-            <div id="players-list" class="players-list">
+            <div id="players-list" class="players-list" aria-live="polite" aria-atomic="false">
                 <!-- Players injected here -->
             </div>
 
