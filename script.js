@@ -190,6 +190,32 @@ document.addEventListener('DOMContentLoaded', () => {
         'Smoesje', 'Hobby'
     ];
 
+    // --- Constants ---
+    const CONSTANTS = {
+        HEARTBEAT_INTERVAL_MS: 5000,
+        INACTIVE_THRESHOLD_MS: 120000,      // 2 minuten
+        VOTING_INACTIVE_THRESHOLD_MS: 180000, // 3 minuten
+        VOTE_TIMER_DURATION_S: 30,
+        MORE_TIME_SECONDS: 10,
+        MAX_HEARTBEAT_RETRIES: 3,
+        ROOM_CODE_LENGTH: 4
+    };
+
+    const ROOM_STATUS = {
+        LOBBY: 'lobby',
+        PLAYING: 'playing',
+        VOTING: 'voting',
+        FINISHED: 'finished',
+        DORMANT: 'dormant',
+        DELETED: 'deleted'
+    };
+
+    const DEBUG = false; // Zet op true voor development
+
+    function debugLog(...args) {
+        if (DEBUG) debugLog('[DEBUG]', ...args);
+    }
+
     // State
     let activeCategories = [];
     let gameDuration = 60; // Default: 60 seconds, can be changed by room creator
@@ -338,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const userCred = await signInAnonymously(auth);
             currentUser = userCred.user;
-            console.log("Logged in as", currentUser.uid);
+            debugLog("Logged in as", currentUser.uid);
 
             // Load user data from Firestore (preferences + profile)
             const userData = await UserService.loadUserData(currentUser.uid);
@@ -408,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function subscribeToActiveRooms() {
         const roomsQuery = query(
             collection(db, "rooms"),
-            where("status", "in", ["lobby", "playing", "voting", "finished"]),  // Excludes only dormant and deleted rooms
+            where("status", "in", [ROOM_STATUS.LOBBY, ROOM_STATUS.PLAYING, ROOM_STATUS.VOTING, ROOM_STATUS.FINISHED]),  // Excludes only dormant and deleted rooms
             orderBy("createdAt", "desc"),
             limit(10)
         );
@@ -460,11 +486,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Dormant Room Reactivation ---
     async function reopenDormantRoom(roomRef, roomData, playerName, playerUid) {
-        console.log(`Reopening dormant room by creator ${roomData.creatorName}`);
+        debugLog(`Reopening dormant room by creator ${roomData.creatorName}`);
 
         // Reactivate the room with the creator as the first player (host)
         await updateDoc(roomRef, {
-            status: 'lobby',
+            status: ROOM_STATUS.LOBBY,
             hostId: playerUid,
             players: [{
                 uid: playerUid,
@@ -505,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const roomData = roomSnap.data();
 
         // Handle dormant room reactivation
-        if (roomData.status === 'dormant') {
+        if (roomData.status === ROOM_STATUS.DORMANT) {
             // Only the original creator can reopen a dormant room
             if (roomData.creatorUid === currentUser.uid) {
                 await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
@@ -555,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const roomRef = doc(db, "rooms", code);
             await updateDoc(roomRef, {
-                status: 'deleted'
+                status: ROOM_STATUS.DELETED
             });
             alert(t('roomDeletedSuccess'));
         } catch (e) {
@@ -585,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const updatedPlayers = players.filter(p => p.uid !== playerUid);
             await updateDoc(roomRef, { players: updatedPlayers });
 
-            console.log(`${playerToKick.name} is uit de kamer verwijderd`);
+            debugLog(`${playerToKick.name} is uit de kamer verwijderd`);
         } catch (e) {
             console.error("Error kicking player:", e);
             alert("Fout bij verwijderen speler: " + e.message);
@@ -618,7 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hostId: currentUser.uid,
             creatorUid: currentUser.uid,  // Track original creator for dormant room access
             creatorName: name,             // Track creator name for display
-            status: 'lobby',
+            status: ROOM_STATUS.LOBBY,
             currentLetter: '?',
             categories: getRandomCategories(),
             timerEnd: null,
@@ -647,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = doc.data();
 
             // Check if room is deleted
-            if (data.status === 'deleted') {
+            if (data.status === ROOM_STATUS.DELETED) {
                 returnToLobby(t('roomDeleted'));
                 return;
             }
@@ -690,7 +716,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateInputPlaceholders();
         }
 
-        if (data.status === 'playing' && !isGameActive) {
+        if (data.status === ROOM_STATUS.PLAYING && !isGameActive) {
             resultsShown = false; // Reset flag when new game starts
             startGameLocal();
         } else if (data.status === 'voting') {
@@ -698,7 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stopGameLocal();
             // Always call showVotingUI to update vote stats in real-time
             showVotingUI(data.votingState);
-        } else if (data.status === 'finished') {
+        } else if (data.status === ROOM_STATUS.FINISHED) {
             isGameActive = false;
             stopGameLocal();
             // Only show results once when transitioning to finished state
@@ -706,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 resultsShown = true;
                 showResults(data);
             }
-        } else if (data.status === 'lobby') {
+        } else if (data.status === ROOM_STATUS.LOBBY) {
             resetBoard();
         }
 
@@ -719,10 +745,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Enable/disable roll button based on status
             // Only enable in lobby state
-            if (data.status === 'lobby') {
+            if (data.status === ROOM_STATUS.LOBBY) {
                 rollBtn.disabled = false;
                 rollBtn.classList.remove('hidden');
-            } else if (data.status === 'playing') {
+            } else if (data.status === ROOM_STATUS.PLAYING) {
                 rollBtn.disabled = true;
                 rollBtn.classList.remove('hidden');
             } else {
@@ -733,7 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.add('hidden');
 
             // Stop button only visible during 'playing' state
-            if (data.status === 'playing') {
+            if (data.status === ROOM_STATUS.PLAYING) {
                 stopBtn.classList.remove('hidden');
             } else {
                 stopBtn.classList.add('hidden');
@@ -745,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Notify if just became host
             if (!wasHost && roomData) {
-                console.log("You are now the host!");
+                debugLog("You are now the host!");
                 // Show toast notification instead of alert
                 setTimeout(() => {
                     showToast(t('nowHost'), 'info', 5000);
@@ -754,8 +780,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Auto-detect stuck states when host rejoins
             // If host is in voting/finished state and rejoining, offer to reset
-            if (!wasHost && shouldBeHost && (data.status === 'voting' || data.status === 'finished')) {
-                console.log('Detected host rejoin in problematic state:', data.status);
+            if (!wasHost && shouldBeHost && (data.status === 'voting' || data.status === ROOM_STATUS.FINISHED)) {
+                debugLog('Detected host rejoin in problematic state:', data.status);
                 setTimeout(() => {
                     showToast(
                         t('hostRejoinStuckState'),
@@ -774,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rollBtn.classList.add('hidden');
             // Only show waiting message in lobby state
             if (waitingForHostLobbyMsg) {
-                if (data.status === 'lobby') {
+                if (data.status === ROOM_STATUS.LOBBY) {
                     waitingForHostLobbyMsg.classList.remove('hidden');
                 } else {
                     waitingForHostLobbyMsg.classList.add('hidden');
@@ -859,22 +885,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Actions ---
     async function handleRollClick() {
         if (!isHost) return;
-        const newLetter = getRandomLetter();
+        try {
+            const newLetter = getRandomLetter();
 
-        // Update local state immediately to prevent showing '?'
-        currentLetter = newLetter;
-        letterDisplay.textContent = currentLetter;
+            // Update local state immediately to prevent showing '?'
+            currentLetter = newLetter;
+            letterDisplay.textContent = currentLetter;
 
-        await updateDoc(doc(db, "rooms", roomId), {
-            status: 'playing',
-            currentLetter: newLetter,
-            timerEnd: Date.now() + (gameDuration * 1000),
-            scoresCalculated: false,  // Reset for new round
-            lastProcessedCategoryIndex: -1,  // Reset category index for new round
-            // Keep existing scores, only reset answers and verifiedResults
-            players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} })),
-            lastActivity: Date.now()
-        });
+            await updateDoc(doc(db, "rooms", roomId), {
+                status: ROOM_STATUS.PLAYING,
+                currentLetter: newLetter,
+                timerEnd: Date.now() + (gameDuration * 1000),
+                scoresCalculated: false,  // Reset for new round
+                lastProcessedCategoryIndex: -1,  // Reset category index for new round
+                // Keep existing scores, only reset answers and verifiedResults
+                players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} })),
+                lastActivity: Date.now()
+            });
+        } catch (e) {
+            console.error("Error starting game:", e);
+            alert(t('errorGeneric') + ': ' + e.message);
+        }
     }
 
     async function handleStopClick() {
@@ -884,16 +915,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleShuffleClick() {
         if (!isHost) return;
-        const newCats = getRandomCategories();
-        await updateDoc(doc(db, "rooms", roomId), {
-            categories: newCats,
-            lastActivity: Date.now()
-        });
+        try {
+            const newCats = getRandomCategories();
+            await updateDoc(doc(db, "rooms", roomId), {
+                categories: newCats,
+                lastActivity: Date.now()
+            });
+        } catch (e) {
+            console.error("Error shuffling categories:", e);
+            alert(t('errorGeneric') + ': ' + e.message);
+        }
     }
 
-    async function handleNextRound() {
-        if (!isHost) return;
-
+    async function resetRoomToLobby() {
         // Reset timer and letter
         timeLeft = gameDuration;
         currentLetter = '?';
@@ -910,64 +944,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Keep scores, only reset answers and verifiedResults
         const resetPlayers = roomData.players.map(p => ({
             ...p,
-            // Keep score intact - accumulate across rounds
             answers: {},
             verifiedResults: {}
         }));
 
-        // Generate new random categories for the next round
+        // Generate new random categories
         const newCategories = getRandomCategories();
 
         await updateDoc(doc(db, "rooms", roomId), {
-            status: 'lobby',
-            categories: newCategories,
-            gameHistory: [],
-            votingState: null,  // Reset voting state in database
-            scoresCalculated: false,  // Reset scores calculated flag for new round
-            lastProcessedCategoryIndex: -1,  // Reset category index for new round
-            players: resetPlayers,
-            lastActivity: Date.now()
-        });
-    }
-
-    async function handleResetGameClick() {
-        if (!isHost) {
-            showToast(t('onlyHostCanReset'), 'warning', 5000);
-            return;
-        }
-
-        if (!confirm(t('confirmReset'))) {
-            return;
-        }
-
-        console.log('Resetting game to lobby state');
-
-        // Reset timer and letter
-        timeLeft = gameDuration;
-        currentLetter = '?';
-        document.getElementById('current-letter').textContent = '?';
-
-        // Reset voting state variables
-        currentCategoryVotes = {};
-        currentVotingCategory = null;
-        isRenderingVotes = false;
-        isSubmittingVotes = false;
-        isProcessingCategory = false;
-        isCalculatingScores = false;
-
-        // Keep scores, only reset answers and verifiedResults
-        const resetPlayers = roomData.players.map(p => ({
-            ...p,
-            // Keep score intact - accumulate across rounds
-            answers: {},
-            verifiedResults: {}
-        }));
-
-        // Generate new random categories for the reset
-        const newCategories = getRandomCategories();
-
-        await updateDoc(doc(db, "rooms", roomId), {
-            status: 'lobby',
+            status: ROOM_STATUS.LOBBY,
             categories: newCategories,
             gameHistory: [],
             votingState: null,
@@ -976,12 +961,38 @@ document.addEventListener('DOMContentLoaded', () => {
             players: resetPlayers,
             lastActivity: Date.now()
         });
+    }
 
-        console.log('Game reset to lobby successfully');
+    async function handleNextRound() {
+        if (!isHost) return;
+        try {
+            await resetRoomToLobby();
+        } catch (e) {
+            console.error("Error starting next round:", e);
+            alert(t('errorGeneric') + ': ' + e.message);
+        }
+    }
+
+    async function handleResetGameClick() {
+        if (!isHost) {
+            showToast(t('onlyHostCanReset'), 'warning', 5000);
+            return;
+        }
+        if (!confirm(t('confirmReset'))) {
+            return;
+        }
+        try {
+            debugLog('Resetting game to lobby state');
+            await resetRoomToLobby();
+            debugLog('Game reset to lobby successfully');
+        } catch (e) {
+            console.error("Error resetting game:", e);
+            alert(t('errorGeneric') + ': ' + e.message);
+        }
     }
 
     async function handleDeleteRoomClick() {
-        console.log("Delete room clicked", { isHost, roomId });
+        debugLog("Delete room clicked", { isHost, roomId });
 
         if (!isHost) {
             alert(t('confirmDelete'));
@@ -1007,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Now update the room status (other players will get the alert via their listeners)
             await updateDoc(roomRef, {
-                status: 'deleted'
+                status: ROOM_STATUS.DELETED
             });
 
             // Reset local state
@@ -1022,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
             votingScreen.classList.add('hidden');
             lobbyScreen.classList.remove('hidden');
 
-            console.log(`Room ${deletedRoomId} deleted!`);
+            debugLog(`Room ${deletedRoomId} deleted!`);
             alert(t('roomDeleted'));
         } catch (e) {
             console.error("Error deleting room:", e);
@@ -1102,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const roomSnap = await getDoc(roomRef);
 
             if (!roomSnap.exists()) {
-                console.log("Room no longer exists, stopping heartbeat");
+                debugLog("Room no longer exists, stopping heartbeat");
                 stopHeartbeat();
                 return;
             }
@@ -1111,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const playerExists = players.find(p => p.uid === currentUser.uid);
 
             if (!playerExists) {
-                console.log("Player no longer in room, stopping heartbeat");
+                debugLog("Player no longer in room, stopping heartbeat");
                 stopHeartbeat();
                 return;
             }
@@ -1123,14 +1134,14 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             await updateDoc(roomRef, { players: updatedPlayers });
-            console.log("Heartbeat updated successfully");
+            debugLog("Heartbeat updated successfully");
         } catch (e) {
             console.error("Heartbeat error:", e);
 
             // Retry up to 3 times with exponential backoff
             if (retryCount < 3) {
                 const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Max 5s delay
-                console.log(`Retrying heartbeat in ${retryDelay}ms (attempt ${retryCount + 1}/3)`);
+                debugLog(`Retrying heartbeat in ${retryDelay}ms (attempt ${retryCount + 1}/3)`);
                 setTimeout(() => updatePlayerHeartbeat(retryCount + 1), retryDelay);
             } else {
                 console.error("Heartbeat failed after 3 retries, but keeping connection alive");
@@ -1154,8 +1165,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Increased threshold to 2 minutes to be more forgiving
             // Also add grace period during voting (3 minutes)
-            const isVoting = data.status === 'voting';
-            const inactiveThreshold = isVoting ? 180000 : 120000; // 3min during voting, 2min otherwise
+            const isVoting = data.status === ROOM_STATUS.VOTING;
+            const inactiveThreshold = isVoting ? CONSTANTS.VOTING_INACTIVE_THRESHOLD_MS : CONSTANTS.INACTIVE_THRESHOLD_MS; // 3min during voting, 2min otherwise
 
             const activePlayers = players.filter(p => {
                 const timeSinceLastSeen = now - (p.lastSeen || 0);
@@ -1163,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Log inactivity status for debugging
                 if (!isActive) {
-                    console.log(`Player ${p.name} (${p.uid}) inactive for ${Math.round(timeSinceLastSeen / 1000)}s (threshold: ${inactiveThreshold/1000}s)`);
+                    debugLog(`Player ${p.name} (${p.uid}) inactive for ${Math.round(timeSinceLastSeen / 1000)}s (threshold: ${inactiveThreshold/1000}s)`);
                 }
 
                 return isActive;
@@ -1173,7 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activePlayers.length < players.length) {
                 const removedCount = players.length - activePlayers.length;
                 const removedPlayers = players.filter(p => !activePlayers.find(ap => ap.uid === p.uid));
-                console.log(`Removing ${removedCount} inactive player(s):`, removedPlayers.map(p => p.name).join(', '));
+                debugLog(`Removing ${removedCount} inactive player(s):`, removedPlayers.map(p => p.name).join(', '));
 
                 // Check if the first player (host) was removed
                 const oldHostUid = players[0]?.uid;
@@ -1187,16 +1198,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Log host change if it happened
                     if (oldHostUid !== newHostUid) {
-                        console.log(`Host changed from ${players[0]?.name} to ${activePlayers[0]?.name}`);
+                        debugLog(`Host changed from ${players[0]?.name} to ${activePlayers[0]?.name}`);
 
                         // Update hostId in room data for consistency
                         await updateDoc(roomRef, { hostId: newHostUid });
                     }
                 } else {
                     // No players left, set room to dormant to preserve word library
-                    console.log("No active players left, setting room to dormant (preserving library)");
+                    debugLog("No active players left, setting room to dormant (preserving library)");
                     await updateDoc(roomRef, {
-                        status: 'dormant',
+                        status: ROOM_STATUS.DORMANT,
                         players: [],
                         lastActivity: Date.now()
                     });
@@ -1242,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTimerDisplay();
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                if (isHost && roomData.status === 'playing') {
+                if (isHost && roomData.status === ROOM_STATUS.PLAYING) {
                     initiateVotingPhase();
                 }
             }
@@ -1272,12 +1283,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Voting System ---
 
     async function initiateVotingPhase() {
-        await updateDoc(doc(db, "rooms", roomId), {
-            status: 'voting',
-            votingState: null,
-            lastActivity: Date.now()
-        });
-        setTimeout(processNextCategory, 2000);
+        try {
+            await updateDoc(doc(db, "rooms", roomId), {
+                status: ROOM_STATUS.VOTING,
+                votingState: null,
+                lastActivity: Date.now()
+            });
+            setTimeout(processNextCategory, 2000);
+        } catch (e) {
+            console.error("Error initiating voting phase:", e);
+            alert(t('errorGeneric') + ': ' + e.message);
+        }
     }
 
     // NEW BATCH VOTING SYSTEM - Process entire category at once
@@ -1296,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let didAutoApprove = false;
 
         if (isFirstCall) {
-            console.log('First processNextCategory call - auto-approving library answers');
+            debugLog('First processNextCategory call - auto-approving library answers');
             const currentHistory = data.gameHistory || [];
             let hasUpdatedPlayers = false;
 
@@ -1316,7 +1332,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     );
 
                     if (existingHistoryEntry) {
-                        console.log(`Skipping auto-approve for ${player.name} - ${cat}: ${answer} (already in history)`);
+                        debugLog(`Skipping auto-approve for ${player.name} - ${cat}: ${answer} (already in history)`);
                         // Mark as verified using the existing history entry's result
                         // This prevents it from being voted on again
                         if (!player.verifiedResults) player.verifiedResults = {};
@@ -1339,14 +1355,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Save updated players if we marked any as verified from history
             if (hasUpdatedPlayers) {
-                console.log('Updating players with verified results from history');
+                debugLog('Updating players with verified results from history');
                 await updateDoc(roomRef, {
                     players: data.players
                 });
             }
 
             if (didAutoApprove) {
-                console.log('Auto-approve complete, refreshing data for voting phase');
+                debugLog('Auto-approve complete, refreshing data for voting phase');
             }
         }
 
@@ -1363,7 +1379,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? lastProcessed + 1
             : 0;
 
-        console.log(`Processing categories starting from index ${startIndex} (lastProcessed: ${lastProcessed})`);
+        debugLog(`Processing categories starting from index ${startIndex} (lastProcessed: ${lastProcessed})`);
 
         for (let catIndex = startIndex; catIndex < activeCategories.length; catIndex++) {
             const cat = activeCategories[catIndex];
@@ -1387,7 +1403,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // If there are answers to vote on for this category, set voting state
             if (answersToVote.length > 0) {
-                console.log(`Setting up voting for category ${cat} (index ${catIndex}) with ${answersToVote.length} answers`);
+                debugLog(`Setting up voting for category ${cat} (index ${catIndex}) with ${answersToVote.length} answers`);
                 await updateDoc(roomRef, {
                     votingState: {
                         category: cat,
@@ -1404,22 +1420,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // All categories processed - calculate final scores
         // Wait a moment to ensure all Firebase writes are propagated
-        console.log('All categories processed, waiting before calculating final scores...');
+        debugLog('All categories processed, waiting before calculating final scores...');
         await new Promise(resolve => setTimeout(resolve, 500));
 
         const finalSnap = await getDoc(roomRef);
-        console.log('Calculating final scores with', finalSnap.data().players.length, 'players');
+        debugLog('Calculating final scores with', finalSnap.data().players.length, 'players');
         calculateFinalScores(finalSnap.data());
     }
 
     // Update only vote stats without re-rendering entire UI
     function updateVoteStats(state) {
         if (!state || !state.answers) {
-            console.log('updateVoteStats: no state or answers');
+            debugLog('updateVoteStats: no state or answers');
             return;
         }
 
-        console.log('updateVoteStats: Updating vote stats for', state.answers.length, 'answers');
+        debugLog('updateVoteStats: Updating vote stats for', state.answers.length, 'answers');
 
         const answers = state.answers || [];
         const sortedAnswers = answers.sort((a, b) => a.playerIndex - b.playerIndex);
@@ -1447,7 +1463,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const yesCount = Object.values(votesForThisAnswer).filter(v => v === true).length;
             const noCount = Object.values(votesForThisAnswer).filter(v => v === false).length;
 
-            console.log(`Vote stats for ${answerData.answer}: ${yesCount}✅ ${noCount}❌`);
+            debugLog(`Vote stats for ${answerData.answer}: ${yesCount}✅ ${noCount}❌`);
 
             // Create voter names list - sort by player name for stable order
             const voterNamesList = Object.entries(votesForThisAnswer)
@@ -1469,12 +1485,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="vote-count">${yesCount}✅ ${noCount}❌</span>
                         ${voterNamesList ? '<div class="voter-names">' + voterNamesList + '</div>' : ''}
                     `;
-                    console.log(`Updated vote stats for item ${index}`);
+                    debugLog(`Updated vote stats for item ${index}`);
                 } else {
-                    console.log(`No vote-stats div found for item ${index}`);
+                    debugLog(`No vote-stats div found for item ${index}`);
                 }
             } else {
-                console.log(`No voting item found at index ${index}`);
+                debugLog(`No voting item found at index ${index}`);
             }
         });
 
@@ -1494,7 +1510,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset votes when switching to a new category
         if (currentVotingCategory !== state.category) {
-            console.log(`Switching to new category: ${state.category}`);
+            debugLog(`Switching to new category: ${state.category}`);
             currentCategoryVotes = {}; // Clear votes from previous category
             currentVotingCategory = state.category;
             isRenderingVotes = false; // Allow fresh render
@@ -1503,7 +1519,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // If already showing this category, just update vote stats instead of full re-render
         if (currentVotingCategory === state.category && isRenderingVotes) {
-            console.log('Already rendering this category, updating vote stats only');
+            debugLog('Already rendering this category, updating vote stats only');
             updateVoteStats(state);
             return;
         }
@@ -1647,7 +1663,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-submit when all votes are cast
         if (votedCount >= totalCount) {
-            console.log('All votes cast, auto-submitting...');
+            debugLog('All votes cast, auto-submitting...');
             submitCategoryVotes();
         }
     }
@@ -1667,40 +1683,45 @@ document.addEventListener('DOMContentLoaded', () => {
     async function submitCategoryVotes() {
         if (!roomData || !roomData.votingState) return;
         if (isSubmittingVotes) {
-            console.log('Already submitting votes, skipping...');
+            debugLog('Already submitting votes, skipping...');
             return;
         }
 
         isSubmittingVotes = true;
         // Don't stop timer yet - let it keep running until next category loads
 
-        // Auto-approve any unanswered votes
-        const state = roomData.votingState;
-        const answers = state.answers || [];
+        try {
+            // Auto-approve any unanswered votes
+            const state = roomData.votingState;
+            const answers = state.answers || [];
 
-        answers.forEach((answerData, index) => {
-            const voteKey = `${answerData.playerUid}_${index}`;
-            if (currentCategoryVotes[voteKey] === undefined) {
-                currentCategoryVotes[voteKey] = true; // Auto-approve
+            answers.forEach((answerData, index) => {
+                const voteKey = `${answerData.playerUid}_${index}`;
+                if (currentCategoryVotes[voteKey] === undefined) {
+                    currentCategoryVotes[voteKey] = true; // Auto-approve
+                }
+            });
+
+            // Submit all votes to Firebase
+            const roomRef = doc(db, "rooms", roomId);
+            const updates = {};
+            updates[`votingState.allPlayersVoted.${currentUser.uid}`] = currentCategoryVotes;
+
+            await updateDoc(roomRef, updates);
+
+            // Host checks if all players voted
+            if (isHost) {
+                setTimeout(() => checkAllPlayersVoted(), 500);
             }
-        });
-
-        // Submit all votes to Firebase
-        const roomRef = doc(db, "rooms", roomId);
-        const updates = {};
-        updates[`votingState.allPlayersVoted.${currentUser.uid}`] = currentCategoryVotes;
-
-        await updateDoc(roomRef, updates);
-
-        // Host checks if all players voted
-        if (isHost) {
-            setTimeout(() => checkAllPlayersVoted(), 500);
+        } catch (e) {
+            console.error("Error submitting votes:", e);
+            alert(t('errorGeneric') + ': ' + e.message);
+        } finally {
+            // Reset flag after 2 seconds
+            setTimeout(() => {
+                isSubmittingVotes = false;
+            }, 2000);
         }
-
-        // Reset flag after 2 seconds
-        setTimeout(() => {
-            isSubmittingVotes = false;
-        }, 2000);
     }
 
     // Check if all players voted (for non-host players, to know when voting is complete)
@@ -1711,12 +1732,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const playerCount = roomData.players.length;
         const votedCount = Object.keys(allPlayersVoted).length;
 
-        console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
+        debugLog(`Voting progress: ${votedCount}/${playerCount} players voted`);
 
         // If all players voted and we're the host, process results
         // Only trigger if not already processing
         if (isHost && votedCount >= playerCount && !isProcessingCategory) {
-            console.log('All players voted, processing category results...');
+            debugLog('All players voted, processing category results...');
             processCategoryResults(state);
         }
     }
@@ -1730,7 +1751,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const freshData = freshSnap.data();
 
         if (!freshData.votingState) {
-            console.log('checkAllPlayersVoted: No voting state, skipping');
+            debugLog('checkAllPlayersVoted: No voting state, skipping');
             return;
         }
 
@@ -1739,11 +1760,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const playerCount = freshData.players.length;
         const votedCount = Object.keys(allPlayersVoted).length;
 
-        console.log(`Voting progress: ${votedCount}/${playerCount} players voted`);
+        debugLog(`Voting progress: ${votedCount}/${playerCount} players voted`);
 
         if (votedCount >= playerCount && !isProcessingCategory) {
             // Everyone voted - process results
-            console.log('All players voted, processing category results...');
+            debugLog('All players voted, processing category results...');
             await processCategoryResults(state);
         }
     }
@@ -1751,7 +1772,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function processCategoryResults(stateParam) {
         if (!isHost) return;
         if (isProcessingCategory) {
-            console.log('Already processing category, skipping duplicate call');
+            debugLog('Already processing category, skipping duplicate call');
             return;
         }
 
@@ -1765,11 +1786,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use fresh votingState from Firebase, not the potentially stale parameter
             const state = freshData.votingState;
             if (!state) {
-                console.log('No voting state found in Firebase, skipping');
+                debugLog('No voting state found in Firebase, skipping');
                 return;
             }
 
-            console.log('Processing category results for:', state.category, 'categoryIndex:', state.categoryIndex);
+            debugLog('Processing category results for:', state.category, 'categoryIndex:', state.categoryIndex);
 
             const players = freshData.players;
             const history = freshData.gameHistory || [];
@@ -1812,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (!alreadyInHistory) {
-                console.log(`Adding voted history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
+                debugLog(`Adding voted history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
                 history.push({
                     playerName: answerData.playerName,
                     category: state.category,
@@ -1822,7 +1843,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     votes: votesForAnswer
                 });
             } else {
-                console.log(`Skipping duplicate history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
+                debugLog(`Skipping duplicate history entry for ${answerData.playerName} - ${state.category}: ${answerData.answer}`);
             }
 
             // Add to library if approved
@@ -1855,7 +1876,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startVoteTimer() {
-        console.log('Starting vote timer');
+        debugLog('Starting vote timer');
         stopVoteTimer();
         voteTimeLeft = 30; // 30 seconds for batch voting
         voteMaxTime = 30; // Track max time for percentage calculation
@@ -1869,7 +1890,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateVoteTimerDisplay();
 
             if (voteTimeLeft === 0) {
-                console.log("Vote timeout - auto-submitting with current votes");
+                debugLog("Vote timeout - auto-submitting with current votes");
                 clearInterval(voteTimerInterval);
                 voteTimerInterval = null;
                 // Auto-submit with current votes (unanswered = auto-approve)
@@ -1911,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', () => {
         voteMaxTime += 10; // Also increase max time so percentage stays accurate
         moreTimeBtn.classList.add('hidden');
         updateVoteTimerDisplay(); // Update display immediately
-        console.log("Added 10 seconds to vote timer");
+        debugLog("Added 10 seconds to vote timer");
     }
 
     // OLD VOTING FUNCTIONS - Removed for batch voting system
@@ -1930,7 +1951,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Track history for infographic - only add for auto-approved items
         // Normal voted items will get their entry in processCategoryResults
         if (isAuto) {
-            console.log(`Adding auto-approve history entry for ${players[pIdx].name} - ${cat}: ${answer}`);
+            debugLog(`Adding auto-approve history entry for ${players[pIdx].name} - ${cat}: ${answer}`);
             history.push({
                 playerName: players[pIdx].name,
                 category: cat,
@@ -2066,17 +2087,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function calculateFinalScores(data) {
         // Check if scores were already calculated for this round
         if (data.scoresCalculated) {
-            console.log("Scores already calculated for this round, skipping");
+            debugLog("Scores already calculated for this round, skipping");
             return;
         }
 
         if (isCalculatingScores) {
-            console.log("Already calculating scores, skipping duplicate call");
+            debugLog("Already calculating scores, skipping duplicate call");
             return;
         }
 
         isCalculatingScores = true;
-        console.log("Starting Score Calculation...");
+        debugLog("Starting Score Calculation...");
         const players = data.players;
 
         // Calculate round scores (don't reset total scores)
@@ -2086,14 +2107,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         for (const cat of activeCategories) {
-            console.log(`Scoring Category: ${cat}`);
+            debugLog(`Scoring Category: ${cat}`);
             const validAnswers = [];
 
             // 1. Collect Valid Answers
             players.forEach(p => {
                 if (p.verifiedResults && p.verifiedResults[cat]) {
                     const res = p.verifiedResults[cat];
-                    console.log(`Player ${p.name} - ${cat}: ${res.answer} (Valid: ${res.isValid})`);
+                    debugLog(`Player ${p.name} - ${cat}: ${res.answer} (Valid: ${res.isValid})`);
                     if (res.isValid) {
                         // Store both normalized and distinct original for display if needed? 
                         // No logic only cares about normalized matches
@@ -2103,7 +2124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                 } else {
-                    console.log(`Player ${p.name} - ${cat}: No verified result`);
+                    debugLog(`Player ${p.name} - ${cat}: No verified result`);
                 }
             });
 
@@ -2119,13 +2140,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (othersWithSame.length > 0) {
                         res.points = 5; // Shared (or close enough!)
-                        console.log(` -> Match found for '${myAns}' with '${othersWithSame[0].answer}'`);
+                        debugLog(` -> Match found for '${myAns}' with '${othersWithSame[0].answer}'`);
                     } else if (othersWithAny.length === 0) {
                         res.points = 20;
                     } else {
                         res.points = 10;
                     }
-                    console.log(`-> ${p.name} gets ${res.points} pts for '${res.answer}'`);
+                    debugLog(`-> ${p.name} gets ${res.points} pts for '${res.answer}'`);
                     roundScores[p.uid] += res.points;
                 }
             });
@@ -2138,8 +2159,8 @@ document.addEventListener('DOMContentLoaded', () => {
             p.score = currentScore + roundScore;
         });
 
-        console.log("Round Scores:", players.map(p => `${p.name}: +${roundScores[p.uid]}`));
-        console.log("Total Scores:", players.map(p => `${p.name}: ${p.score}`));
+        debugLog("Round Scores:", players.map(p => `${p.name}: +${roundScores[p.uid]}`));
+        debugLog("Total Scores:", players.map(p => `${p.name}: ${p.score}`));
 
         // Update history with points information
         const history = data.gameHistory || [];
@@ -2159,7 +2180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await updateDoc(doc(db, "rooms", roomId), {
             players: players,
-            status: 'finished',
+            status: ROOM_STATUS.FINISHED,
             votingState: null,
             gameHistory: history,
             scoresCalculated: true,  // Mark that scores have been calculated for this round
@@ -2168,7 +2189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset flag after database update completes
         isCalculatingScores = false;
-        console.log("Score calculation complete");
+        debugLog("Score calculation complete");
     }
 
     function showResults(data) {
@@ -2224,15 +2245,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const logEntries = document.getElementById('log-entries');
         const history = data.gameHistory || [];
 
-        console.log('renderGameLog called', { historyLength: history.length, logBox, logEntries });
+        debugLog('renderGameLog called', { historyLength: history.length, logBox, logEntries });
 
         if (history.length === 0) {
             logBox.classList.add('hidden');
-            console.log('No history, hiding log');
+            debugLog('No history, hiding log');
             return;
         }
 
-        console.log('Rendering game log with', history.length, 'entries');
+        debugLog('Rendering game log with', history.length, 'entries');
         logBox.classList.remove('hidden');
         logEntries.innerHTML = history.map(entry => {
             const escapedPlayerName = escapeHtml(entry.playerName);
