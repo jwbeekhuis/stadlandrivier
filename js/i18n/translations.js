@@ -211,7 +211,17 @@ export function updateResultsContent() {
  * This function is called when language changes
  */
 export function updateDynamicContent() {
-    // This will be implemented later - it needs renderCategories and updateInputPlaceholders
-    // from the rendering modules (Fase 3)
-    // For now, this is a placeholder
+    // Import rendering functions dynamically to avoid circular dependencies
+    // These functions are in Level 4, while translations.js is Level 3
+    // Dynamic import ensures they're loaded when needed
+    import('../ui/render.js').then(({ renderCategories, updateInputPlaceholders }) => {
+        // Update categories if they exist
+        if (state.game.activeCategories && state.game.activeCategories.length > 0) {
+            renderCategories();
+            updateInputPlaceholders();
+        }
+    }).catch(err => {
+        // Silently fail if modules aren't loaded yet (during initial setup)
+        console.debug('Rendering modules not yet loaded:', err.message);
+    });
 }
