@@ -1804,7 +1804,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function processCategoryResults(state) {
+    async function processCategoryResults(stateParam) {
         if (!isHost) return;
         if (isProcessingCategory) {
             console.log('Already processing category, skipping duplicate call');
@@ -1812,16 +1812,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         isProcessingCategory = true;
-        console.log('Processing category results for:', state.category);
 
         try {
             const roomRef = doc(db, "rooms", roomId);
             const freshSnap = await getDoc(roomRef);
             const freshData = freshSnap.data();
+
+            // Use fresh votingState from Firebase, not the potentially stale parameter
+            const state = freshData.votingState;
+            if (!state) {
+                console.log('No voting state found in Firebase, skipping');
+                return;
+            }
+
+            console.log('Processing category results for:', state.category, 'categoryIndex:', state.categoryIndex);
+
             const players = freshData.players;
             const history = freshData.gameHistory || [];
 
-        const answers = state.answers || [];
+            const answers = state.answers || [];
 
         // Tally votes for each answer
         for (let i = 0; i < answers.length; i++) {
