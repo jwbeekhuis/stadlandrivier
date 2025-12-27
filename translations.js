@@ -128,6 +128,12 @@ export const translations = {
         roomNotFound: "Kamer niet gevonden!",
         errorGeneric: "Er ging iets mis",
 
+        // Modal buttons
+        confirm: "Bevestigen",
+        cancel: "Annuleren",
+        delete: "Verwijderen",
+        kick: "Verwijderen",
+
         // Categories
         categories: {
             'Stad': 'Stad',
@@ -286,6 +292,12 @@ export const translations = {
         invalidCode: "Invalid code",
         roomNotFound: "Room not found!",
         errorGeneric: "Something went wrong",
+
+        // Modal buttons
+        confirm: "Confirm",
+        cancel: "Cancel",
+        delete: "Delete",
+        kick: "Remove",
 
         // Categories
         categories: {

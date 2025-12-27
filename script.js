@@ -322,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ` : ''}
             </div>
             <button class="toast-close" aria-label="Close">×</button>
+            ${duration > 0 ? '<div class="toast-progress"></div>' : ''}
         `;
 
         // Add to container
@@ -340,9 +341,30 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Auto-remove after duration
+        // Progress bar animation
         if (duration > 0) {
+            const progressBar = toast.querySelector('.toast-progress');
+            if (progressBar) {
+                // Trigger animation
+                setTimeout(() => {
+                    progressBar.style.transition = `width ${duration}ms linear`;
+                    progressBar.style.width = '0%';
+                }, 10);
+            }
+
+            // Auto-remove after duration
             setTimeout(() => removeToast(toast), duration);
+        }
+
+        // Trigger haptic feedback on mobile
+        if ('vibrate' in navigator) {
+            const vibrationPatterns = {
+                success: [10, 30, 10],
+                error: [20, 50, 20],
+                warning: [10, 20, 10],
+                info: [10]
+            };
+            navigator.vibrate(vibrationPatterns[type] || [10]);
         }
 
         return toast;
@@ -357,6 +379,142 @@ document.addEventListener('DOMContentLoaded', () => {
                 toast.parentElement.removeChild(toast);
             }
         }, 300);
+    }
+
+    // --- Modal System ---
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalContainer = modalOverlay?.querySelector('.modal-container');
+    const modalIconWrapper = modalOverlay?.querySelector('.modal-icon-wrapper');
+    const modalIcon = modalOverlay?.querySelector('.modal-icon');
+    const modalTitle = modalOverlay?.querySelector('.modal-title');
+    const modalMessage = modalOverlay?.querySelector('.modal-message');
+    const modalCancelBtn = modalOverlay?.querySelector('.modal-cancel');
+    const modalConfirmBtn = modalOverlay?.querySelector('.modal-confirm');
+
+    let currentModalResolve = null;
+
+    /**
+     * Show a modal dialog
+     * @param {string} title - Modal title
+     * @param {string} message - Modal message
+     * @param {Object} options - Modal options
+     * @param {string} options.type - Type: 'warning', 'danger', 'info' (default: 'warning')
+     * @param {string} options.confirmText - Confirm button text (default: t('confirm'))
+     * @param {string} options.cancelText - Cancel button text (default: t('cancel'))
+     * @param {boolean} options.confirmDanger - Make confirm button red (default: false)
+     * @returns {Promise<boolean>} - Resolves to true if confirmed, false if cancelled
+     */
+    function showModal(title, message, options = {}) {
+        return new Promise((resolve) => {
+            if (!modalOverlay) {
+                console.error('Modal overlay not found');
+                resolve(false);
+                return;
+            }
+
+            const type = options.type || 'warning';
+            const confirmText = options.confirmText || t('confirm');
+            const cancelText = options.cancelText || t('cancel');
+            const confirmDanger = options.confirmDanger || false;
+
+            // Set modal content
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalCancelBtn.textContent = cancelText;
+            modalConfirmBtn.textContent = confirmText;
+
+            // Set icon based on type
+            modalIconWrapper.className = 'modal-icon-wrapper ' + type;
+            const iconMap = {
+                warning: 'fa-solid fa-triangle-exclamation',
+                danger: 'fa-solid fa-trash-can',
+                info: 'fa-solid fa-circle-info'
+            };
+            modalIcon.className = 'modal-icon ' + (iconMap[type] || iconMap.warning);
+
+            // Set confirm button style
+            if (confirmDanger) {
+                modalConfirmBtn.classList.add('danger');
+            } else {
+                modalConfirmBtn.classList.remove('danger');
+            }
+
+            // Store resolve function
+            currentModalResolve = resolve;
+
+            // Show modal with animation
+            modalOverlay.classList.remove('hidden', 'modal-closing');
+
+            // Trigger haptic feedback on mobile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(10);
+            }
+
+            // Focus confirm button for keyboard accessibility
+            setTimeout(() => modalConfirmBtn.focus(), 100);
+        });
+    }
+
+    function closeModal(confirmed = false) {
+        if (!modalOverlay || !currentModalResolve) return;
+
+        // Add closing animation
+        modalOverlay.classList.add('modal-closing');
+
+        // Trigger haptic feedback on mobile
+        if ('vibrate' in navigator) {
+            navigator.vibrate(confirmed ? [10, 50, 10] : 5);
+        }
+
+        // Wait for animation to complete
+        setTimeout(() => {
+            modalOverlay.classList.add('hidden');
+            modalOverlay.classList.remove('modal-closing');
+
+            // Resolve promise
+            if (currentModalResolve) {
+                currentModalResolve(confirmed);
+                currentModalResolve = null;
+            }
+        }, 250);
+    }
+
+    // Modal event listeners
+    if (modalOverlay) {
+        // Confirm button
+        modalConfirmBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeModal(true);
+        });
+
+        // Cancel button
+        modalCancelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeModal(false);
+        });
+
+        // Click overlay to cancel (but not the modal itself)
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal(false);
+            }
+        });
+
+        // Prevent clicks on modal container from closing
+        modalContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (!modalOverlay.classList.contains('hidden')) {
+                if (e.key === 'Escape') {
+                    closeModal(false);
+                } else if (e.key === 'Enter') {
+                    closeModal(true);
+                }
+            }
+        });
     }
 
     // --- Initialization ---
@@ -397,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error("Auth error:", e);
-            alert(t('authError'));
+            showToast(t('authError'), 'error', 6000);
         }
 
         createRoomBtn.addEventListener('click', createRoom);
@@ -510,7 +668,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.quickJoinRoom = async function (code) {
         const name = playerNameInput.value.trim();
-        if (!name) return alert(t('enterName'));
+        if (!name) {
+            showToast(t('enterName'), 'warning', 4000);
+            playerNameInput.focus();
+            return;
+        }
 
         // Save name to localStorage as fallback
         localStorage.setItem('playerName', name);
@@ -525,7 +687,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const roomSnap = await getDoc(roomRef);
 
         if (!roomSnap.exists()) {
-            return alert(t('roomNotExist'));
+            showToast(t('roomNotExist'), 'info', 4000);
+            return;
         }
 
         const roomData = roomSnap.data();
@@ -541,7 +704,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 startHeartbeat();
                 return;
             } else {
-                return alert(t('roomNotExist'));  // Non-creators see it as non-existent
+                showToast(t('roomNotExist'), 'info', 4000);
+                return;
             }
         }
 
@@ -574,19 +738,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteRoom = async function (code) {
-        if (!confirm(t('confirmDeleteRoom'))) {
-            return;
-        }
+        const confirmed = await showModal(
+            t('deleteRoom'),
+            t('confirmDeleteRoom'),
+            { type: 'danger', confirmText: t('delete'), confirmDanger: true }
+        );
+
+        if (!confirmed) return;
 
         try {
             const roomRef = doc(db, "rooms", code);
             await updateDoc(roomRef, {
                 status: ROOM_STATUS.DELETED
             });
-            alert(t('roomDeletedSuccess'));
+            showToast(t('roomDeletedSuccess'), 'success', 3000);
         } catch (e) {
             console.error("Error deleting room:", e);
-            alert("Fout bij verwijderen: " + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     };
 
@@ -604,17 +772,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!playerToKick) return;
 
-            if (!confirm(t('confirmKick').replace('{name}', playerToKick.name))) {
-                return;
-            }
+            const confirmed = await showModal(
+                t('kick') + ' ' + playerToKick.name + '?',
+                t('confirmKick').replace('{name}', playerToKick.name),
+                { type: 'warning', confirmText: t('kick'), confirmDanger: true }
+            );
+
+            if (!confirmed) return;
 
             const updatedPlayers = players.filter(p => p.uid !== playerUid);
             await updateDoc(roomRef, { players: updatedPlayers });
 
             debugLog(`${playerToKick.name} is uit de kamer verwijderd`);
+            showToast(playerToKick.name + ' is verwijderd', 'info', 3000);
         } catch (e) {
             console.error("Error kicking player:", e);
-            alert("Fout bij verwijderen speler: " + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     };
 
@@ -622,7 +795,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function createRoom() {
         const name = playerNameInput.value.trim();
-        if (!name) return alert(t('enterName'));
+        if (!name) {
+            showToast(t('enterName'), 'warning', 4000);
+            playerNameInput.focus();
+            return;
+        }
 
         // Save name to localStorage as fallback
         localStorage.setItem('playerName', name);
@@ -875,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show message if provided
         if (message) {
-            alert(message);
+            showToast(message, 'info', 5000);
         }
 
         // Refresh room list
@@ -904,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (e) {
             console.error("Error starting game:", e);
-            alert(t('errorGeneric') + ': ' + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     }
 
@@ -923,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } catch (e) {
             console.error("Error shuffling categories:", e);
-            alert(t('errorGeneric') + ': ' + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     }
 
@@ -969,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await resetRoomToLobby();
         } catch (e) {
             console.error("Error starting next round:", e);
-            alert(t('errorGeneric') + ': ' + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     }
 
@@ -978,16 +1155,23 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(t('onlyHostCanReset'), 'warning', 5000);
             return;
         }
-        if (!confirm(t('confirmReset'))) {
-            return;
-        }
+
+        const confirmed = await showModal(
+            t('resetToLobby'),
+            t('confirmReset'),
+            { type: 'warning', confirmText: t('confirm'), confirmDanger: true }
+        );
+
+        if (!confirmed) return;
+
         try {
             debugLog('Resetting game to lobby state');
             await resetRoomToLobby();
             debugLog('Game reset to lobby successfully');
+            showToast(t('resetToLobby') + ' ✓', 'success', 3000);
         } catch (e) {
             console.error("Error resetting game:", e);
-            alert(t('errorGeneric') + ': ' + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     }
 
@@ -995,18 +1179,22 @@ document.addEventListener('DOMContentLoaded', () => {
         debugLog("Delete room clicked", { isHost, roomId });
 
         if (!isHost) {
-            alert(t('confirmDelete'));
+            showToast(t('onlyHostCanReset'), 'warning', 5000);
             return;
         }
 
         if (!roomId) {
-            alert(t('roomNotExist'));
+            showToast(t('roomNotExist'), 'info', 4000);
             return;
         }
 
-        if (!confirm(t('confirmDelete'))) {
-            return;
-        }
+        const confirmed = await showModal(
+            t('deleteRoom'),
+            t('confirmDelete'),
+            { type: 'danger', confirmText: t('delete'), confirmDanger: true }
+        );
+
+        if (!confirmed) return;
 
         try {
             // Unsubscribe first to prevent the listener from firing for the host
@@ -1016,7 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const deletedRoomId = roomId;
             const roomRef = doc(db, "rooms", deletedRoomId);
 
-            // Now update the room status (other players will get the alert via their listeners)
+            // Now update the room status (other players will get the toast via their listeners)
             await updateDoc(roomRef, {
                 status: ROOM_STATUS.DELETED
             });
@@ -1034,10 +1222,10 @@ document.addEventListener('DOMContentLoaded', () => {
             lobbyScreen.classList.remove('hidden');
 
             debugLog(`Room ${deletedRoomId} deleted!`);
-            alert(t('roomDeleted'));
+            showToast(t('roomDeleted'), 'success', 3000);
         } catch (e) {
             console.error("Error deleting room:", e);
-            alert("Error: " + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     }
 
@@ -1078,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             subscribeToActiveRooms();
         } catch (e) {
             console.error("Error leaving room:", e);
-            alert("Error: " + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     }
 
@@ -1292,7 +1480,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(processNextCategory, 2000);
         } catch (e) {
             console.error("Error initiating voting phase:", e);
-            alert(t('errorGeneric') + ': ' + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         }
     }
 
@@ -1715,7 +1903,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error("Error submitting votes:", e);
-            alert(t('errorGeneric') + ': ' + e.message);
+            showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
         } finally {
             // Reset flag after 2 seconds
             setTimeout(() => {
@@ -2192,33 +2380,63 @@ document.addEventListener('DOMContentLoaded', () => {
         debugLog("Score calculation complete");
     }
 
+    /**
+     * Calculate ranks for players based on their scores.
+     * Players with equal scores get the same rank, and the next rank skips accordingly.
+     * Example: scores [15, 15, 10, 5] -> ranks [1, 1, 3, 4]
+     *
+     * @param {Array} sortedPlayers - Array of players sorted by score (highest first)
+     * @returns {Array<number>} - Array of rank numbers corresponding to each player
+     */
+    function calculateRanks(sortedPlayers) {
+        const ranks = [];
+        let currentRank = 1;
+
+        for (let i = 0; i < sortedPlayers.length; i++) {
+            if (i > 0 && sortedPlayers[i].score < sortedPlayers[i - 1].score) {
+                // Score changed, update rank to current position + 1
+                currentRank = i + 1;
+            }
+            ranks.push(currentRank);
+        }
+
+        return ranks;
+    }
+
     function showResults(data) {
         gameBoard.classList.add('hidden');
         votingScreen.classList.add('hidden');
         resultsBoard.classList.remove('hidden');
 
         const sortedPlayers = [...data.players].sort((a, b) => b.score - a.score);
+        const ranks = calculateRanks(sortedPlayers);
 
-        // Winner Confetti! (Only for the winner)
-        if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0 && sortedPlayers[0].uid === currentUser.uid) {
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#22c55e', '#38bdf8', '#ffffff']
-            });
+        // Winner Confetti! (For all players with the highest score)
+        if (sortedPlayers.length > 0) {
+            const topScore = sortedPlayers[0].score;
+            const isWinner = topScore > 0 && sortedPlayers.some(p => p.score === topScore && p.uid === currentUser.uid);
+
+            if (isWinner) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#22c55e', '#38bdf8', '#ffffff']
+                });
+            }
         }
 
         const list = document.getElementById('results-list');
         list.innerHTML = sortedPlayers.map((p, i) => {
+            const rank = ranks[i];
             let rankIcon = '';
-            if (i === 0) rankIcon = '<span class="rank-1">🥇</span>';
-            if (i === 1) rankIcon = '<span class="rank-2">🥈</span>';
-            if (i === 2) rankIcon = '<span class="rank-3">🥉</span>';
+            if (rank === 1) rankIcon = '<span class="rank-1">🥇</span>';
+            if (rank === 2) rankIcon = '<span class="rank-2">🥈</span>';
+            if (rank === 3) rankIcon = '<span class="rank-3">🥉</span>';
 
             return `
                 <tr>
-                    <td class="text-center">${rankIcon || (i + 1)}</td>
+                    <td class="text-center">${rankIcon || rank}</td>
                     <td><strong>${p.name}</strong></td>
                     <td class="text-right text-accent">${p.score}</td>
                 </tr>
