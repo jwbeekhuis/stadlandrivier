@@ -1467,8 +1467,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // All categories processed - calculate final scores
-        console.log('All categories processed, calculating final scores');
+        // Wait a moment to ensure all Firebase writes are propagated
+        console.log('All categories processed, waiting before calculating final scores...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         const finalSnap = await getDoc(roomRef);
+        console.log('Calculating final scores with', finalSnap.data().players.length, 'players');
         calculateFinalScores(finalSnap.data());
     }
 
