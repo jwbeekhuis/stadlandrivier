@@ -1,4 +1,4 @@
-import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, runTransaction, signInAnonymously, auth, UserService } from './firebase-config.js?v=121';
+import { db, collection, doc, setDoc, onSnapshot, updateDoc, getDoc, getDocs, writeBatch, arrayUnion, query, where, orderBy, limit, runTransaction, signInAnonymously, auth, UserService } from './firebase-config.js?v=122';
 import { translations } from './translations.js?v=105';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -192,13 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Constants ---
     const CONSTANTS = {
-        HEARTBEAT_INTERVAL_MS: 5000,
+        HEARTBEAT_INTERVAL_MS: 30000,       // 30 seconden (was 5s - Firebase optimalisatie)
         INACTIVE_THRESHOLD_MS: 120000,      // 2 minuten
         VOTING_INACTIVE_THRESHOLD_MS: 180000, // 3 minuten
         VOTE_TIMER_DURATION_S: 30,
         MORE_TIME_SECONDS: 10,
         MAX_HEARTBEAT_RETRIES: 3,
-        ROOM_CODE_LENGTH: 4
+        ROOM_CODE_LENGTH: 4,
+        PLAYER_LIST_DEBOUNCE_MS: 1000       // Debounce voor player list updates
     };
 
     const ROOM_STATUS = {
@@ -229,12 +230,15 @@ document.addEventListener('DOMContentLoaded', () => {
     let roomId = null;
     let isHost = false;
     let roomUnsubscribe = null;
+    let activeRoomsUnsubscribe = null; // Firebase listener voor active rooms (FIX: memory leak)
     let roomData = null; // Store full room data
     let heartbeatInterval = null;
     let voteTimerInterval = null;
     let voteTimeLeft = 0;
     let voteMaxTime = 15;
     let resultsShown = false; // Track if results have been shown for current round
+    let lastPlayerListHash = ''; // Voor debounce - alleen updaten bij echte changes
+    let playerListDebounceTimer = null; // Debounce timer voor player list
 
     // --- DOM Elements ---
     // Screens
@@ -590,14 +594,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Room Discovery ---
     function subscribeToActiveRooms() {
+        // BELANGRIJK: Stop bestaande listener eerst om memory leaks te voorkomen
+        if (activeRoomsUnsubscribe) {
+            activeRoomsUnsubscribe();
+            activeRoomsUnsubscribe = null;
+        }
+
         const roomsQuery = query(
             collection(db, "rooms"),
-            where("status", "in", [ROOM_STATUS.LOBBY, ROOM_STATUS.PLAYING, ROOM_STATUS.VOTING, ROOM_STATUS.FINISHED]),  // Excludes only dormant and deleted rooms
+            where("status", "in", [ROOM_STATUS.LOBBY, ROOM_STATUS.PLAYING, ROOM_STATUS.VOTING, ROOM_STATUS.FINISHED]),
             orderBy("createdAt", "desc"),
             limit(10)
         );
 
-        onSnapshot(roomsQuery, (snapshot) => {
+        // Sla de unsubscribe functie op zodat we hem later kunnen aanroepen
+        activeRoomsUnsubscribe = onSnapshot(roomsQuery, (snapshot) => {
             const rooms = [];
             snapshot.forEach((doc) => {
                 const data = doc.data();
@@ -605,6 +616,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             renderRoomsList(rooms);
         });
+    }
+
+    function stopActiveRoomsListener() {
+        if (activeRoomsUnsubscribe) {
+            activeRoomsUnsubscribe();
+            activeRoomsUnsubscribe = null;
+        }
     }
 
     function renderRoomsList(rooms) {
@@ -991,21 +1009,43 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPlayersList(players) {
-        playersList.innerHTML = players.map(p => {
-            const isMe = p.uid === currentUser.uid;
-            const canKick = isHost && !isMe && players.length > 1;
-            const escapedName = escapeHtml(p.name);
+        // Genereer een hash van de relevante player data om onnodige re-renders te voorkomen
+        const playerHash = players.map(p => `${p.uid}:${p.name}:${p.score}`).join('|');
 
-            return `
-                <span class="player-tag ${isMe ? 'me' : ''}">
-                    ${escapedName} (${p.score} ${t('points').toLowerCase()})
-                    ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="${t('confirmKick').replace('{name}', '')}"><i class="fa-solid fa-xmark"></i></button>` : ''}
-                </span>
-            `;
-        }).join('');
+        // Skip update als data niet is veranderd (voorkomt onnodige DOM updates)
+        if (playerHash === lastPlayerListHash) {
+            return;
+        }
+
+        // Debounce: wacht even voordat we daadwerkelijk renderen
+        // Dit voorkomt meerdere re-renders bij snel opeenvolgende updates
+        if (playerListDebounceTimer) {
+            clearTimeout(playerListDebounceTimer);
+        }
+
+        playerListDebounceTimer = setTimeout(() => {
+            lastPlayerListHash = playerHash;
+
+            playersList.innerHTML = players.map(p => {
+                const isMe = p.uid === currentUser.uid;
+                const canKick = isHost && !isMe && players.length > 1;
+                const escapedName = escapeHtml(p.name);
+
+                return `
+                    <span class="player-tag ${isMe ? 'me' : ''}">
+                        ${escapedName} (${p.score} ${t('points').toLowerCase()})
+                        ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="${t('confirmKick').replace('{name}', '')}"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                    </span>
+                `;
+            }).join('');
+        }, CONSTANTS.PLAYER_LIST_DEBOUNCE_MS);
     }
 
     function enterGameUI(code) {
+        // BELANGRIJK: Stop de active rooms listener bij het betreden van een kamer
+        // Dit voorkomt onnodige Firebase reads terwijl je in een game zit
+        stopActiveRoomsListener();
+
         lobbyScreen.classList.add('hidden');
         controlsPanel.classList.remove('hidden');
         gameBoard.classList.remove('hidden');
@@ -1277,13 +1317,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update immediately
         updatePlayerHeartbeat();
 
-        // Then update every 5 seconds (increased frequency to prevent false positives)
+        // Update elke HEARTBEAT_INTERVAL_MS (30s) - geoptimaliseerd voor Firebase kosten
+        // Host doet ook cleanup, maar minder frequent dan voorheen
         heartbeatInterval = setInterval(() => {
             updatePlayerHeartbeat();
             if (isHost) {
                 cleanupInactivePlayers();
             }
-        }, 5000);
+        }, CONSTANTS.HEARTBEAT_INTERVAL_MS);
     }
 
     function stopHeartbeat() {
@@ -2311,7 +2352,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     roundScores[p.uid] = 0;
                 });
 
-                for (const cat of activeCategories) {
+                // Use categories from roomData, not local activeCategories which may be stale
+                const categories = roomData.categories || [];
+                for (const cat of categories) {
                     debugLog(`Scoring Category: ${cat}`);
                     const validAnswers = [];
 
