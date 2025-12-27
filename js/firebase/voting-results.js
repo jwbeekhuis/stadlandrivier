@@ -188,8 +188,8 @@ export async function markAnswerVerified(pIdx, cat, answer, isValid, isAuto) {
             category: cat,
             answer: answer,
             isValid: isValid,
-            isAuto: true,
-            votes: null
+            isAuto: true
+            // votes field omitted for auto-approved items (Firebase rejects null values)
         });
     }
 
