@@ -217,6 +217,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (DEBUG) console.log('[DEBUG]', ...args);
     }
 
+    /**
+     * Pluralization helper for grammatically correct text
+     * @param {number} count - The number to check
+     * @param {string} singular - Singular form (e.g., "seconde", "second")
+     * @param {string} plural - Plural form (e.g., "seconden", "seconds")
+     * @returns {string} - Grammatically correct form
+     */
+    function pluralize(count, singular, plural) {
+        return count === 1 ? singular : plural;
+    }
+
     // State
     let activeCategories = [];
     let gameDuration = 60; // Default: 60 seconds, can be changed by room creator
@@ -585,7 +596,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Duration slider
         if (gameDurationSlider) {
             gameDurationSlider.addEventListener('input', (e) => {
-                durationValueDisplay.textContent = e.target.value;
+                const value = parseInt(e.target.value);
+                durationValueDisplay.textContent = value;
+                // Update plural/singular form
+                const secondsLabel = durationValueDisplay.nextElementSibling;
+                if (secondsLabel) {
+                    secondsLabel.textContent = pluralize(value, t('second'), t('seconds'));
+                }
             });
         }
 
@@ -1038,9 +1055,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const canKick = isHost && !isMe && players.length > 1;
                 const escapedName = escapeHtml(p.name);
 
+                const pointsText = pluralize(p.score, t('point'), t('points')).toLowerCase();
                 return `
                     <span class="player-tag ${isMe ? 'me' : ''}">
-                        ${escapedName} (${p.score} ${t('points').toLowerCase()})
+                        ${escapedName} (${p.score} ${pointsText})
                         ${canKick ? `<button class="kick-player-btn" onclick="kickPlayer('${p.uid}')" title="${t('confirmKick').replace('{name}', '')}"><i class="fa-solid fa-xmark"></i></button>` : ''}
                     </span>
                 `;
