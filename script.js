@@ -841,6 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentLetter: newLetter,
             timerEnd: Date.now() + (gameDuration * 1000),
             scoresCalculated: false,  // Reset for new round
+            lastProcessedCategoryIndex: -1,  // Reset category index for new round
             // Keep existing scores, only reset answers and verifiedResults
             players: roomData.players.map(p => ({ ...p, answers: {}, verifiedResults: {} })),
             lastActivity: Date.now()
@@ -894,6 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gameHistory: [],
             votingState: null,  // Reset voting state in database
             scoresCalculated: false,  // Reset scores calculated flag for new round
+            lastProcessedCategoryIndex: -1,  // Reset category index for new round
             players: resetPlayers,
             lastActivity: Date.now()
         });
@@ -1274,7 +1276,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const freshSnap = await getDoc(roomRef);
         const freshData = freshSnap.data();
 
-        for (let catIndex = 0; catIndex < activeCategories.length; catIndex++) {
+        // Start from the next category after the last processed one
+        const startIndex = (freshData.lastProcessedCategoryIndex !== undefined)
+            ? freshData.lastProcessedCategoryIndex + 1
+            : 0;
+
+        console.log(`Processing categories starting from index ${startIndex}`);
+
+        for (let catIndex = startIndex; catIndex < activeCategories.length; catIndex++) {
             const cat = activeCategories[catIndex];
 
             // Collect all unverified answers for this category
@@ -1713,10 +1722,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Update database and move to next category
+        // Store the categoryIndex before clearing votingState
         await updateDoc(roomRef, {
             players: players,
             votingState: null,
-            gameHistory: history
+            gameHistory: history,
+            lastProcessedCategoryIndex: state.categoryIndex
         });
 
         // Reset flag before moving to next category
