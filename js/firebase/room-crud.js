@@ -10,6 +10,7 @@ import { showModal } from '../ui/modal.js';
 import { t } from '../i18n/translations.js';
 import { ROOM_STATUS } from '../constants.js';
 import { debugLog } from '../utils/string.js';
+import { setButtonLoading, clearButtonLoading } from '../utils/loading.js';
 
 /**
  * Create a new room
@@ -21,7 +22,7 @@ import { debugLog } from '../utils/string.js';
  * These will be passed as dependencies to avoid circular imports
  */
 export async function createRoom(enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener) {
-    const { playerNameInput, roomNameInput, gameDurationSlider } = getElements();
+    const { playerNameInput, roomNameInput, gameDurationSlider, createRoomBtn } = getElements();
     const currentUser = state.user.currentUser;
 
     const name = playerNameInput.value.trim();
@@ -31,43 +32,53 @@ export async function createRoom(enterGameUI, subscribeToRoom, startHeartbeat, s
         return;
     }
 
-    // Save name to localStorage as fallback
-    localStorage.setItem('playerName', name);
-    // Save name to Firestore user profile
-    if (currentUser) {
-        await UserService.saveProfile(currentUser.uid, { name: name });
+    // Zet button in loading state
+    setButtonLoading(createRoomBtn, t('creatingRoom') || 'Kamer maken...');
+
+        // Save name to localStorage as fallback
+        localStorage.setItem('playerName', name);
+        // Save name to Firestore user profile
+        if (currentUser) {
+            await UserService.saveProfile(currentUser.uid, { name: name });
+        }
+
+        const roomName = roomNameInput.value.trim() || `${name}${t('defaultRoomName')}`;
+        const selectedDuration = parseInt(gameDurationSlider.value) || 30;
+        const code = generateRoomCode();
+        setRoomId(code);
+        state.room.isHost = true;
+
+        const roomRef = doc(db, "rooms", code);
+        await setDoc(roomRef, {
+            roomId: code,
+            roomName: roomName,
+            hostId: currentUser.uid,
+            creatorUid: currentUser.uid,  // Track original creator for dormant room access
+            creatorName: name,             // Track creator name for display
+            status: ROOM_STATUS.LOBBY,
+            currentLetter: '?',
+            categories: getRandomCategories(),
+            timerEnd: null,
+            gameDuration: selectedDuration,
+            players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }],
+            votingState: null,
+            createdAt: Date.now(),
+            lastActivity: Date.now()      // Track last activity for cleanup
+        });
+
+        // Update state
+        state.game.gameDuration = selectedDuration;
+
+        enterGameUI(code, stopActiveRoomsListener);
+        subscribeToRoom(code);
+        startHeartbeat();
+    } catch (error) {
+        console.error("Error creating room:", error);
+        showToast(t('errorGeneric') + ': ' + error.message, 'error', 6000);
+    } finally {
+        // Herstel button state altijd, ook bij errors
+        clearButtonLoading(createRoomBtn);
     }
-
-    const roomName = roomNameInput.value.trim() || `${name}${t('defaultRoomName')}`;
-    const selectedDuration = parseInt(gameDurationSlider.value) || 30;
-    const code = generateRoomCode();
-    setRoomId(code);
-    state.room.isHost = true;
-
-    const roomRef = doc(db, "rooms", code);
-    await setDoc(roomRef, {
-        roomId: code,
-        roomName: roomName,
-        hostId: currentUser.uid,
-        creatorUid: currentUser.uid,  // Track original creator for dormant room access
-        creatorName: name,             // Track creator name for display
-        status: ROOM_STATUS.LOBBY,
-        currentLetter: '?',
-        categories: getRandomCategories(),
-        timerEnd: null,
-        gameDuration: selectedDuration,
-        players: [{ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }],
-        votingState: null,
-        createdAt: Date.now(),
-        lastActivity: Date.now()      // Track last activity for cleanup
-    });
-
-    // Update state
-    state.game.gameDuration = selectedDuration;
-
-    enterGameUI(code, stopActiveRoomsListener);
-    subscribeToRoom(code);
-    startHeartbeat();
 }
 
 /**

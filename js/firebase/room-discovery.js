@@ -9,6 +9,7 @@ import { renderRoomsList } from '../ui/render-rooms.js';
 import { t } from '../i18n/translations.js';
 import { ROOM_STATUS } from '../constants.js';
 import { debugLog } from '../utils/string.js';
+import { setButtonLoading, clearButtonLoading } from '../utils/loading.js';
 
 /**
  * Subscribe to active rooms list
@@ -86,7 +87,7 @@ export async function reopenDormantRoom(roomRef, roomData, playerName, playerUid
  * @param {Function} startHeartbeat - Function to start heartbeat
  * @param {Function} stopActiveRoomsListener - Function to stop active rooms listener
  */
-export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener) {
+export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHeartbeat, stopActiveRoomsListener, joinButton = null) {
     const { playerNameInput } = getElements();
     const currentUser = state.user.currentUser;
 
@@ -97,65 +98,79 @@ export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHea
         return;
     }
 
-    // Save name to localStorage as fallback
-    localStorage.setItem('playerName', name);
-    // Save name to Firestore user profile
-    if (currentUser) {
-        await UserService.saveProfile(currentUser.uid, { name: name });
+    // Zet join button in loading state als deze is meegegeven
+    if (joinButton) {
+        setButtonLoading(joinButton, t('joining') || 'Deelnemen...');
     }
 
-    setRoomId(code);
+        // Save name to localStorage as fallback
+        localStorage.setItem('playerName', name);
+        // Save name to Firestore user profile
+        if (currentUser) {
+            await UserService.saveProfile(currentUser.uid, { name: name });
+        }
 
-    const roomRef = doc(db, "rooms", code);
-    const roomSnap = await getDoc(roomRef);
+        setRoomId(code);
 
-    if (!roomSnap.exists()) {
-        showToast(t('roomNotExist'), 'info', 4000);
-        return;
-    }
+        const roomRef = doc(db, "rooms", code);
+        const roomSnap = await getDoc(roomRef);
 
-    const roomData = roomSnap.data();
-
-    // Handle dormant room reactivation
-    if (roomData.status === ROOM_STATUS.DORMANT) {
-        // Only the original creator can reopen a dormant room
-        if (roomData.creatorUid === currentUser.uid) {
-            await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
-            state.room.isHost = true;  // Creator becomes host when reopening
-            enterGameUI(code, stopActiveRoomsListener);
-            subscribeToRoom(code);
-            startHeartbeat();
-            return;
-        } else {
+        if (!roomSnap.exists()) {
             showToast(t('roomNotExist'), 'info', 4000);
             return;
         }
+
+        const roomData = roomSnap.data();
+
+        // Handle dormant room reactivation
+        if (roomData.status === ROOM_STATUS.DORMANT) {
+            // Only the original creator can reopen a dormant room
+            if (roomData.creatorUid === currentUser.uid) {
+                await reopenDormantRoom(roomRef, roomData, name, currentUser.uid);
+                state.room.isHost = true;  // Creator becomes host when reopening
+                enterGameUI(code, stopActiveRoomsListener);
+                subscribeToRoom(code);
+                startHeartbeat();
+                return;
+            } else {
+                showToast(t('roomNotExist'), 'info', 4000);
+                return;
+            }
+        }
+
+        // Normal join flow for active rooms
+        state.room.isHost = false;
+        const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
+
+        if (existingPlayer) {
+            // Player already exists, update their info
+            const updatedPlayers = roomData.players.map(p =>
+                p.uid === currentUser.uid
+                    ? { ...p, name: name, lastSeen: Date.now() }
+                    : p
+            );
+            await updateDoc(roomRef, {
+                players: updatedPlayers,
+                lastActivity: Date.now()
+            });
+        } else {
+            // New player, add them
+            await updateDoc(roomRef, {
+                players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }),
+                lastActivity: Date.now()
+            });
+        }
+
+        enterGameUI(code, stopActiveRoomsListener);
+        subscribeToRoom(code);
+        startHeartbeat();
+    } catch (error) {
+        console.error("Error joining room:", error);
+        showToast(t('errorGeneric') + ': ' + error.message, 'error', 6000);
+    } finally {
+        // Herstel button state altijd, ook bij errors
+        if (joinButton) {
+            clearButtonLoading(joinButton);
+        }
     }
-
-    // Normal join flow for active rooms
-    state.room.isHost = false;
-    const existingPlayer = roomData.players.find(p => p.uid === currentUser.uid);
-
-    if (existingPlayer) {
-        // Player already exists, update their info
-        const updatedPlayers = roomData.players.map(p =>
-            p.uid === currentUser.uid
-                ? { ...p, name: name, lastSeen: Date.now() }
-                : p
-        );
-        await updateDoc(roomRef, {
-            players: updatedPlayers,
-            lastActivity: Date.now()
-        });
-    } else {
-        // New player, add them
-        await updateDoc(roomRef, {
-            players: arrayUnion({ uid: currentUser.uid, name: name, score: 0, answers: {}, isVerified: false, lastSeen: Date.now() }),
-            lastActivity: Date.now()
-        });
-    }
-
-    enterGameUI(code, stopActiveRoomsListener);
-    subscribeToRoom(code);
-    startHeartbeat();
 }

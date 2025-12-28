@@ -6,6 +6,7 @@ import { showToast } from '../ui/toast.js';
 import { t } from '../i18n/translations.js';
 import { ROOM_STATUS } from '../constants.js';
 import { debugLog, normalizeAnswer } from '../utils/string.js';
+import { showLoadingText, disableButtons, enableButtons } from '../utils/loading.js';
 
 /**
  * Initiate the voting phase
@@ -206,6 +207,21 @@ export async function submitCategoryVotes() {
     state.voting.isSubmittingVotes = true;
     // Don't stop timer yet - let it keep running until next category loads
 
+    // Toon loading feedback en disable voting buttons
+    const votingContainer = document.querySelector('.voting-items-grid');
+    const voteButtons = document.querySelectorAll('.vote-btn');
+    const moreTimeBtn = document.getElementById('more-time-btn');
+
+    // Disable alle voting buttons om double-clicks te voorkomen
+    disableButtons([...voteButtons, moreTimeBtn]);
+
+    // Toon loading text in de submit container
+    const submitContainer = document.querySelector('.voting-submit-container');
+    let clearLoadingText = null;
+    if (submitContainer) {
+        clearLoadingText = showLoadingText(submitContainer, t('submittingVotes') || 'Stemmen verzenden...');
+    }
+
     try {
         // Auto-approve any unanswered votes
         const votingState = state.room.roomData.votingState;
@@ -242,7 +258,15 @@ export async function submitCategoryVotes() {
     } catch (e) {
         console.error("Error submitting votes:", e);
         showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
+
+        // Re-enable buttons bij error
+        enableButtons([...voteButtons, moreTimeBtn]);
     } finally {
+        // Herstel loading state
+        if (clearLoadingText) {
+            clearLoadingText();
+        }
+
         // Reset flag after 2 seconds
         setTimeout(() => {
             state.voting.isSubmittingVotes = false;
