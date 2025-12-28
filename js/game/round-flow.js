@@ -19,6 +19,18 @@ export async function handleNextRound(resetRoomToLobby) {
     if (!state.room.isHost) return;
     try {
         await resetRoomToLobby();
+
+        // Scroll naar de draai letter sectie na het resetten
+        // Kleine delay om ervoor te zorgen dat de UI update compleet is
+        setTimeout(() => {
+            const letterContainer = document.querySelector('.letter-display-container');
+            if (letterContainer) {
+                letterContainer.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }, 100);
     } catch (e) {
         console.error("Error starting next round:", e);
         showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);
