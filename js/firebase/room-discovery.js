@@ -103,6 +103,7 @@ export async function quickJoinRoom(code, enterGameUI, subscribeToRoom, startHea
         setButtonLoading(joinButton, t('joining') || 'Deelnemen...');
     }
 
+    try {
         // Save name to localStorage as fallback
         localStorage.setItem('playerName', name);
         // Save name to Firestore user profile
