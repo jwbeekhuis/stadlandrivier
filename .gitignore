@@ -3,5 +3,4 @@ firebas-debug.log*
 .DS_Store
 node_modules/
 .env
-firebase-config.js
 .claude/settings.local.json
