@@ -64,7 +64,11 @@
       "Bash(az containerapp update:*)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(git stash pop:*)"
+      "Bash(git stash pop:*)",
+      "Bash(git merge:*)",
+      "Bash(node -c:*)",
+      "Bash(grep:*)",
+      "Bash(git fetch:*)"
     ]
   },
   "preferences": {
