@@ -37,6 +37,9 @@ async function initAuth() {
         state.user.currentUser = userCred.user;
         debugLog("Logged in as", state.user.currentUser.uid);
 
+        // Wait a bit for auth token to sync with Firestore
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const { playerNameInput } = getElements();
 
         // Load user data from Firestore (preferences + profile)
