@@ -75,12 +75,17 @@ export async function processCategoryResults(stateParam) {
                 const isApproved = yesVotes >= noVotes;
 
                 // Mark answer as verified
+                // Safety check: ensure player exists at this index
+                if (!players[answerData.playerIndex]) {
+                    console.warn(`Player at index ${answerData.playerIndex} not found, skipping verified result update`);
+                    continue;
+                }
                 if (!players[answerData.playerIndex].verifiedResults) {
                     players[answerData.playerIndex].verifiedResults = {};
                 }
                 players[answerData.playerIndex].verifiedResults[votingState.category] = {
                     isValid: isApproved,
-                    answer: answerData.answer,
+                    answer: answerData.answer || '',
                     points: 0
                 };
 
@@ -93,20 +98,25 @@ export async function processCategoryResults(stateParam) {
 
                 if (!alreadyInHistory) {
                     debugLog(`Adding voted history entry for ${answerData.playerName} - ${votingState.category}: ${answerData.answer}`);
-                    history.push({
-                        playerName: answerData.playerName,
-                        category: votingState.category,
-                        answer: answerData.answer,
-                        isValid: isApproved,
-                        isAuto: false,
-                        votes: votesForAnswer
-                    });
+                    // Validate all required fields before adding to history
+                    if (answerData.playerName && votingState.category && answerData.answer) {
+                        history.push({
+                            playerName: answerData.playerName,
+                            category: votingState.category,
+                            answer: answerData.answer,
+                            isValid: isApproved,
+                            isAuto: false,
+                            votes: votesForAnswer || {}
+                        });
+                    } else {
+                        console.warn('Skipping history entry due to missing fields:', answerData);
+                    }
                 } else {
                     debugLog(`Skipping duplicate history entry for ${answerData.playerName} - ${votingState.category}: ${answerData.answer}`);
                 }
 
                 // Collect approved answers for batch write (outside transaction for performance)
-                if (isApproved) {
+                if (isApproved && answerData.answer && votingState.category) {
                     approvedAnswers.push({ category: votingState.category, answer: answerData.answer });
                 }
             }
@@ -131,6 +141,12 @@ export async function processCategoryResults(stateParam) {
             const batch = writeBatch(db);
 
             approvedAnswers.forEach(({ category, answer }) => {
+                // Validate all required fields
+                if (!category || !answer || !state.room.roomId || !state.game.currentLetter) {
+                    console.warn('Skipping library entry due to missing fields:', { category, answer });
+                    return;
+                }
+
                 const cleanWord = normalizeAnswer(answer);
                 const letter = state.game.currentLetter;
                 const docId = `${state.room.roomId}_${category}_${letter}_${cleanWord}`.replace(/\s/g, '_');

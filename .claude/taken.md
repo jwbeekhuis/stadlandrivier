@@ -1,0 +1,4 @@
+- Host spring naar draai letter sectie als die klikt op volgende ronde
+- transistieschermen 1 seconden langer in beeld, zodat je de tekst kan lezen als je gaat voten en naar resultaten gaat
+- je kan nu in het stemmen erbij komen en mag je mee stemmen, maar als het testen stemmen voorbij is, blijf je erin hangen
+- kamers worden niet meer goed geupdated als je naar beginscherm gaat

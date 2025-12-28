@@ -70,9 +70,10 @@
       "Bash(dir:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: include firebase-config.js in deployment\n\n- Remove firebase-config.js from .gitignore\n- Add firebase-config.js to repository\n\nFixes MIME type error in production where the missing file\ncaused Firebase Hosting to return index.html instead of JS.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(gh run list:*)",
-      "Bash(git fetch:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: add git fetch to allowed Bash commands\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git merge feature-1766952556829 --no-ff -m \"$\\(cat <<''EOF''\nMerge branch ''feature-1766952556829'' - Critical bug fixes\n\nMerges 5 important commits:\n- Add validation to prevent undefined values in Firestore writes\n- Add delay after sign-in to sync auth token with Firestore\n- Add missing try blocks in quickJoinRoom and createRoom functions\n- Add Claude settings and documentation files\n\nThese fixes resolve syntax errors and Firestore 400 Bad Request errors\nduring voting and authentication.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git merge:*)",
+      "Bash(node -c:*)",
+      "Bash(grep:*)",
+      "Bash(git fetch:*)"
     ]
   },
   "preferences": {
