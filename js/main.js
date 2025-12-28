@@ -136,6 +136,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         await quickJoinRoom(code, enterGameUI, subscribeToRoomWithDeps, startHeartbeat, stopActiveRoomsListener);
     };
 
+    // Nieuwe functie die loading state ondersteunt voor join buttons
+    window.quickJoinRoomWithButton = async (code, button) => {
+        await quickJoinRoom(code, enterGameUI, subscribeToRoomWithDeps, startHeartbeat, stopActiveRoomsListener, button);
+    };
+
     window.reopenDormantRoom = async (code) => {
         await reopenDormantRoom(code, enterGameUI, subscribeToRoomWithDeps, startHeartbeat, stopActiveRoomsListener);
     };
