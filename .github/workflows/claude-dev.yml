@@ -58,7 +58,7 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           show_full_output: true
-          claude_args: "--model claude-sonnet-4-20250514 --dangerously-skip-permissions --force"
+          claude_args: "--model claude-sonnet-4-20250514 --dangerously-skip-permissions"
           additional_permissions: |
             allow_read: **/*
             allow_write: **/*
