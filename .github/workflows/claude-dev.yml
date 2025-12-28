@@ -102,11 +102,15 @@ jobs:
         if: steps.build.outcome == 'success'
         run: |
           npm install -g firebase-tools
-          PREVIEW_URL="https://stadlandrivier--${{ github.event.inputs.branch_name }}.web.app"
-          firebase hosting:channel:deploy ${{ github.event.inputs.branch_name }} \
+          OUTPUT=$(firebase hosting:channel:deploy ${{ github.event.inputs.branch_name }} \
             --expires 7d \
             --project stadlandrivier \
-            --token "${{ secrets.FIREBASE_TOKEN }}" || true
+            --token "${{ secrets.FIREBASE_TOKEN }}" 2>&1) || true
+          echo "$OUTPUT"
+          PREVIEW_URL=$(echo "$OUTPUT" | grep -oP 'https://stadlandrivier--[a-zA-Z0-9-]+\.web\.app' | head -1)
+          if [ -z "$PREVIEW_URL" ]; then
+            PREVIEW_URL="https://stadlandrivier--${{ github.event.inputs.branch_name }}.web.app"
+          fi
           echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
 
       - name: Notify n8n - Success
