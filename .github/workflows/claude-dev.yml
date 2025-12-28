@@ -122,25 +122,7 @@ jobs:
       - name: Notify n8n - Success
         if: steps.build.outcome == 'success' && steps.firebase_preview.outcome == 'success'
         run: |
-          RESULT='${{ steps.claude.outputs.result }}'
-          CONCLUSION='${{ steps.claude.outputs.conclusion }}'
-          EXECUTION='${{ steps.claude.outputs.execution-result }}'
-
-          echo "=== DEBUG ==="
-          echo "result length: ${#RESULT}"
-          echo "conclusion length: ${#CONCLUSION}"
-          echo "execution length: ${#EXECUTION}"
-          echo "============="
-
-          if [ -n "$RESULT" ] && [ "$RESULT" != "null" ]; then
-            SUMMARY="$RESULT"
-          elif [ -n "$CONCLUSION" ] && [ "$CONCLUSION" != "null" ]; then
-            SUMMARY="$CONCLUSION"
-          elif [ -n "$EXECUTION" ] && [ "$EXECUTION" != "null" ]; then
-            SUMMARY="$EXECUTION"
-          else
-            SUMMARY="Taak uitgevoerd. Check de preview."
-          fi
+          ACTION_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
           curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
@@ -148,8 +130,8 @@ jobs:
               --arg branch "${{ github.event.inputs.branch_name }}" \
               --arg preview_url "${{ steps.firebase_preview.outputs.preview_url }}" \
               --arg status "success" \
-              --arg summary "$SUMMARY" \
-              '{branch: $branch, preview_url: $preview_url, status: $status, summary: $summary}')"
+              --arg action_url "$ACTION_URL" \
+              '{branch: $branch, preview_url: $preview_url, status: $status, action_url: $action_url}')"
 
       - name: Notify n8n - Failure
         if: failure() || steps.build.outcome == 'failure' || steps.firebase_preview.outcome == 'failure'
