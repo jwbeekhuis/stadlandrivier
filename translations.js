@@ -99,13 +99,13 @@ export const translations = {
         isOwnAnswerCorrect: "Is je eigen antwoord goed of fout? (Wees eerlijk! 😉)",
 
         // Results
-        results: "🏆 EN DE WINNAAR IS...",
+        results: "EN DE WINNAAR IS...",
         name: "👤 Naam",
         points: "Punten",
         point: "Punt",
         nextRound: "🔄 VOLGENDE RONDE!",
         waitingForHost: "🕐 Chillen tot de host de volgende ronde start... ☕",
-        roundLog: "📜 Ronde Logboek",
+        roundLog: "Ronde Logboek",
         uniqueAnswer: "🌟 Uniek antwoord!",
         onlyInCategory: "💎 Enige in categorie",
         sharedAnswer: "🤝 Gedeeld antwoord",
@@ -356,13 +356,13 @@ export const translations = {
         isOwnAnswerCorrect: "Is your own answer correct or incorrect? (Be honest! 😉)",
 
         // Results
-        results: "🏆 AND THE WINNER IS...",
+        results: "AND THE WINNER IS...",
         name: "👤 Name",
         points: "Points",
         point: "Point",
         nextRound: "🔄 NEXT ROUND!",
         waitingForHost: "🕐 Chilling until the host starts the next round... ☕",
-        roundLog: "📜 Round Log",
+        roundLog: "Round Log",
         uniqueAnswer: "🌟 Unique answer!",
         onlyInCategory: "💎 Only in category",
         sharedAnswer: "🤝 Shared answer",
