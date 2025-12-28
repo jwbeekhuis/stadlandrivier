@@ -35,6 +35,7 @@ export async function createRoom(enterGameUI, subscribeToRoom, startHeartbeat, s
     // Zet button in loading state
     setButtonLoading(createRoomBtn, t('creatingRoom') || 'Kamer maken...');
 
+    try {
         // Save name to localStorage as fallback
         localStorage.setItem('playerName', name);
         // Save name to Firestore user profile
