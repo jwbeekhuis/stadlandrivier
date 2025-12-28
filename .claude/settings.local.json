@@ -64,7 +64,12 @@
       "Bash(az containerapp update:*)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(git stash pop:*)"
+      "Bash(git stash pop:*)",
+      "Bash(npm test:*)",
+      "Bash(git push)",
+      "Bash(dir:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: include firebase-config.js in deployment\n\n- Remove firebase-config.js from .gitignore\n- Add firebase-config.js to repository\n\nFixes MIME type error in production where the missing file\ncaused Firebase Hosting to return index.html instead of JS.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(gh run list:*)"
     ]
   },
   "preferences": {
