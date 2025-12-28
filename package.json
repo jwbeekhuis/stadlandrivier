@@ -1,0 +1,15 @@
+{
+  "name": "stad-land-rivier",
+  "version": "1.0.0",
+  "description": "Stad Land Rivier game application",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "game",
+    "stad-land-rivier"
+  ],
+  "author": "",
+  "license": "ISC"
+}
