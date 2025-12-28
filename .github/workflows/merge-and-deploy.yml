@@ -1,0 +1,53 @@
+name: Merge and Deploy Live
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: 'Branch om te mergen naar main'
+        required: true
+        type: string
+
+jobs:
+  merge-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Setup Git
+        run: |
+          git config user.name "Claude Code Bot"
+          git config user.email "claude-bot@users.noreply.github.com"
+
+      - name: Merge feature branch
+        run: |
+          git fetch origin ${{ github.event.inputs.branch_name }}
+          git merge origin/${{ github.event.inputs.branch_name }} --no-ff -m "Merge ${{ github.event.inputs.branch_name }} into main via Claude Dev Pipeline"
+          git push origin main
+
+      - name: Delete feature branch
+        run: |
+          git push origin --delete ${{ github.event.inputs.branch_name }} || echo "Branch already deleted"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to Firebase Live
+        run: |
+          npm install -g firebase-tools
+          firebase deploy --only hosting --project stadlandrivier --token "${{ secrets.FIREBASE_TOKEN }}"

@@ -1,0 +1,117 @@
+name: Claude Code Development
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'De opdracht voor Claude'
+        required: true
+        type: string
+      branch_name:
+        description: 'Naam voor de feature branch'
+        required: true
+        type: string
+
+jobs:
+  develop:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config user.name "Claude Code Bot"
+          git config user.email "claude-bot@users.noreply.github.com"
+
+      - name: Create or checkout feature branch
+        run: |
+          if git ls-remote --exit-code --heads origin ${{ github.event.inputs.branch_name }}; then
+            echo "Branch exists, checking out"
+            git checkout ${{ github.event.inputs.branch_name }}
+            git pull origin ${{ github.event.inputs.branch_name }}
+          else
+            echo "Creating new branch"
+            git checkout -b ${{ github.event.inputs.branch_name }}
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-sonnet-4-20250514
+          prompt: |
+            Je werkt aan "Stad Land Rivier" - een web-based spel.
+
+            TAAK:
+            ${{ github.event.inputs.task }}
+
+            REGELS:
+            - Maak alleen wijzigingen die direct met de taak te maken hebben
+            - Houd de code clean en leesbaar
+            - Voeg comments toe waar nodig (in het Nederlands mag)
+            - Als je nieuwe dependencies nodig hebt, voeg ze toe aan package.json
+            - Test je wijzigingen als dat mogelijk is
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git commit -m "feat(${{ github.event.inputs.branch_name }}): Claude Code wijzigingen"
+          git push -u origin ${{ github.event.inputs.branch_name }}
+
+      - name: Build project
+        id: build
+        run: npm run build
+        continue-on-error: true
+
+      - name: Deploy to Firebase Preview
+        id: firebase_preview
+        if: steps.build.outcome == 'success'
+        run: |
+          npm install -g firebase-tools
+          PREVIEW_URL="https://stadlandrivier--${{ github.event.inputs.branch_name }}.web.app"
+          firebase hosting:channel:deploy ${{ github.event.inputs.branch_name }} \
+            --expires 7d \
+            --project stadlandrivier \
+            --token "${{ secrets.FIREBASE_TOKEN }}" || true
+          echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+
+      - name: Notify n8n - Success
+        if: steps.build.outcome == 'success'
+        run: |
+          curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\": \"${{ github.event.inputs.branch_name }}\", \"preview_url\": \"${{ steps.firebase_preview.outputs.preview_url }}\", \"status\": \"success\"}"
+
+      - name: Notify n8n - Failure
+        if: steps.build.outcome == 'failure'
+        run: |
+          curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\": \"${{ github.event.inputs.branch_name }}\", \"preview_url\": null, \"status\": \"failure\"}"
