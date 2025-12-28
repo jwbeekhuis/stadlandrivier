@@ -122,10 +122,26 @@ jobs:
       - name: Notify n8n - Success
         if: steps.build.outcome == 'success' && steps.firebase_preview.outcome == 'success'
         run: |
-          SUMMARY=$(cat << 'EOFSUM'
-          ${{ steps.claude.outputs.result || 'Geen samenvatting' }}
-          EOFSUM
-          )
+          RESULT='${{ steps.claude.outputs.result }}'
+          CONCLUSION='${{ steps.claude.outputs.conclusion }}'
+          EXECUTION='${{ steps.claude.outputs.execution-result }}'
+
+          echo "=== DEBUG ==="
+          echo "result length: ${#RESULT}"
+          echo "conclusion length: ${#CONCLUSION}"
+          echo "execution length: ${#EXECUTION}"
+          echo "============="
+
+          if [ -n "$RESULT" ] && [ "$RESULT" != "null" ]; then
+            SUMMARY="$RESULT"
+          elif [ -n "$CONCLUSION" ] && [ "$CONCLUSION" != "null" ]; then
+            SUMMARY="$CONCLUSION"
+          elif [ -n "$EXECUTION" ] && [ "$EXECUTION" != "null" ]; then
+            SUMMARY="$EXECUTION"
+          else
+            SUMMARY="Taak uitgevoerd. Check de preview."
+          fi
+
           curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
             -d "$(jq -n \
