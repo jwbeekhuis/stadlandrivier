@@ -35,10 +35,35 @@ export function renderRoomsList(rooms) {
                     <span class="room-host">${t('host')} ${escapedHostName}</span>
                     <span class="room-players">👤 ${playerCount}</span>
                 </div>
-                <button class="join-room-quick-btn" onclick="quickJoinRoom('${room.id}')">
+                <button class="join-room-quick-btn" data-room-id="${room.id}">
                     ${t('joinRoom')}
                 </button>
             </div>
         `;
     }).join('');
+
+    // Bind event listeners voor join buttons
+    bindJoinButtonListeners();
+}
+
+/**
+ * Bind event listeners voor join room buttons
+ */
+function bindJoinButtonListeners() {
+    const joinButtons = document.querySelectorAll('.join-room-quick-btn');
+    joinButtons.forEach(button => {
+        // Remove existing listeners om duplicates te voorkomen
+        button.replaceWith(button.cloneNode(true));
+    });
+
+    // Bind nieuwe listeners
+    const newJoinButtons = document.querySelectorAll('.join-room-quick-btn');
+    newJoinButtons.forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const roomId = e.target.dataset.roomId;
+            if (roomId && window.quickJoinRoomWithButton) {
+                await window.quickJoinRoomWithButton(roomId, e.target);
+            }
+        });
+    });
 }

@@ -20,6 +20,11 @@ export const translations = {
         host: "👑 Host:",
         joinRoom: "🚀 Meedoen",
 
+        // Loading states
+        creatingRoom: "Kamer maken...",
+        joining: "Deelnemen...",
+        submittingVotes: "Stemmen verzenden...",
+
         // Tutorial
         howItWorks: "❓ Hoe werkt het?",
         tutorialRoomTitle: "🚪 Spel Maken & Deelnemen",
@@ -271,6 +276,11 @@ export const translations = {
         noRooms: "😴 No active rooms found. Create one!",
         host: "👑 Host:",
         joinRoom: "🚀 Join",
+
+        // Loading states
+        creatingRoom: "Creating room...",
+        joining: "Joining...",
+        submittingVotes: "Submitting votes...",
 
         // Tutorial
         howItWorks: "❓ How does it work?",
