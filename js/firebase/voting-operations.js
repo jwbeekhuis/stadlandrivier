@@ -19,7 +19,7 @@ export async function initiateVotingPhase() {
             votingState: null,
             lastActivity: Date.now()
         });
-        setTimeout(processNextCategory, 2000);
+        setTimeout(processNextCategory, 3000); // Verlengd met 1 seconde voor beter lezen van teksten
     } catch (e) {
         console.error("Error initiating voting phase:", e);
         showToast(t('errorGeneric') + ': ' + e.message, 'error', 6000);

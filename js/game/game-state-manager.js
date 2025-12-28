@@ -67,7 +67,7 @@ export function createUpdateGameState(
 
             // Show new Roll Letter transition
             transitionInProgress = true;
-            showTransition('roll-letter', 1000, data.currentLetter).then(() => {
+            showTransition('roll-letter', 2000, data.currentLetter).then(() => {
                 transitionInProgress = false;
                 startGameLocal();
             });
@@ -78,7 +78,7 @@ export function createUpdateGameState(
             // Show "Pens Down" transition when moving from PLAYING to VOTING
             if (lastStatus === ROOM_STATUS.PLAYING && !transitionInProgress) {
                 transitionInProgress = true;
-                showTransition('pens-down', 2800).then(() => {
+                showTransition('pens-down', 3800).then(() => {
                     transitionInProgress = false;
                 });
             }
@@ -94,7 +94,7 @@ export function createUpdateGameState(
 
                 // Show calculating transition before results
                 transitionInProgress = true;
-                showTransition('calculating', 3200).then(() => {
+                showTransition('calculating', 4200).then(() => {
                     transitionInProgress = false;
                 });
 

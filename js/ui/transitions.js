@@ -31,17 +31,17 @@ export function showTransition(type, durationMs = 4000, extra = '') {
             return new Promise((resolve) => {
                 screen.classList.remove('hidden');
 
-                // 1.5s spinning
+                // 2s spinning (was 1.5s, +0.5s voor beter leesbaarheid)
                 setTimeout(() => {
                     // Show revealed letter
                     animation.innerHTML = `<div class="letter-reveal">${extra || '?'}</div>`;
 
-                    // Stay on screen for another 1.5s then resolve
+                    // Stay on screen for another 2s then resolve (was 1.5s, +0.5s voor beter leesbaarheid)
                     setTimeout(() => {
                         screen.classList.add('hidden');
                         setTimeout(resolve, 500);
-                    }, 1500);
-                }, 1500);
+                    }, 2000);
+                }, 2000);
             });
 
         case 'pens-down':
