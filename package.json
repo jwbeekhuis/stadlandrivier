@@ -5,12 +5,20 @@
   "private": true,
   "scripts": {
     "build": "echo \"No build needed - static HTML/CSS/JS project\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "game",
     "stad-land-rivier"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4",
+    "happy-dom": "^17.6.1",
+    "vitest": "^3.2.4"
+  }
 }
