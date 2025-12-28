@@ -61,7 +61,10 @@
       "Bash(az storage account:*)",
       "Bash(az storage share create:*)",
       "Bash(npm install:*)",
-      "Bash(az containerapp update:*)"
+      "Bash(az containerapp update:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)"
     ]
   },
   "preferences": {
