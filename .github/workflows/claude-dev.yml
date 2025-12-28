@@ -75,6 +75,7 @@ jobs:
             - Voeg comments toe waar nodig (in het Nederlands mag)
             - Als je nieuwe dependencies nodig hebt, voeg ze toe aan package.json
             - Test je wijzigingen als dat mogelijk is
+            - NOOIT bestanden in .github/workflows/ aanpassen
 
       - name: Check for changes
         id: changes
