@@ -4,6 +4,7 @@
   "description": "Stad Land Rivier game application",
   "private": true,
   "scripts": {
+    "build": "echo \"No build needed - static HTML/CSS/JS project\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
