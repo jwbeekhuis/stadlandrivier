@@ -121,10 +121,12 @@ jobs:
 
       - name: Notify n8n - Success
         if: steps.build.outcome == 'success' && steps.firebase_preview.outcome == 'success'
+        env:
+          CLAUDE_SUMMARY: ${{ steps.claude.outputs.summary || 'Geen samenvatting beschikbaar' }}
         run: |
           curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d "{\"branch\": \"${{ github.event.inputs.branch_name }}\", \"preview_url\": \"${{ steps.firebase_preview.outputs.preview_url }}\", \"status\": \"success\"}"
+            -d "{\"branch\": \"${{ github.event.inputs.branch_name }}\", \"preview_url\": \"${{ steps.firebase_preview.outputs.preview_url }}\", \"status\": \"success\", \"summary\": $(echo "$CLAUDE_SUMMARY" | jq -Rs .)}"
 
       - name: Notify n8n - Failure
         if: failure() || steps.build.outcome == 'failure' || steps.firebase_preview.outcome == 'failure'
