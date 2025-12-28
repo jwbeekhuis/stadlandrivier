@@ -105,23 +105,29 @@ jobs:
           OUTPUT=$(firebase hosting:channel:deploy ${{ github.event.inputs.branch_name }} \
             --expires 7d \
             --project stadlandrivier \
-            --token "${{ secrets.FIREBASE_TOKEN }}" 2>&1) || true
+            --token "${{ secrets.FIREBASE_TOKEN }}" 2>&1)
+          DEPLOY_EXIT_CODE=$?
           echo "$OUTPUT"
+          if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+            echo "deploy_failed=true" >> $GITHUB_OUTPUT
+            exit 1
+          fi
           PREVIEW_URL=$(echo "$OUTPUT" | grep -oP 'https://stadlandrivier--[a-zA-Z0-9-]+\.web\.app' | head -1)
           if [ -z "$PREVIEW_URL" ]; then
-            PREVIEW_URL="https://stadlandrivier--${{ github.event.inputs.branch_name }}.web.app"
+            echo "Could not extract preview URL"
+            exit 1
           fi
           echo "preview_url=$PREVIEW_URL" >> $GITHUB_OUTPUT
 
       - name: Notify n8n - Success
-        if: steps.build.outcome == 'success'
+        if: steps.build.outcome == 'success' && steps.firebase_preview.outcome == 'success'
         run: |
           curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
             -d "{\"branch\": \"${{ github.event.inputs.branch_name }}\", \"preview_url\": \"${{ steps.firebase_preview.outputs.preview_url }}\", \"status\": \"success\"}"
 
       - name: Notify n8n - Failure
-        if: steps.build.outcome == 'failure'
+        if: failure() || steps.build.outcome == 'failure' || steps.firebase_preview.outcome == 'failure'
         run: |
           curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
