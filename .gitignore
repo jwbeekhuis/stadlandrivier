@@ -4,3 +4,4 @@ firebas-debug.log*
 node_modules/
 .env
 firebase-config.js
+.claude/settings.local.json

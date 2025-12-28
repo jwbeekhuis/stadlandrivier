@@ -49,7 +49,19 @@
       "Bash(ls:*)",
       "Bash(echo \"Files created:\" ls js/game/voting-*.js js/firebase/voting-*.js)",
       "Bash(git rm:*)",
-      "Bash(firebase hosting:channel:deploy:*)"
+      "Bash(firebase hosting:channel:deploy:*)",
+      "Bash(az extension add:*)",
+      "Bash(az group create:*)",
+      "Bash(az containerapp env create:*)",
+      "Bash(az provider register:*)",
+      "Bash(az containerapp create:*)",
+      "Bash(az containerapp show:*)",
+      "Bash(mkdir:*)",
+      "Bash(az storage account create:*)",
+      "Bash(az storage account:*)",
+      "Bash(az storage share create:*)",
+      "Bash(npm install:*)",
+      "Bash(az containerapp update:*)"
     ]
   },
   "preferences": {
