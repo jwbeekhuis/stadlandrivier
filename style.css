@@ -863,18 +863,18 @@ body.light-mode .lobby-panel input:focus {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
     min-width: 180px;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.3s ease;
-    z-index: 1000;
+    z-index: 1100;
 }
 
 .game-actions-dropdown.show {
@@ -891,7 +891,7 @@ body.light-mode .lobby-panel input:focus {
     background: transparent;
     border: none;
     padding: 12px 16px;
-    color: var(--text-color);
+    color: rgba(255, 255, 255, 0.95);
     font-size: 0.9rem;
     font-weight: 500;
     font-family: var(--font-main);
@@ -911,7 +911,7 @@ body.light-mode .lobby-panel input:focus {
 }
 
 .game-action-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
     transform: translateX(4px);
 }
