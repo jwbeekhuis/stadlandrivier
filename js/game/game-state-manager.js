@@ -185,7 +185,7 @@ function updateInputPlaceholders() {
         const translatedCat = t('categories.' + cat);
         const input = document.getElementById(`input-${safeId}`);
         if (input) {
-            input.placeholder = `${translatedCat} ${state.user.currentLanguage === 'nl' ? 'met' : 'with'} ${state.game.currentLetter}`;
+            input.placeholder = `${translatedCat} ${t('with')} ${state.game.currentLetter}`;
         }
     });
 }

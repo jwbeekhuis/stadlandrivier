@@ -81,10 +81,39 @@ export function bindEventListeners(
         themeToggleBtn.addEventListener('click', toggleTheme);
     }
 
-    // Language toggle
+    // Language selector dropdown
     if (languageToggleBtn) {
-        languageToggleBtn.addEventListener('click', () => {
-            setLanguage(state.user.currentLanguage === 'nl' ? 'en' : 'nl');
+        const languageSelector = document.getElementById('language-selector');
+        const languageDropdown = document.getElementById('language-dropdown');
+        const languageOptions = document.querySelectorAll('.language-option');
+
+        // Toggle dropdown open/close
+        languageToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            languageSelector.classList.toggle('open');
+        });
+
+        // Handle language selection
+        languageOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                const selectedLang = option.getAttribute('data-lang');
+                setLanguage(selectedLang);
+                languageSelector.classList.remove('open');
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!languageSelector.contains(e.target)) {
+                languageSelector.classList.remove('open');
+            }
+        });
+
+        // Close dropdown on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                languageSelector.classList.remove('open');
+            }
         });
     }
 

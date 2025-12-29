@@ -28,7 +28,7 @@ export function t(key) {
 
 /**
  * Set the current language
- * @param {string} lang - Language code ('nl' or 'en')
+ * @param {string} lang - Language code ('nl', 'en', or 'de')
  */
 export function setLanguage(lang) {
     setCurrentLanguage(lang);
@@ -40,6 +40,73 @@ export function setLanguage(lang) {
 
     updateAllTranslations();
     updateDynamicContent();
+    updateLanguageToggleButton();
+}
+
+/**
+ * Get the next language in the cycle
+ * @param {string} currentLang - Current language code
+ * @returns {string} - Next language code
+ */
+export function getNextLanguage(currentLang) {
+    switch (currentLang) {
+        case 'nl':
+            return 'en';
+        case 'en':
+            return 'de';
+        case 'de':
+            return 'nl';
+        default:
+            return 'en';
+    }
+}
+
+/**
+ * Get language display name
+ * @param {string} lang - Language code
+ * @returns {string} - Display name
+ */
+export function getLanguageDisplayName(lang) {
+    const names = {
+        nl: 'NL',
+        en: 'EN',
+        de: 'DE'
+    };
+    return names[lang] || lang.toUpperCase();
+}
+
+/**
+ * Update language selector to reflect current language
+ */
+export function updateLanguageToggleButton() {
+    const currentLang = getCurrentLanguage();
+
+    // Update dropdown - mark active option
+    const languageOptions = document.querySelectorAll('.language-option');
+    languageOptions.forEach(option => {
+        const optionLang = option.getAttribute('data-lang');
+        if (optionLang === currentLang) {
+            option.classList.add('active');
+        } else {
+            option.classList.remove('active');
+        }
+    });
+
+    // Update button tooltip with current language info
+    const languageToggleBtn = document.getElementById('language-toggle');
+    if (languageToggleBtn) {
+        const currentDisplay = getLanguageDisplayName(currentLang);
+
+        // Meertalige tooltip die altijd begrijpelijk is
+        const tooltips = {
+            'nl': 'Huidige taal: Nederlands - Klik om te wijzigen',
+            'en': 'Current language: English - Click to change',
+            'de': 'Aktuelle Sprache: Deutsch - Klicken zum Ändern'
+        };
+
+        languageToggleBtn.title = tooltips[currentLang] || 'Kies taal / Choose language / Sprache wählen';
+        languageToggleBtn.setAttribute('aria-label', 'Kies taal / Choose language / Sprache wählen');
+    }
 }
 
 /**
@@ -94,6 +161,9 @@ export function updateAllTranslations() {
 
     // Update results content
     updateResultsContent();
+
+    // Update language toggle button
+    updateLanguageToggleButton();
 }
 
 /**
