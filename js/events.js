@@ -44,7 +44,13 @@ export function bindEventListeners(
         nextRoundBtn,
         moreTimeBtn,
         gameDurationSlider,
-        durationValueDisplay
+        durationValueDisplay,
+        gameActionsMenu,
+        gameActionsToggle,
+        gameActionsDropdown,
+        leaveRoomAction,
+        deleteRoomAction,
+        resetGameAction
     } = getElements();
 
     // Room creation
@@ -69,6 +75,51 @@ export function bindEventListeners(
     }
     if (leaveRoomBtn) {
         leaveRoomBtn.addEventListener('click', handleLeaveRoomClick);
+    }
+
+    // Game Actions Menu
+    if (gameActionsToggle && gameActionsDropdown) {
+        // Toggle dropdown visibility
+        gameActionsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            gameActionsDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!gameActionsMenu.contains(e.target)) {
+                gameActionsDropdown.classList.remove('show');
+            }
+        });
+
+        // Close dropdown on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                gameActionsDropdown.classList.remove('show');
+            }
+        });
+
+        // Connect menu actions to existing handlers
+        if (leaveRoomAction) {
+            leaveRoomAction.addEventListener('click', () => {
+                gameActionsDropdown.classList.remove('show');
+                handleLeaveRoomClick();
+            });
+        }
+
+        if (deleteRoomAction) {
+            deleteRoomAction.addEventListener('click', () => {
+                gameActionsDropdown.classList.remove('show');
+                handleDeleteRoomClick();
+            });
+        }
+
+        if (resetGameAction) {
+            resetGameAction.addEventListener('click', () => {
+                gameActionsDropdown.classList.remove('show');
+                handleResetGameClick(resetRoomToLobby);
+            });
+        }
     }
 
     // Category shuffle

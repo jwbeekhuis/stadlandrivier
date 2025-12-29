@@ -40,6 +40,14 @@ export function initDOM() {
         languageToggleBtn: document.getElementById('language-toggle'),
         playersList: document.getElementById('players-list'),
 
+        // Game Actions Menu
+        gameActionsMenu: document.getElementById('game-actions-menu'),
+        gameActionsToggle: document.getElementById('game-actions-toggle'),
+        gameActionsDropdown: document.getElementById('game-actions-dropdown'),
+        leaveRoomAction: document.getElementById('leave-room-action'),
+        deleteRoomAction: document.getElementById('delete-room-action'),
+        resetGameAction: document.getElementById('reset-game-action'),
+
         // Voting Elements
         votingCategoryTitle: document.getElementById('voting-category-title'),
         votingItemsContainer: document.getElementById('voting-items-container'),

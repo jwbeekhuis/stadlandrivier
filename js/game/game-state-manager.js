@@ -136,6 +136,11 @@ export function createUpdateGameState(
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.remove('hidden');
             if (resetGameBtn) resetGameBtn.classList.remove('hidden');
 
+            // Ook de menu items tonen voor host
+            const { deleteRoomAction, resetGameAction } = getElements();
+            if (deleteRoomAction) deleteRoomAction.classList.remove('hidden');
+            if (resetGameAction) resetGameAction.classList.remove('hidden');
+
             if (!wasHost && state.room.roomData) {
                 debugLog("You are now the host!");
                 setTimeout(() => {
@@ -172,6 +177,11 @@ export function createUpdateGameState(
             if (shuffleBtn) shuffleBtn.classList.add('hidden');
             if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
             if (resetGameBtn) resetGameBtn.classList.add('hidden');
+
+            // Ook de menu items verbergen voor niet-host
+            const { deleteRoomAction, resetGameAction } = getElements();
+            if (deleteRoomAction) deleteRoomAction.classList.add('hidden');
+            if (resetGameAction) resetGameAction.classList.add('hidden');
         }
     };
 }

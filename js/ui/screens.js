@@ -34,6 +34,11 @@ export function enterGameUI(code, stopActiveRoomsListener) {
         if (deleteRoomGameBtn) deleteRoomGameBtn.classList.add('hidden');
         if (resetGameBtn) resetGameBtn.classList.add('hidden');
 
+        // Ook de menu items verbergen voor niet-host
+        const { deleteRoomAction, resetGameAction } = getElements();
+        if (deleteRoomAction) deleteRoomAction.classList.add('hidden');
+        if (resetGameAction) resetGameAction.classList.add('hidden');
+
         const waitingForHostLobbyMsg = document.getElementById('waiting-for-host-lobby');
         if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.remove('hidden');
     }

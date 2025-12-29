@@ -839,6 +839,107 @@ body.light-mode .lobby-panel input:focus {
     transform: scale(1.05);
 }
 
+/* Game Actions Menu */
+.game-actions-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.game-actions-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.2s ease;
+}
+
+.game-actions-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.game-actions-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    min-width: 180px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.game-actions-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.game-action-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    margin: 4px;
+    text-align: left;
+}
+
+.game-action-item:first-child {
+    margin-top: 8px;
+}
+
+.game-action-item:last-child {
+    margin-bottom: 8px;
+}
+
+.game-action-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateX(4px);
+}
+
+.game-action-item svg {
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+.game-action-item:hover svg {
+    opacity: 1;
+}
+
+.game-action-item.hidden {
+    display: none;
+}
+
+/* Menu item kleuren voor verschillende acties */
+.game-action-item[id="delete-room-action"]:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.game-action-item[id="reset-game-action"]:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+}
+
 .players-list {
     display: flex;
     flex-wrap: wrap;
