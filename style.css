@@ -1044,16 +1044,39 @@ body.light-mode .language-option.active {
 /* Extra kleine schermen */
 @media (max-width: 480px) {
     .language-selector {
-        position: static;
+        position: relative; /* Hersteld van static naar relative voor juiste positioning */
     }
 
     .language-dropdown {
-        position: fixed;
-        top: auto;
-        bottom: 80px;
-        right: 20px;
-        left: 20px;
-        min-width: auto;
+        position: absolute; /* Behoud absolute positioning ten opzichte van parent */
+        top: calc(100% + 8px); /* Dropdown verschijnt onder de knop */
+        right: 0; /* Uitgelijnd met rechterrand van de knop */
+        left: auto; /* Laat links vrij voor natuurlijke breedte */
+        min-width: 160px; /* Herstel minimale breedte */
+        width: max-content; /* Zorg dat dropdown zich aanpast aan inhoud */
+
+        /* Zorg ervoor dat dropdown niet buiten het scherm valt */
+        transform: translateX(0);
+    }
+
+    /* Als de dropdown te ver naar rechts zou vallen, verschuif dan naar links */
+    .language-selector:has(.language-dropdown) {
+        position: relative;
+    }
+
+    /* Alternatieve positionering als dropdown buiten scherm valt */
+    @supports not selector(:has(*)) {
+        .language-dropdown {
+            right: -10px; /* Kleine aanpassing voor oudere browsers */
+        }
+    }
+
+    /* Voor zeer smalle schermen (< 320px), zorg dat dropdown niet buiten scherm valt */
+    @media (max-width: 320px) {
+        .language-dropdown {
+            right: -20px; /* Meer ruimte voor zeer smalle schermen */
+            min-width: 140px; /* Kleinere minimumbreedte */
+        }
     }
 }
 
