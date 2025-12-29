@@ -59,12 +59,32 @@
                     data-i18n="by">by
                     JW</small></h1>
             <div class="header-controls">
-                <button id="language-toggle" class="icon-btn" aria-label="Toggle Language" title="EN/NL">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                        <path
-                            d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0014.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z" />
-                    </svg>
-                </button>
+                <div class="language-selector" id="language-selector">
+                    <button id="language-toggle" class="icon-btn language-toggle-btn" aria-label="Kies taal / Choose language / Sprache wählen">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                            <!-- Wereldbol icoon -->
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" class="dropdown-arrow">
+                            <!-- Pijltje omlaag -->
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+                    <div class="language-dropdown" id="language-dropdown">
+                        <div class="language-option" data-lang="nl">
+                            <span class="flag">🇳🇱</span>
+                            <span class="lang-name">Nederlands</span>
+                        </div>
+                        <div class="language-option" data-lang="en">
+                            <span class="flag">🇬🇧</span>
+                            <span class="lang-name">English</span>
+                        </div>
+                        <div class="language-option" data-lang="de">
+                            <span class="flag">🇩🇪</span>
+                            <span class="lang-name">Deutsch</span>
+                        </div>
+                    </div>
+                </div>
                 <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
                     <svg id="theme-icon" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
                         <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
