@@ -28,7 +28,7 @@ export function t(key) {
 
 /**
  * Set the current language
- * @param {string} lang - Language code ('nl', 'en', or 'de')
+ * @param {string} lang - Language code ('nl', 'en', 'de', or 'fi')
  */
 export function setLanguage(lang) {
     setCurrentLanguage(lang);
@@ -55,6 +55,8 @@ export function getNextLanguage(currentLang) {
         case 'en':
             return 'de';
         case 'de':
+            return 'fi';
+        case 'fi':
             return 'nl';
         default:
             return 'en';
@@ -70,7 +72,8 @@ export function getLanguageDisplayName(lang) {
     const names = {
         nl: 'NL',
         en: 'EN',
-        de: 'DE'
+        de: 'DE',
+        fi: 'FI'
     };
     return names[lang] || lang.toUpperCase();
 }
@@ -101,11 +104,12 @@ export function updateLanguageToggleButton() {
         const tooltips = {
             'nl': 'Huidige taal: Nederlands - Klik om te wijzigen',
             'en': 'Current language: English - Click to change',
-            'de': 'Aktuelle Sprache: Deutsch - Klicken zum Ändern'
+            'de': 'Aktuelle Sprache: Deutsch - Klicken zum Ändern',
+            'fi': 'Nykyinen kieli: Suomi - Klikkaa vaihtaaksesi'
         };
 
-        languageToggleBtn.title = tooltips[currentLang] || 'Kies taal / Choose language / Sprache wählen';
-        languageToggleBtn.setAttribute('aria-label', 'Kies taal / Choose language / Sprache wählen');
+        languageToggleBtn.title = tooltips[currentLang] || 'Kies taal / Choose language / Sprache wählen / Valitse kieli';
+        languageToggleBtn.setAttribute('aria-label', 'Kies taal / Choose language / Sprache wählen / Valitse kieli');
     }
 }
 
