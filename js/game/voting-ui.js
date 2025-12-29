@@ -247,12 +247,8 @@ export function showVotingUI(votingState, syncVoteToFirebase, startVoteTimer) {
         itemDiv.className = 'voting-item';
 
         // Create ARIA labels for accessibility
-        const rejectLabel = state.user.currentLanguage === 'nl'
-            ? `Keur af: ${answerData.answer} door ${answerData.playerName}`
-            : `Reject: ${answerData.answer} by ${answerData.playerName}`;
-        const approveLabel = state.user.currentLanguage === 'nl'
-            ? `Keur goed: ${answerData.answer} door ${answerData.playerName}`
-            : `Approve: ${answerData.answer} by ${answerData.playerName}`;
+        const rejectLabel = `${t('rejectAriaPrefix')} ${answerData.answer} ${t('ariaByPlayer')} ${answerData.playerName}`;
+        const approveLabel = `${t('approveAriaPrefix')} ${answerData.answer} ${t('ariaByPlayer')} ${answerData.playerName}`;
 
         itemDiv.innerHTML = `
             <div class="voting-item-header">

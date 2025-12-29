@@ -226,6 +226,14 @@ export const translations = {
         delete: "Verwijderen",
         kick: "Verwijderen",
 
+        // Input placeholder word
+        with: "met",
+
+        // ARIA labels for voting
+        rejectAriaPrefix: "Keur af:",
+        approveAriaPrefix: "Keur goed:",
+        ariaByPlayer: "door",
+
         // Categories
         categories: {
             'Stad': 'Stad',
@@ -482,6 +490,14 @@ export const translations = {
         delete: "Delete",
         kick: "Remove",
 
+        // Input placeholder word
+        with: "with",
+
+        // ARIA labels for voting
+        rejectAriaPrefix: "Reject:",
+        approveAriaPrefix: "Approve:",
+        ariaByPlayer: "by",
+
         // Categories
         categories: {
             'Stad': 'City',
@@ -509,6 +525,270 @@ export const translations = {
             'Schoolvak': 'School Subject',
             'Hoofdstad': 'Capital',
             'Smoesje': 'Excuse',
+            'Hobby': 'Hobby'
+        }
+    },
+    de: {
+        // Header
+        title: "Stadt Land Fluss",
+        by: "von JW",
+
+        // Lobby
+        welcome: "Willkommen!",
+        yourName: "👤 Dein Name",
+        namePlaceholder: "Gib deinen Namen ein...",
+        roomName: "🏠 Spielname (optional)",
+        roomNamePlaceholder: "Z.B. Freunde Gruppe...",
+        gameTime: "⏱️ Spielzeit:",
+        seconds: "Sekunden",
+        second: "Sekunde",
+        newRoom: "➕ Neues Spiel",
+        activeRooms: "🎮 Aktive Spiele",
+        loading: "⏳ Einen Moment...",
+        noRooms: "😴 Keine aktiven Spiele gefunden. Erstelle eins!",
+        host: "👑 Host:",
+        joinRoom: "🚀 Mitmachen",
+
+        // Loading states
+        creatingRoom: "Raum erstellen...",
+        joining: "Beitreten...",
+        submittingVotes: "Stimmen senden...",
+
+        // Tutorial
+        howItWorks: "❓ Wie funktioniert es?",
+        tutorialRoomTitle: "🚪 Spiel Erstellen & Beitreten",
+        tutorialActiveRooms: "👀 Aktive Spiele: Sieh direkt, welche Spiele verfügbar sind! Gib nur deinen Namen ein und klicke bei einem Spiel auf \"Mitmachen\". Kinderleicht! 🎯",
+        tutorialNewRoom: "✨ Neues Spiel: Erstelle dein eigenes Spiel mit \"Neues Spiel\". Du kannst die Spielzeit (30-300 Sekunden) mit dem Schieberegler einstellen. Dein Spiel erscheint automatisch in der Liste bei anderen! 🚀",
+        tutorialHost: "👑 Host-Power: Der Ersteller des Spiels kann den Buchstaben drehen, Kategorien mischen, die nächste Runde starten, Spieler entfernen und das Spiel löschen. Wenn der Host das Spiel verlässt, übernimmt der nächste Spieler automatisch als neuer König! 🤴",
+        tutorialKicked: "👢 Aus dem Spiel entfernt? Wenn der Host das Spiel löscht oder dich rauswirft, wirst du automatisch zum Startbildschirm zurückgeschickt. Keine Panik!",
+        tutorialReconnect: "📶 Verbindung unterbrochen? Kein Stress! Dein Name wird automatisch gespeichert. Lade die Seite neu und klicke einfach wieder auf \"Mitmachen\" - du kommst zurück ins gleiche Spiel! Inaktive Spieler werden nach 2 Minuten automatisch entfernt (3 Minuten während des Abstimmens). ⏰",
+
+        tutorialLibraryTitle: "📚 Intelligente Bibliothek (Pro Spiel)",
+        tutorialLibrary: "🧠 Jedes Spiel hat seine eigene Wörterbibliothek. Genehmigte Antworten werden gespeichert und bei späteren Runden automatisch genehmigt - aber nur innerhalb desselben Spiels! So wird das Spiel schneller und fairer! 🎯",
+        tutorialDormant: "😴 Spiel leer? Keine Panik! Wenn alle Spieler inaktiv werden, wird dein Spiel nicht gelöscht! Das Spiel geht in den Schlafmodus und behält die vollständige Wörterbibliothek. Als ursprünglicher Ersteller kannst du immer zurückkehren und das Spiel wieder öffnen - alle genehmigten Wörter bleiben sicher gespeichert! 🛌💤",
+
+        tutorialRulesTitle: "🎮 Spielregeln",
+        tutorialRules: "🎲 Der Host dreht einen Buchstaben und BAM! Jeder hat die eingestellte Zeit (Standard 60 Sekunden), um Antworten für jede Kategorie einzugeben, die mit diesem Buchstaben beginnen. Geschwindigkeit und Kreativität = gewinnen! 💪",
+
+        tutorialPointsTitle: "🏆 Punkte Verdienen",
+        tutorialPoints20: "🌟 20 Punkte - WOW! Du bist der Einzige mit einer gültigen Antwort (Superstar!)",
+        tutorialPoints10: "💎 10 Punkte - Du hast eine einzigartige Antwort in einer Kategorie, wo andere auch etwas haben (gut gemacht!)",
+        tutorialPoints5: "🤝 5 Punkte - Deine Antwort stimmt (fast) mit der von jemand anderem überein (große Köpfe!)",
+
+        tutorialRecognitionTitle: "🔍 Intelligente Worterkennung",
+        tutorialRecognition: "🧠 Das Spiel erkennt ähnliche Wörter! Kleine Tippfehler oder Plural/Singular werden als dasselbe angesehen. Zum Beispiel: \"Amsterdam\" und \"Amsterdm\" werden als geteilte Antwort betrachtet. Wir sind hier nicht streng! 😉",
+
+        tutorialVotingTitle: "✅ Abstimmungsprozess - Zeit zum Richtern!",
+        tutorialVotingIntro: "⚖️ Nach Ablauf der Zeit stimmt jeder über alle Antworten ab:",
+        tutorialVoting1: "📋 Du siehst alle Antworten für eine Kategorie auf einmal",
+        tutorialVoting2: "⏰ Du hast 30 Sekunden pro Kategorie, um über alle Antworten abzustimmen",
+        tutorialVoting3: "🆘 In den letzten 5 Sekunden erscheint ein \"+10s Mehr Zeit\" Button (für wenn du zweifelst!)",
+        tutorialVoting4: "😇 Wenn du nicht über alle Antworten in der Zeit abstimmst, werden die übrigen Antworten automatisch genehmigt",
+        tutorialVoting5: "⚡ Wenn du alle Antworten beurteilt hast, werden deine Stimmen direkt eingereicht! Kein Warten! 🚀",
+        tutorialVoting6: "🎯 Wenn alle abgestimmt haben, geht das Spiel automatisch zur nächsten Kategorie! Superschnell!",
+        tutorialVoting7: "👍👎 Stimme ✅ (richtig) oder ❌ (falsch) für jede Antwort",
+        tutorialVoting8: "🔄 Du kannst deine Stimme ändern, solange die Abstimmzeit läuft - klicke einfach nochmal auf einen Button!",
+        tutorialVoting9: "🤔 Du darfst auch über deine eigenen Antworten abstimmen - das macht es fairer und du kannst mitdiskutieren!",
+        tutorialVoting10: "👯 Doppelte Antworten werden automatisch erkannt und markiert (kein Schummeln!)",
+
+        tutorialLogTitle: "📊 Runden-Log",
+        tutorialLog: "🔍 Am Ende siehst du eine vollständige Übersicht aller Antworten, Stimmen und Punkte - so kannst du genau kontrollieren, wie die Punkte zustande gekommen sind! Transparenz FTW! 🎯",
+
+        // Game Controls
+        room: "Spiel:",
+        leaveRoom: "👋 Spiel Verlassen",
+        deleteRoom: "Spiel Löschen",
+        resetGame: "🔄 Spiel Zurücksetzen",
+        rollLetter: "🎲 DREH DEN BUCHSTABEN!",
+        stopRound: "RUNDE STOPPEN",
+        mixCategories: "🔀 Kategorien Mischen",
+        waitingForHostLobby: "🕐 Warte mal... der Host denkt nach! ☕",
+
+        // Voting
+        checkAnswer: "🔍 Antwort Prüfen",
+        checkAllAnswers: "⚖️ Zeit zum Richtern!",
+        voteAllInstructions: "👇 Stimme über alle Antworten unten ab. Du kannst deine Stimme ändern, bis die Zeit abläuft!",
+        yourAnswer: "💬 Deine Antwort",
+        duplicate: "👯 Doppelt mit",
+        voted: "abgestimmt",
+        autoSubmitInfo: "⚡ Stimmen werden automatisch eingereicht, wenn du alles beurteilt hast!",
+        hasAnswered: "Hat",
+        at: "bei",
+        theFollowingAnswer: "folgende Antwort:",
+        moreTime: "⏱️ +10s Mehr Zeit",
+        waitingForVotes: "⏳ Warten auf Stimmen...",
+        verdictDecided: "⚖️ Urteil gefällt!",
+        approved: "✅ GENEHMIGT!",
+        rejected: "❌ LEIDER NEIN!",
+        youVotedYes: "Du hast ✅ gestimmt. Du kannst deine Stimme ändern.",
+        youVotedNo: "Du hast ❌ gestimmt. Du kannst deine Stimme ändern.",
+        youVotedYesOwn: "Du hast ✅ für deine eigene Antwort gestimmt. Bist du ehrlich? 😇",
+        youVotedNoOwn: "Du hast ❌ für deine eigene Antwort gestimmt. Streng zu dir selbst! 😅",
+        isAnswerCorrect: "Ist diese Antwort richtig oder falsch?",
+        isOwnAnswerCorrect: "Ist deine eigene Antwort richtig oder falsch? (Sei ehrlich! 😉)",
+
+        // Results
+        results: "UND DER GEWINNER IST...",
+        name: "👤 Name",
+        points: "Punkte",
+        point: "Punkt",
+        nextRound: "🔄 NÄCHSTE RUNDE!",
+        waitingForHost: "🕐 Entspannen bis der Host die nächste Runde startet... ☕",
+        roundLog: "Runden-Log",
+        uniqueAnswer: "🌟 Einzigartige Antwort!",
+        onlyInCategory: "💎 Einziger in Kategorie",
+        sharedAnswer: "🤝 Geteilte Antwort",
+        notApproved: "❌ Leider nicht genehmigt",
+        autoApproved: "⚡ (Auto)",
+        votedYes: "stimmte ✅",
+        votedNo: "stimmte ❌",
+
+        // Alerts
+        enterName: "👤 Gib zuerst deinen Namen ein!",
+        roomNotExist: "😢 Dieses Spiel existiert nicht mehr.",
+        roomDeleted: "🗑️ Dieses Spiel wurde gelöscht.",
+        kickedFromRoom: "👢 Du wurdest aus dem Spiel entfernt. Bis zum nächsten Mal!",
+        youLeftRoom: "👋 Du hast das Spiel verlassen",
+        confirmKick: "🤔 Bist du sicher, dass du {name} aus dem Spiel entfernen möchtest?",
+        confirmDelete: "⚠️ Bist du sicher, dass du dieses Spiel löschen möchtest?",
+        confirmReset: "🔄 Bist du sicher, dass du das Spiel zur Lobby zurücksetzen möchtest? Alle aktuellen Antworten und Stimmen gehen verloren.",
+        onlyHostCanReset: "Nur der Host kann das Spiel zurücksetzen",
+        hostRejoinStuckState: "Spiel ist in unvollständigem Zustand",
+        resetToLobby: "Zur Lobby Zurücksetzen",
+        nowHost: "Du bist jetzt der Host! Du kannst den Buchstaben drehen und die nächste Runde starten",
+        confirmDeleteRoom: "Bist du sicher, dass du diesen Raum löschen möchtest?",
+        roomDeletedSuccess: "Raum gelöscht!",
+        defaultRoomName: "s Raum",
+        authError: "Etwas ist beim Anmelden schiefgelaufen. Überprüfe deine Internetverbindung.",
+        enterNameFirst: "Gib zuerst deinen Namen ein!",
+        invalidCode: "Ungültiger Code",
+        roomNotFound: "Raum nicht gefunden!",
+        errorGeneric: "Etwas ist schiefgelaufen",
+
+        // Transitions
+        transRollLetter: [
+            { title: "BUCHSTABE WIRD GEWÄHLT...", sub: "Die Spannung steigt zum Siedepunkt! 🔥" },
+            { title: "GLÜCKSRAD!", sub: "Welcher Buchstabe wird dein Leben verändern? 🎡" },
+            { title: "ALPHABET ROULETTE...", sub: "Setze alle deine Punkte auf den nächsten Buchstaben! 🎰" },
+            { title: "MAGISCHER BUCHSTABE...", sub: "Der Computer spricht in Zungen... 🔮" },
+            { title: "TROMMELWIRBEL...", sub: "Der Buchstabe des Tages ist... 🥁" },
+            { title: "MAL SCHAUEN...", sub: "Wir haben das ganze Alphabet in einen Mixer geworfen. 🌪️" },
+            { title: "SIMSALABIM!", sub: "Welchen Buchstaben ziehen wir aus dem Hut? 🎩" },
+            { title: "BUCHSTABEN-JÄGER...", sub: "Auf der Jagd nach dem perfekten Zeichen. 🏹" },
+            { title: "BUCHSTABEN-STURM!", sub: "Halte dich an deiner Tastatur fest! 🌪️" },
+            { title: "WIE STEHT ES?", sub: "Welcher Buchstabe wird uns heute überraschen? 😮" },
+            { title: "ZAHLENLOSES CHAOS!", sub: "Hier kommt nur Text heraus. 🔠" },
+            { title: "FÜR DEN SIEG!", sub: "Wird es das Z oder das A? Oder etwas dazwischen? 🅰️" },
+            { title: "REBELLISCHES ALPHABET...", sub: "Die Buchstaben weigern sich zu gehorchen. ✊" },
+            { title: "STILLE...", sub: "Das Universum wählt jetzt einen Buchstaben für dich. 🌌" },
+            { title: "BEEIL DICH!", sub: "Der Buchstabe ist fast angekommen. 🏎️" },
+            { title: "CYBER-SPIN!", sub: "Unsere Pixel tanzen für dich. 💃" },
+            { title: "BUCHSTABEN-LOTTO!", sub: "Mach dich bereit für den Hauptgewinn! 🏆" },
+            { title: "DOPPELTES D!", sub: "Nein, das hoffen wir nicht für dich. 🅱️" },
+            { title: "FRISCH GEPRESST!", sub: "Der brandneue Buchstabe ist unterwegs. 🍒" },
+            { title: "DREH-ZEIT!", sub: "Drehe dich für die besten Ergebnisse. 💃" },
+            { title: "REKORDE BRECHEN?", sub: "Mit diesem Buchstaben auf jeden Fall! 🥇" },
+            { title: "WAS WIRD ES?", sub: "Selbst Einstein wusste es nicht. 🧠" },
+            { title: "KEIN STRESS!", sub: "Es ist nur ein Buchstabe (oder doch nicht?). 😱" },
+            { title: "GLÜCKS-BUCHSTABE?", sub: "Mal sehen! 🍀" },
+            { title: "EXPLOSIONSBEREIT!", sub: "Der Buchstabe wird gleich auf deinem Bildschirm explodieren. 🧨" }
+        ],
+        transPensDown: [
+            { title: "STIFTE WEG!", sub: "Die Jury putzt ihre Brille... 🧐" },
+            { title: "STOPP! HAMMER-ZEIT!", sub: "Die Jury wird jetzt auf deine Fehler hämmern. 🔨" },
+            { title: "JETZT STOPPEN!", sub: "Kein Schummeln mehr möglich! 🚫" },
+            { title: "ZEIT IST UM!", sub: "Lass die Gehirne mal abkühlen. 🧠🔥" },
+            { title: "HÄNDE HOCH!", sub: "Du bist von der Zeit umzingelt. 🔫⏰" },
+            { title: "VORBEI!", sub: "Hast du überhaupt etwas eingegeben? 🤔" },
+            { title: "GAME OVER!", sub: "(Für diese Runde jedenfalls...) 🎮" },
+            { title: "STIFTE AUF DEN TISCH!", sub: "Tinte ist sowieso fast alle. ✒️" },
+            { title: "WIE SCHON?", sub: "War die Zeit wirklich zu kurz? ⏳" },
+            { title: "ENDE DER ÜBUNG!", sub: "Die rote Karte für deine Tastatur. 🟥" },
+            { title: "NICHTS MEHR TIPPEN!", sub: "Deine Finger verdienen Ruhe. 🖐️" },
+            { title: "BUMM! ZEIT VORBEI!", sub: "Die Uhr hat gesprochen. 💣" },
+            { title: "ENTSPANN DICH!", sub: "Mal sehen, was für Unsinn du dir ausgedacht hast. 🤡" },
+            { title: "STREIK!", sub: "Deine Gehirne sind in Streik getreten. 🪧" },
+            { title: "FINITO!", sub: "Italienisch für: du bist zu spät. 🇮🇹" },
+            { title: "HALT!", sub: "Im Namen des Gesetzes (dieses Spiels). 👮" },
+            { title: "GENUG GEWESEN!", sub: "Tinte ist alle, Mut auch. 🪶" },
+            { title: "RUHE IM SAAL!", sub: "Die Jury beginnt mit dem Urteil. 👩‍⚖️" },
+            { title: "FERTIG IST KLAUS!", sub: "(Auch wenn du nicht Klaus heißt). 🧔" },
+            { title: "KEIN GEKRITZEL MEHR!", sub: "Schönheitspreis bekommst du sowieso nicht. ✨" },
+            { title: "STOPP DIE PRESSEN!", sub: "Das muss überprüft werden. 📰" },
+            { title: "VERULKT!", sub: "Zeit für die Begutachtung deiner 'Kreativität'. 🎭" },
+            { title: "PFÖTCHEN HOCH!", sub: "Zeit, zu den Nachbarn zu schauen. 👀" },
+            { title: "UND... STOPP!", sub: "Du warst gerade so schön dabei (wahrscheinlich nicht). 🛑" },
+            { title: "DURCHSCHAUT!", sub: "Jetzt sehen wir, wer gelogen hat. 🧺" }
+        ],
+        transCalculating: [
+            { title: "PUNKTE ZÄHLEN...", sub: "Unsere trainierten Affen machen die Mathematik... 🐒" },
+            { title: "RECHEN-WUNDER...", sub: "Wir hoffen, dass 1+1 immer noch 2 ist. 🧮" },
+            { title: "MATHEMATIK IST SCHWER...", sub: "Einen Moment, der Taschenrechner raucht. 💨" },
+            { title: "RECHENRAHMEN AKTIVIEREN!", sub: "Die Hamster laufen jetzt extra schnell. 🐹" },
+            { title: "DATEN KNACKEN...", sub: "Der Computer versucht deine Handschrift zu lesen. 💻" },
+            { title: "MOMENTCHEN...", sub: "Wir suchen nach den verlorenen Punkten. 🔍" },
+            { title: "RECHEN-MAGIE...", sub: "Unsere KI hatte einen Fehler (Scherz). 🤖" },
+            { title: "ZAHLEN, ZAHLEN...", sub: "Wird es ein Rekord oder eine Katastrophe? 📉" },
+            { title: "ALGORITHMUS LÄUFT...", sub: "Der Computer wählt, wer gewinnt (hoffe ich). 🔋" },
+            { title: "NEBENSACHEN ZÄHLEN...", sub: "Auch die Rechtschreibfehler zählen mit (nicht wirklich). 📝" },
+            { title: "MATHE-STUNDE...", sub: "Die Lehrerin korrigiert deine Arbeit. 👩‍🏫" },
+            { title: "ZÄHL-PARTY!", sub: "Konfetti in der Cloud. 🎉" },
+            { title: "PIEP PIEP!", sub: "Die Spannung steigt, der Prozessor auch. 🌡️" },
+            { title: "BINÄRE MAGIE...", sub: "Einsen und Nullen werden zu Punkten. ✨" },
+            { title: "PUNKTE-STURM...", sub: "Die Punkte fliegen herum. 🌀" },
+            { title: "RECHENSÜMCHEN...", sub: "2+2 ist ungefähr 4, oder? 🥨" },
+            { title: "PI...", sub: "Wir fanden einen Kuchen, aber zählen trotzdem Punkte. 🥧" },
+            { title: "MATRIX-MODUS...", sub: "Siehst du die grünen Zahlen auch? 🕶️" },
+            { title: "BUCHHALTUNG...", sub: "Das Finanzamt schaut mit (Scherz). 🏦" },
+            { title: "ZÄHL-O-MATIC...", sub: "Unsere neueste Erfindung berechnet den Gewinn. ⚙️" },
+            { title: "PUNKTE-RAD...", sub: "Wo es stoppt, weiß niemand. 🎡" },
+            { title: "PUNKTE-REGEN...", sub: "Regenschirm hoch! ☔" },
+            { title: "CYBER-MATHEMATIK...", sub: "Für die Gamer unter uns. 🕹️" },
+            { title: "EINSTEIN-MODUS...", sub: "Relativ gesehen gewinnst du. 👨‍🔬" },
+            { title: "LETZTE ZÜGE...", sub: "Der Computer schwitzt Blut und Wasser. 💦" }
+        ],
+
+        // Modal buttons
+        confirm: "Bestätigen",
+        cancel: "Abbrechen",
+        delete: "Löschen",
+        kick: "Entfernen",
+
+        // Input placeholder word
+        with: "mit",
+
+        // ARIA labels for voting
+        rejectAriaPrefix: "Ablehnen:",
+        approveAriaPrefix: "Genehmigen:",
+        ariaByPlayer: "von",
+
+        // Categories
+        categories: {
+            'Stad': 'Stadt',
+            'Land': 'Land',
+            'Rivier': 'Fluss',
+            'Dier': 'Tier',
+            'Plant': 'Pflanze',
+            'Jongensnaam': 'Jungenname',
+            'Meisjesnaam': 'Mädchenname',
+            'Naam': 'Name',
+            'Beroep': 'Beruf',
+            'Eten & Drinken': 'Essen & Trinken',
+            'Beroemdheid': 'Berühmtheit',
+            'Merk': 'Marke',
+            'Film of Serie': 'Film oder Serie',
+            'Sport': 'Sport',
+            'Kledingstuk': 'Kleidungsstück',
+            'Lichaamsdeel': 'Körperteil',
+            'Kleur': 'Farbe',
+            'Automerk': 'Automarke',
+            'Voorwerp in Huis': 'Gegenstand im Haus',
+            'Muziekinstrument': 'Musikinstrument',
+            'Liedje': 'Lied',
+            'Vakantie-item': 'Urlaubs-Artikel',
+            'Schoolvak': 'Schulfach',
+            'Hoofdstad': 'Hauptstadt',
+            'Smoesje': 'Ausrede',
             'Hobby': 'Hobby'
         }
     }

@@ -28,7 +28,7 @@ export function t(key) {
 
 /**
  * Set the current language
- * @param {string} lang - Language code ('nl' or 'en')
+ * @param {string} lang - Language code ('nl', 'en', or 'de')
  */
 export function setLanguage(lang) {
     setCurrentLanguage(lang);
@@ -40,6 +40,55 @@ export function setLanguage(lang) {
 
     updateAllTranslations();
     updateDynamicContent();
+    updateLanguageToggleButton();
+}
+
+/**
+ * Get the next language in the cycle
+ * @param {string} currentLang - Current language code
+ * @returns {string} - Next language code
+ */
+export function getNextLanguage(currentLang) {
+    switch (currentLang) {
+        case 'nl':
+            return 'en';
+        case 'en':
+            return 'de';
+        case 'de':
+            return 'nl';
+        default:
+            return 'en';
+    }
+}
+
+/**
+ * Get language display name
+ * @param {string} lang - Language code
+ * @returns {string} - Display name
+ */
+export function getLanguageDisplayName(lang) {
+    const names = {
+        nl: 'NL',
+        en: 'EN',
+        de: 'DE'
+    };
+    return names[lang] || lang.toUpperCase();
+}
+
+/**
+ * Update language toggle button text
+ */
+export function updateLanguageToggleButton() {
+    const languageToggleBtn = document.getElementById('language-toggle');
+    if (languageToggleBtn) {
+        const currentLang = getCurrentLanguage();
+        const nextLang = getNextLanguage(currentLang);
+        const currentDisplay = getLanguageDisplayName(currentLang);
+        const nextDisplay = getLanguageDisplayName(nextLang);
+
+        languageToggleBtn.title = `${currentDisplay} → ${nextDisplay}`;
+        languageToggleBtn.setAttribute('aria-label', `Switch to ${nextDisplay}`);
+    }
 }
 
 /**
@@ -94,6 +143,9 @@ export function updateAllTranslations() {
 
     // Update results content
     updateResultsContent();
+
+    // Update language toggle button
+    updateLanguageToggleButton();
 }
 
 /**

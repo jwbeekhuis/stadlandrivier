@@ -81,10 +81,27 @@ export function bindEventListeners(
         themeToggleBtn.addEventListener('click', toggleTheme);
     }
 
-    // Language toggle
+    // Language toggle - cycle through nl -> en -> de -> nl
     if (languageToggleBtn) {
         languageToggleBtn.addEventListener('click', () => {
-            setLanguage(state.user.currentLanguage === 'nl' ? 'en' : 'nl');
+            const currentLang = state.user.currentLanguage;
+            let nextLang;
+
+            switch (currentLang) {
+                case 'nl':
+                    nextLang = 'en';
+                    break;
+                case 'en':
+                    nextLang = 'de';
+                    break;
+                case 'de':
+                    nextLang = 'nl';
+                    break;
+                default:
+                    nextLang = 'en';
+            }
+
+            setLanguage(nextLang);
         });
     }
 
