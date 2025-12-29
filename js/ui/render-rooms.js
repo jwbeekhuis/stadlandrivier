@@ -33,7 +33,7 @@ export function renderRoomsList(rooms) {
                 <div class="room-name">${escapedRoomName}</div>
                 <div class="room-info">
                     <span class="room-host">${t('host')} ${escapedHostName}</span>
-                    <span class="room-players">👤 ${playerCount}</span>
+                    <span class="room-players">${playerCount} spelers</span>
                 </div>
                 <button class="join-room-quick-btn" data-room-id="${room.id}">
                     ${t('joinRoom')}

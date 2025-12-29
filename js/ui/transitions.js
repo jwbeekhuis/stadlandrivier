@@ -49,8 +49,7 @@ export function showTransition(type, durationMs = 4000, extra = '') {
             subtitle.textContent = variation.sub;
             animation.innerHTML = `
                 <div class="pens-down-icon">
-                    <span>🖋️</span>
-                    <span>💥</span>
+                    <span>✏️</span>
                 </div>
             `;
             break;
@@ -59,16 +58,14 @@ export function showTransition(type, durationMs = 4000, extra = '') {
             subtitle.textContent = variation.sub;
             animation.innerHTML = `
                 <div class="calculating-animation">
-                    <span>🐒</span>
-                    <span>🧮</span>
-                    <span>🍌</span>
+                    <span>🔢</span>
                 </div>
             `;
             break;
         case 'verdict':
             title.textContent = variation.title || t('transVerdict');
             subtitle.textContent = variation.sub || t('transVerdictSub');
-            animation.innerHTML = '<div class="drumroll-animation">🥁</div>';
+            animation.innerHTML = '<div class="drumroll-animation">⚖️</div>';
             break;
         default:
             return Promise.resolve();
