@@ -5,6 +5,8 @@ import { getElements } from '../utils/dom.js';
 import { escapeHtml, debugLog, normalizeAnswer, icon } from '../utils/string.js';
 import { areWordsFuzzyMatching } from '../utils/fuzzy.js';
 import { t } from '../i18n/translations.js';
+import { isInDictionary } from '../utils/dictionary.js';
+import { showToast } from '../ui/toast.js';
 
 /**
  * Update vote statistics for all answers in current category
@@ -243,6 +245,9 @@ export function showVotingUI(votingState, syncVoteToFirebase, startVoteTimer) {
         const escapedPlayerName = escapeHtml(answerData.playerName);
         const escapedDuplicateName = isDuplicate ? escapeHtml(duplicates[0].playerName) : '';
 
+        // Check if word is in dictionary
+        const inDictionary = isInDictionary(answerData.answer);
+
         const itemDiv = document.createElement('div');
         itemDiv.className = 'voting-item';
 
@@ -257,6 +262,7 @@ export function showVotingUI(votingState, syncVoteToFirebase, startVoteTimer) {
                 ${isDuplicate ? '<span class="duplicate-badge">' + t('duplicate') + ' ' + escapedDuplicateName + '</span>' : ''}
             </div>
             <div class="voting-answer-text">${escapedAnswer}</div>
+            ${inDictionary === true ? `<button type="button" class="dictionary-badge" aria-label="${escapeHtml(t('dictionaryTooltip'))}"><span class="dictionary-icon">📖</span> ${escapeHtml(t('dictionaryBadge'))}</button>` : ''}
             <div class="voting-item-actions">
                 <button class="vote-btn vote-no ${myVote === false ? 'selected' : ''}"
                         data-vote-key="${voteKey}"
@@ -308,6 +314,15 @@ export function showVotingUI(votingState, syncVoteToFirebase, startVoteTimer) {
 
             // Sync to Firebase
             syncVoteToFirebase(voteKey, voteValue);
+        });
+    });
+
+    // Add click listeners to dictionary badges
+    document.querySelectorAll('.dictionary-badge').forEach(badge => {
+        badge.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showToast(t('dictionaryTooltip'), 'info', 4000);
         });
     });
 

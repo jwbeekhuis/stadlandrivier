@@ -27,6 +27,7 @@ import { handleResetGameClick } from './game/round-flow.js';
 import { saveMyAnswers } from './game/game-logic.js';
 import { syncVoteToFirebase } from './firebase/voting-operations.js';
 import { startVoteTimer } from './game/voting-timer.js';
+import { loadDictionary } from './utils/dictionary.js';
 
 /**
  * Initialize authentication and load user data
@@ -116,6 +117,9 @@ async function init() {
 
     // Initialize translations
     updateAllTranslations();
+
+    // Load dictionary asynchronously (non-blocking)
+    loadDictionary();
 
     // Cleanup intervals on page unload/refresh
     window.addEventListener('beforeunload', () => {
