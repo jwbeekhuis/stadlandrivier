@@ -23,6 +23,7 @@ export function normalizeAnswer(str) {
     if (!str) return "";
     return str
         .toLowerCase()
+        .replace(/ß/g, "ss")             // Convert German Eszett to ss
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "") // Remove accents
         .replace(/[^a-z0-9]/g, "");      // Keep only simple alphanumerics
