@@ -74,7 +74,16 @@
       "Bash(node -c:*)",
       "Bash(grep:*)",
       "Bash(git fetch:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(curl:*)",
+      "Bash(node convert-wordlist.js:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: add Dutch dictionary for word verification\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: add dictionary check with visual badge in voting phase\n\n- Add js/utils/dictionary.js with IndexedDB caching for Dutch wordlist\n- Show dictionary badge on answers found in Dutch dictionary\n- Click badge for info toast about proper nouns\n- Add translations for NL/EN/DE/FI\n- Load dictionary async at app start \\(non-blocking\\)\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(node convert-wordlists.js:*)",
+      "Bash(node convert-german.js:*)",
+      "Bash(node convert-finnish.js:*)",
+      "Bash(gzip:*)",
+      "Bash(node convert-all.js:*)"
     ]
   },
   "preferences": {

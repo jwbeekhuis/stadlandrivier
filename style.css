@@ -284,6 +284,10 @@ body:has(.sticky-timer-bar.active) .app-container {
 }
 
 .waiting-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     text-align: center;
     color: rgba(255, 255, 255, 0.7);
     font-size: 1.1rem;
@@ -292,6 +296,19 @@ body:has(.sticky-timer-bar.active) .app-container {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.waiting-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    animation: spin 2s linear infinite;
+    color: var(--primary-color);
+}
+
+.waiting-spinner svg {
+    width: 24px;
+    height: 24px;
 }
 
 /* Game History Log (Infographic) */
@@ -1327,6 +1344,35 @@ body.light-mode .language-option.active {
     100% {
         box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
     }
+}
+
+/* Shimmer effect for buttons */
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+
+    50%,
+    100% {
+        left: 100%;
+    }
+}
+
+.shimmer {
+    position: relative;
+    overflow: hidden;
+}
+
+.shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2.5s infinite;
+    pointer-events: none;
 }
 
 @media (max-width: 600px) {
