@@ -6,11 +6,11 @@ export const translations = {
 
         // Lobby
         welcome: "Welkom!",
-        yourName: "👤 Jouw Naam",
+        yourName: "Jouw Naam",
         namePlaceholder: "Typ je naam...",
-        roomName: "🏠 Spel Naam (optioneel)",
+        roomName: "Spel Naam (optioneel)",
         roomNamePlaceholder: "Bijv. Vrienden Groep...",
-        gameTime: "⏱️ Speeltijd:",
+        gameTime: "Speeltijd:",
         seconds: "seconden",
         second: "seconde",
         newRoom: "➕ Nieuw Spel",
@@ -271,11 +271,11 @@ export const translations = {
 
         // Lobby
         welcome: "Welcome!",
-        yourName: "👤 Your Name",
+        yourName: "Your Name",
         namePlaceholder: "Enter your name...",
-        roomName: "🏠 Room Name (optional)",
+        roomName: "Room Name (optional)",
         roomNamePlaceholder: "E.g. Friends Group...",
-        gameTime: "⏱️ Game Time:",
+        gameTime: "Game Time:",
         seconds: "seconds",
         second: "second",
         newRoom: "➕ New Room",
@@ -535,11 +535,11 @@ export const translations = {
 
         // Lobby
         welcome: "Willkommen!",
-        yourName: "👤 Dein Name",
+        yourName: "Dein Name",
         namePlaceholder: "Gib deinen Namen ein...",
-        roomName: "🏠 Spielname (optional)",
+        roomName: "Spielname (optional)",
         roomNamePlaceholder: "Z.B. Freunde Gruppe...",
-        gameTime: "⏱️ Spielzeit:",
+        gameTime: "Spielzeit:",
         seconds: "Sekunden",
         second: "Sekunde",
         newRoom: "➕ Neues Spiel",
@@ -799,11 +799,11 @@ export const translations = {
 
         // Lobby
         welcome: "Tervetuloa!",
-        yourName: "👤 Nimesi",
+        yourName: "Nimesi",
         namePlaceholder: "Kirjoita nimesi...",
-        roomName: "🏠 Huoneen Nimi (valinnainen)",
+        roomName: "Huoneen Nimi (valinnainen)",
         roomNamePlaceholder: "Esim. Kaverit Ryhmä...",
-        gameTime: "⏱️ Peliaika:",
+        gameTime: "Peliaika:",
         seconds: "sekuntia",
         second: "sekunti",
         newRoom: "➕ Uusi Huone",

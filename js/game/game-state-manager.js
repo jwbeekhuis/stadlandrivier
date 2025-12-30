@@ -40,7 +40,7 @@ export function createUpdateGameState(
 
         // Update room info displays
         roomCodeDisplay.textContent = data.roomId;
-        playerCountDisplay.textContent = `👤 ${data.players.length}`;
+        playerCountDisplay.textContent = `${data.players.length}`;
         renderPlayersList(data.players);
 
         // Update gameDuration from room data
