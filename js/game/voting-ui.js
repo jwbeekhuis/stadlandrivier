@@ -5,7 +5,7 @@ import { getElements } from '../utils/dom.js';
 import { escapeHtml, debugLog, normalizeAnswer, icon } from '../utils/string.js';
 import { areWordsFuzzyMatching } from '../utils/fuzzy.js';
 import { t } from '../i18n/translations.js';
-import { isInDictionary } from '../utils/dictionary.js';
+import { getMatchingFlags } from '../utils/dictionary.js';
 import { showToast } from '../ui/toast.js';
 
 /**
@@ -245,8 +245,8 @@ export function showVotingUI(votingState, syncVoteToFirebase, startVoteTimer) {
         const escapedPlayerName = escapeHtml(answerData.playerName);
         const escapedDuplicateName = isDuplicate ? escapeHtml(duplicates[0].playerName) : '';
 
-        // Check if word is in dictionary
-        const inDictionary = isInDictionary(answerData.answer);
+        // Check if word is in any dictionary
+        const matchingFlags = getMatchingFlags(answerData.answer);
 
         const itemDiv = document.createElement('div');
         itemDiv.className = 'voting-item';
@@ -262,7 +262,7 @@ export function showVotingUI(votingState, syncVoteToFirebase, startVoteTimer) {
                 ${isDuplicate ? '<span class="duplicate-badge">' + t('duplicate') + ' ' + escapedDuplicateName + '</span>' : ''}
             </div>
             <div class="voting-answer-text">${escapedAnswer}</div>
-            ${inDictionary === true ? `<button type="button" class="dictionary-badge" aria-label="${escapeHtml(t('dictionaryTooltip'))}"><span class="dictionary-icon">📖</span> ${escapeHtml(t('dictionaryBadge'))}</button>` : ''}
+            ${matchingFlags ? `<button type="button" class="dictionary-badge" aria-label="${escapeHtml(t('dictionaryTooltip'))}"><span class="dictionary-flags">${matchingFlags}</span></button>` : ''}
             <div class="voting-item-actions">
                 <button class="vote-btn vote-no ${myVote === false ? 'selected' : ''}"
                         data-vote-key="${voteKey}"
@@ -325,6 +325,14 @@ export function showVotingUI(votingState, syncVoteToFirebase, startVoteTimer) {
             showToast(t('dictionaryTooltip'), 'info', 4000);
         });
     });
+
+    // Parse emoji with Twemoji for cross-platform flag support
+    if (typeof twemoji !== 'undefined') {
+        twemoji.parse(votingItemsContainer, {
+            folder: 'svg',
+            ext: '.svg'
+        });
+    }
 
     // Update vote counter
     totalVotesCountDisplay.textContent = answers.length;

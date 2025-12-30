@@ -1,13 +1,31 @@
-// Dictionary utility for Dutch word verification
+// Dictionary utility for multi-language word verification
 
 import { normalizeAnswer } from './string.js';
 
-// Module state
-let dutchWords = null;
-let isLoading = false;
-let loadError = null;
+// Dictionary configuration per language (v2 = top 200k frequency words)
+const DICTIONARY_CONFIG = {
+    nl: { file: '/data/dutch-words.json', cacheKey: 'dict-nl-v2', flag: '🇳🇱' },
+    en: { file: '/data/english-words.json', cacheKey: 'dict-en-v2', flag: '🇬🇧' },
+    de: { file: '/data/german-words.json', cacheKey: 'dict-de-v2', flag: '🇩🇪' },
+    fi: { file: '/data/finnish-words.json', cacheKey: 'dict-fi-v2', flag: '🇫🇮' }
+};
 
-const CACHE_KEY = 'dutch-dictionary-v1';
+// Module state - dictionaries per language
+const dictionaries = {
+    nl: null,
+    en: null,
+    de: null,
+    fi: null
+};
+
+// Loading state per language
+const loadingState = {
+    nl: false,
+    en: false,
+    de: false,
+    fi: false
+};
+
 const DB_NAME = 'StadLandRivierDB';
 const STORE_NAME = 'cache';
 
@@ -75,34 +93,37 @@ async function saveToCache(key, value) {
 }
 
 /**
- * Load the Dutch dictionary
- * Tries to load from IndexedDB cache first, then fetches from server
- * Non-blocking - call at game start
+ * Load dictionary for a specific language
+ * @param {string} lang - Language code (nl, en, de, fi)
  * @returns {Promise<void>}
  */
-export async function loadDictionary() {
-    // Early return if already loaded or loading
-    if (dutchWords !== null || isLoading) {
+async function loadDictionaryForLang(lang) {
+    const config = DICTIONARY_CONFIG[lang];
+    if (!config) {
+        console.warn(`Unknown language: ${lang}`);
         return;
     }
 
-    isLoading = true;
-    loadError = null;
+    // Early return if already loaded or loading
+    if (dictionaries[lang] !== null || loadingState[lang]) {
+        return;
+    }
+
+    loadingState[lang] = true;
 
     try {
         // Try to load from IndexedDB cache first
-        const cached = await getFromCache(CACHE_KEY);
+        const cached = await getFromCache(config.cacheKey);
 
         if (cached && Array.isArray(cached)) {
-            dutchWords = new Set(cached);
-            console.log(`Dictionary loaded from cache: ${dutchWords.size} words`);
-            isLoading = false;
+            dictionaries[lang] = new Set(cached);
+            console.log(`[${lang.toUpperCase()}] Dictionary loaded from cache: ${dictionaries[lang].size} words`);
             return;
         }
 
         // Fetch from server
-        console.log('Fetching dictionary from server...');
-        const response = await fetch('/data/dutch-words.json');
+        console.log(`[${lang.toUpperCase()}] Fetching dictionary from server...`);
+        const response = await fetch(config.file);
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -115,28 +136,37 @@ export async function loadDictionary() {
         }
 
         // Save to IndexedDB for next time
-        await saveToCache(CACHE_KEY, words);
+        await saveToCache(config.cacheKey, words);
 
         // Create Set for fast lookup
-        dutchWords = new Set(words);
-        console.log(`Dictionary loaded from server: ${dutchWords.size} words`);
+        dictionaries[lang] = new Set(words);
+        console.log(`[${lang.toUpperCase()}] Dictionary loaded from server: ${dictionaries[lang].size} words`);
 
     } catch (e) {
-        console.error('Failed to load dictionary:', e);
-        loadError = e;
-        // Don't set dutchWords - keep it null to indicate not loaded
+        console.error(`[${lang.toUpperCase()}] Failed to load dictionary:`, e);
+        // Keep dictionary as null to indicate not loaded
     } finally {
-        isLoading = false;
+        loadingState[lang] = false;
     }
 }
 
 /**
- * Check if a word is in the Dutch dictionary
+ * Load all dictionaries in parallel
+ * Non-blocking - call at game start
+ * @returns {Promise<void>}
+ */
+export async function loadDictionary() {
+    const languages = Object.keys(DICTIONARY_CONFIG);
+    await Promise.all(languages.map(lang => loadDictionaryForLang(lang)));
+}
+
+/**
+ * Check if a word is in the Dutch dictionary (backwards compatibility)
  * @param {string} word - The word to check
  * @returns {boolean|null} - true if found, false if not found, null if dictionary not loaded
  */
 export function isInDictionary(word) {
-    if (dutchWords === null) {
+    if (dictionaries.nl === null) {
         return null;
     }
 
@@ -146,29 +176,73 @@ export function isInDictionary(word) {
         return false;
     }
 
-    return dutchWords.has(normalized);
+    return dictionaries.nl.has(normalized);
 }
 
 /**
- * Check if the dictionary is loaded
+ * Get array of language codes where the word is found
+ * @param {string} word - The word to check
+ * @returns {string[]} - Array of language codes, e.g. ['nl', 'en']
+ */
+export function getMatchingLanguages(word) {
+    const normalized = normalizeAnswer(word);
+
+    if (!normalized) {
+        return [];
+    }
+
+    const matches = [];
+
+    for (const [lang, dict] of Object.entries(dictionaries)) {
+        if (dict !== null && dict.has(normalized)) {
+            matches.push(lang);
+        }
+    }
+
+    return matches;
+}
+
+/**
+ * Get flag emojis for languages where the word is found
+ * @param {string} word - The word to check
+ * @returns {string} - Space-separated flag emojis, e.g. "🇳🇱 🇬🇧" or empty string
+ */
+export function getMatchingFlags(word) {
+    const matchingLangs = getMatchingLanguages(word);
+
+    if (matchingLangs.length === 0) {
+        return '';
+    }
+
+    return matchingLangs
+        .map(lang => DICTIONARY_CONFIG[lang].flag)
+        .join(' ');
+}
+
+/**
+ * Check if any dictionary is loaded
  * @returns {boolean}
  */
 export function isDictionaryLoaded() {
-    return dutchWords !== null;
+    return Object.values(dictionaries).some(dict => dict !== null);
 }
 
 /**
- * Check if the dictionary is currently loading
+ * Check if any dictionary is currently loading
  * @returns {boolean}
  */
 export function isDictionaryLoading() {
-    return isLoading;
+    return Object.values(loadingState).some(loading => loading);
 }
 
 /**
- * Get the load error if any
- * @returns {Error|null}
+ * Get loading status per language
+ * @returns {Object} - Object with loaded word counts per language
  */
-export function getDictionaryError() {
-    return loadError;
+export function getDictionaryStatus() {
+    const status = {};
+    for (const [lang, dict] of Object.entries(dictionaries)) {
+        status[lang] = dict ? dict.size : 0;
+    }
+    return status;
 }

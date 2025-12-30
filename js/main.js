@@ -118,6 +118,14 @@ async function init() {
     // Initialize translations
     updateAllTranslations();
 
+    // Parse emoji with Twemoji for cross-platform support (fixes Windows flag emoji)
+    if (typeof twemoji !== 'undefined') {
+        twemoji.parse(document.body, {
+            folder: 'svg',
+            ext: '.svg'
+        });
+    }
+
     // Load dictionary asynchronously (non-blocking)
     loadDictionary();
 

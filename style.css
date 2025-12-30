@@ -1850,9 +1850,10 @@ body.light-mode .language-option.active {
     background: rgba(255, 255, 255, 0.15);
 }
 
-.dictionary-icon {
-    font-size: 1em;
+.dictionary-flags {
+    font-size: 1.1em;
     line-height: 1;
+    letter-spacing: 3px;
 }
 
 /* Light mode styling for dictionary badge */
@@ -1869,6 +1870,29 @@ body.light-mode .dictionary-badge:hover {
 
 body.light-mode .dictionary-badge:active {
     background: rgba(0, 0, 0, 0.12);
+}
+
+/* ==================== TWEMOJI (CROSS-PLATFORM EMOJI) ==================== */
+
+img.emoji {
+    height: 1.2em;
+    width: 1.2em;
+    margin: 0 0.1em;
+    vertical-align: -0.2em;
+    display: inline-block;
+}
+
+/* Slightly larger flags in dictionary badges */
+.dictionary-flags img.emoji {
+    height: 1.3em;
+    width: 1.3em;
+    margin: 0 2px;
+}
+
+/* Flags in language selector */
+.language-option .flag img.emoji {
+    height: 1.4em;
+    width: 1.4em;
 }
 
 /* ==================== TOAST NOTIFICATIONS ==================== */

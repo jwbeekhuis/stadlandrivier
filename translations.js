@@ -231,7 +231,7 @@ export const translations = {
 
         // Dictionary badge
         dictionaryBadge: "Woordenboek",
-        dictionaryTooltip: "Dit woord staat in het Nederlandse woordenboek. Let op: eigennamen zoals steden en landen staan hier vaak niet in.",
+        dictionaryTooltip: "Dit woord staat in ons woordenboek! Eigennamen staan er vaak niet in.",
 
         // ARIA labels for voting
         rejectAriaPrefix: "Keur af:",
@@ -499,7 +499,7 @@ export const translations = {
 
         // Dictionary badge
         dictionaryBadge: "Dictionary",
-        dictionaryTooltip: "This word is in the Dutch dictionary. Note: proper nouns like cities and countries are often not included.",
+        dictionaryTooltip: "This word is in our dictionary! Proper nouns are often not included.",
 
         // ARIA labels for voting
         rejectAriaPrefix: "Reject:",
@@ -767,7 +767,7 @@ export const translations = {
 
         // Dictionary badge
         dictionaryBadge: "Wörterbuch",
-        dictionaryTooltip: "Dieses Wort steht im niederländischen Wörterbuch. Hinweis: Eigennamen wie Städte und Länder sind oft nicht enthalten.",
+        dictionaryTooltip: "Dieses Wort steht in unserem Wörterbuch! Eigennamen sind oft nicht enthalten.",
 
         // ARIA labels for voting
         rejectAriaPrefix: "Ablehnen:",
@@ -1035,7 +1035,7 @@ export const translations = {
 
         // Dictionary badge
         dictionaryBadge: "Sanakirja",
-        dictionaryTooltip: "Tämä sana löytyy hollannin sanakirjasta. Huomaa: erisnimet kuten kaupungit ja maat eivät usein ole mukana.",
+        dictionaryTooltip: "Tämä sana löytyy sanakirjastamme! Erisnimet eivät usein ole mukana.",
 
         // ARIA labels for voting
         rejectAriaPrefix: "Hylkää:",
