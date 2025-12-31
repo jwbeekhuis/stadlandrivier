@@ -154,27 +154,34 @@
         <!-- Game Controls (Hidden in Lobby) -->
         <section id="game-controls" class="glass-panel controls-panel hidden">
             <div class="room-info">
-                <span><span data-i18n="room">Kamer:</span> <strong id="room-code-display">---</strong></span>
-                <span id="player-count">👤 1</span>
-                <button id="leave-room-btn" class="leave-room-btn" data-i18n="leaveRoom" title="Verlaat kamer">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                        <path
-                            d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-                    </svg> Verlaat Kamer
-                </button>
-                <button id="delete-room-game-btn" class="delete-room-game-btn hidden" data-i18n="deleteRoom"
-                    title="Verwijder kamer">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-                    </svg> Verwijder Kamer
-                </button>
-                <button id="reset-game-btn" class="reset-game-btn hidden" data-i18n="resetGame"
-                    title="Reset spel naar lobby">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                        <path
-                            d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
-                    </svg> Reset Spel
-                </button>
+                <!-- Room informatie sectie -->
+                <div class="room-info-content">
+                    <span><span data-i18n="room">Kamer:</span> <strong id="room-code-display">---</strong></span>
+                    <span id="player-count">👤 1</span>
+                </div>
+
+                <!-- Game control knoppen sectie -->
+                <div class="game-buttons-container">
+                    <button id="leave-room-btn" class="leave-room-btn" data-i18n="leaveRoom" title="Verlaat kamer">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                            <path
+                                d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+                        </svg> Verlaat Kamer
+                    </button>
+                    <button id="delete-room-game-btn" class="delete-room-game-btn hidden" data-i18n="deleteRoom"
+                        title="Verwijder kamer">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                        </svg> Verwijder Kamer
+                    </button>
+                    <button id="reset-game-btn" class="reset-game-btn hidden" data-i18n="resetGame"
+                        title="Reset spel naar lobby">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                            <path
+                                d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                        </svg> Reset Spel
+                    </button>
+                </div>
             </div>
             <div class="letter-display-container">
                 <div class="letter-circle">
