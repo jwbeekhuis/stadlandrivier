@@ -35,8 +35,94 @@ body.dark-mode {
     --color-text-light: #FFFFFF;
     --bg-color: #0f172a;
     --text-color: #f8fafc;
-    --glass-bg: rgba(30, 41, 59, 0.85);
+    --glass-bg: rgba(30, 41, 59, 0.9);
     --glass-border: rgba(108, 180, 238, 0.2);
+}
+
+/* Dark mode - Component Overrides */
+body.dark-mode .glass-panel {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(108, 180, 238, 0.25);
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.3),
+        0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode h1 {
+    background: linear-gradient(180deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+    filter:
+        drop-shadow(0 2px 0 rgba(0, 0, 0, 0.5))
+        drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+body.dark-mode .icon-btn {
+    background: linear-gradient(180deg, rgba(50, 80, 120, 0.9) 0%, rgba(30, 50, 80, 0.9) 100%);
+    color: var(--color-primary-light);
+    border-color: rgba(108, 180, 238, 0.3);
+    box-shadow:
+        0 3px 0 rgba(0, 0, 0, 0.4),
+        0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .icon-btn:hover {
+    background: linear-gradient(180deg, rgba(60, 100, 150, 0.9) 0%, rgba(50, 80, 120, 0.9) 100%);
+}
+
+body.dark-mode .room-card,
+body.dark-mode .voting-item {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(108, 180, 238, 0.25);
+}
+
+body.dark-mode .toast {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(108, 180, 238, 0.25);
+}
+
+body.dark-mode .lobby-panel input,
+body.dark-mode .category-input-group input {
+    background: rgba(30, 41, 59, 0.8);
+    color: #f8fafc;
+    border-color: rgba(108, 180, 238, 0.3);
+}
+
+body.dark-mode .lobby-panel input:focus,
+body.dark-mode .category-input-group input:focus {
+    background: rgba(40, 55, 75, 0.9);
+    border-color: var(--color-primary);
+}
+
+body.dark-mode .lobby-panel input::placeholder,
+body.dark-mode .category-input-group input::placeholder {
+    color: rgba(248, 250, 252, 0.5);
+}
+
+body.dark-mode .player-tag {
+    background: linear-gradient(180deg, rgba(50, 80, 120, 0.8) 0%, rgba(30, 50, 80, 0.8) 100%);
+    border-color: rgba(108, 180, 238, 0.3);
+    color: #f8fafc;
+}
+
+body.dark-mode .sm-btn {
+    background: linear-gradient(180deg, rgba(50, 80, 120, 0.9) 0%, rgba(30, 50, 80, 0.9) 100%);
+    color: var(--color-primary-light);
+    border-color: rgba(108, 180, 238, 0.3);
+}
+
+body.dark-mode .vote-btn {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(108, 180, 238, 0.3);
+    color: #f8fafc;
+}
+
+body.dark-mode .modal-container {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(108, 180, 238, 0.3);
+}
+
+body.dark-mode .modal-cancel {
+    background: rgba(50, 70, 100, 0.8);
+    border-color: rgba(108, 180, 238, 0.3);
 }
 
 /* Legacy light-mode class (nu de standaard) */
@@ -285,31 +371,70 @@ body:has(.sticky-timer-bar.active) .app-container {
     gap: 40px;
 }
 
+/* Results Table - Fantasy Style */
 .results-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 20px;
-    /* Increased row space */
+    border-spacing: 0 12px;
     text-align: left;
 }
 
 .results-table td {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px 15px;
+    background: rgba(108, 180, 238, 0.1);
+    padding: 18px 15px;
     font-size: 1.1rem;
     vertical-align: middle;
+    border-top: 2px solid rgba(108, 180, 238, 0.15);
+    border-bottom: 2px solid rgba(108, 180, 238, 0.15);
+    transition: background 0.2s ease;
+}
+
+.results-table tr:hover td {
+    background: rgba(108, 180, 238, 0.2);
 }
 
 .results-table td:first-child {
     border-top-left-radius: 12px;
     border-bottom-left-radius: 12px;
+    border-left: 2px solid rgba(108, 180, 238, 0.15);
     width: 60px;
 }
 
 .results-table td:last-child {
     border-top-right-radius: 12px;
     border-bottom-right-radius: 12px;
+    border-right: 2px solid rgba(108, 180, 238, 0.15);
     width: 80px;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+}
+
+/* Rank Colors - Gold, Silver, Bronze */
+.results-table tbody tr:nth-child(1) td {
+    background: rgba(218, 165, 32, 0.15);
+    border-color: rgba(218, 165, 32, 0.3);
+}
+
+.results-table tbody tr:nth-child(1):hover td {
+    background: rgba(218, 165, 32, 0.25);
+}
+
+.results-table tbody tr:nth-child(2) td {
+    background: rgba(168, 169, 173, 0.15);
+    border-color: rgba(168, 169, 173, 0.3);
+}
+
+.results-table tbody tr:nth-child(2):hover td {
+    background: rgba(168, 169, 173, 0.25);
+}
+
+.results-table tbody tr:nth-child(3) td {
+    background: rgba(205, 127, 50, 0.15);
+    border-color: rgba(205, 127, 50, 0.3);
+}
+
+.results-table tbody tr:nth-child(3):hover td {
+    background: rgba(205, 127, 50, 0.25);
 }
 
 .results-table td strong {
@@ -318,6 +443,31 @@ body:has(.sticky-timer-bar.active) .app-container {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Dark mode results table */
+body.dark-mode .results-table td {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(108, 180, 238, 0.2);
+}
+
+body.dark-mode .results-table tr:hover td {
+    background: rgba(50, 70, 100, 0.6);
+}
+
+body.dark-mode .results-table tbody tr:nth-child(1) td {
+    background: rgba(218, 165, 32, 0.2);
+    border-color: rgba(218, 165, 32, 0.35);
+}
+
+body.dark-mode .results-table tbody tr:nth-child(2) td {
+    background: rgba(168, 169, 173, 0.2);
+    border-color: rgba(168, 169, 173, 0.35);
+}
+
+body.dark-mode .results-table tbody tr:nth-child(3) td {
+    background: rgba(205, 127, 50, 0.2);
+    border-color: rgba(205, 127, 50, 0.35);
 }
 
 .text-right {
@@ -838,18 +988,25 @@ body.light-mode .lobby-panel input:focus {
     font-weight: 600;
 }
 
+/* Room Info Bar - Fantasy Style */
 .room-info {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 10px 15px;
-    border-radius: 10px;
+    background: rgba(108, 180, 238, 0.12);
+    border: 2px solid rgba(108, 180, 238, 0.25);
+    padding: 12px 18px;
+    border-radius: 14px;
     margin-bottom: 20px;
     font-weight: 600;
     flex-wrap: wrap;
     gap: 10px;
+}
+
+body.dark-mode .room-info {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(108, 180, 238, 0.2);
 }
 
 .delete-room-game-btn {
@@ -1025,21 +1182,26 @@ body.light-mode .lobby-panel input:focus {
     padding: 10px 0;
 }
 
+/* Header Controls - Desktop layout */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
 /* 3D Fantasy Title Effect */
 h1 {
     font-weight: 900;
     font-size: 2.8rem;
     letter-spacing: 0.05em;
-    color: var(--color-text-light);
-    text-shadow:
-        0 2px 0 var(--color-primary-dark),
-        0 4px 0 rgba(0, 80, 120, 0.3),
-        0 6px 10px rgba(0, 0, 0, 0.15);
     background: linear-gradient(180deg, #FFFFFF 0%, var(--color-primary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    filter: drop-shadow(0 4px 6px rgba(0, 80, 120, 0.25));
+    filter:
+        drop-shadow(0 2px 0 var(--color-primary-dark))
+        drop-shadow(0 4px 6px rgba(0, 80, 120, 0.3));
 }
 
 .highlight {
@@ -2834,14 +2996,18 @@ img.emoji {
     justify-content: center;
 }
 
+/* Transition Title - Fantasy Style */
 #transition-title {
     font-size: 3.5rem;
     font-weight: 800;
     margin-bottom: 20px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    background: linear-gradient(135deg, #FFFFFF 0%, var(--color-primary-light) 40%, var(--color-accent-gold) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.3));
+    background-clip: text;
+    filter:
+        drop-shadow(0 3px 0 rgba(0, 80, 120, 0.5))
+        drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
 }
 
 .transition-animation {

@@ -117,11 +117,14 @@ export function createUpdateGameState(
             if (data.status === ROOM_STATUS.LOBBY) {
                 rollBtn.disabled = false;
                 rollBtn.classList.remove('hidden');
+                rollBtn.classList.add('shimmer'); // Shimmer actief in lobby
             } else if (data.status === ROOM_STATUS.PLAYING) {
                 rollBtn.disabled = true;
                 rollBtn.classList.remove('hidden');
+                rollBtn.classList.remove('shimmer'); // Geen shimmer tijdens spel
             } else {
                 rollBtn.classList.add('hidden');
+                rollBtn.classList.remove('shimmer');
             }
 
             if (waitingForHostLobbyMsg) waitingForHostLobbyMsg.classList.add('hidden');
@@ -161,6 +164,7 @@ export function createUpdateGameState(
         } else {
             state.room.isHost = false;
             rollBtn.classList.add('hidden');
+            rollBtn.classList.remove('shimmer'); // Geen shimmer voor niet-hosts
             if (waitingForHostLobbyMsg) {
                 if (data.status === ROOM_STATUS.LOBBY) {
                     waitingForHostLobbyMsg.classList.remove('hidden');
